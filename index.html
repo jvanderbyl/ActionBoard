@@ -562,141 +562,209 @@ dialog.sm{width:440px}
 dialog.md{width:580px}
 dialog::backdrop{background:rgba(0,0,0,.38)}
 
-/* ═══════════════ MOBILE / IPHONE ═══════════════ */
-@media (max-width: 768px) {
-  /* Hide sidebar, full-width main */
-  #sidebar { display: none !important; }
-  #main    { margin-left: 0 !important; width: 100vw !important; }
+/* ═══════════════ MOBILE / IPHONE ═══════════════
+   Strategy: keep sidebar hidden, use ROWS layout for board,
+   bottom tab bar for navigation, slide-up modals
+   ═══════════════════════════════════════════════ */
 
-  /* Topbar */
-  .topbar  { padding: 0 8px !important; height: 44px !important; position: sticky; top: 0; z-index: 200; }
+/* ── ROWS layout for mobile board ── */
+@media (max-width: 768px) {
+
+  /* Core layout */
+  #sidebar { display: none !important; }
+  #main    { margin-left: 0 !important; width: 100vw !important; min-height: 0; }
+
+  /* Sticky topbar */
+  .topbar {
+    padding: 0 8px !important;
+    height: 46px !important;
+    position: sticky; top: 0; z-index: 200;
+  }
   .tb-logo { font-size: 13px !important; }
 
-  /* Nav tabs: horizontal scroll */
-  .navtabs { overflow-x: auto !important; -webkit-overflow-scrolling: touch; flex-wrap: nowrap !important; gap: 0 !important; scrollbar-width: none; }
+  /* Nav tabs: horizontal scroll strip */
+  .navtabs {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    flex-wrap: nowrap !important;
+    gap: 0 !important;
+    scrollbar-width: none;
+  }
   .navtabs::-webkit-scrollbar { display: none; }
-  .navtab  { font-size: 11px !important; padding: 6px 9px !important; white-space: nowrap; flex-shrink: 0 !important; }
+  .navtab {
+    font-size: 11px !important;
+    padding: 6px 10px !important;
+    white-space: nowrap;
+    flex-shrink: 0 !important;
+  }
 
-  /* Board: horizontal scroll */
-  #board-wrap { overflow-x: auto !important; -webkit-overflow-scrolling: touch; }
-  #board { display: flex !important; flex-wrap: nowrap !important; padding: 8px !important; gap: 8px !important; min-height: calc(100svh - 88px); }
-  .column { min-width: 255px !important; max-width: 275px !important; flex-shrink: 0 !important; }
-  .cards-list { max-height: calc(100svh - 180px) !important; overflow-y: auto !important; -webkit-overflow-scrolling: touch; }
+  /* Board: ROWS layout (each column stacks vertically) */
+  #board-wrap {
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+    height: calc(100svh - 90px);
+  }
+  #board {
+    display: flex !important;
+    flex-direction: column !important;
+    flex-wrap: nowrap !important;
+    padding: 8px !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+  /* Row mode: columns go full width */
+  #board.rows { flex-direction: column !important; }
+  .column {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    flex-shrink: 0 !important;
+  }
+  /* Collapse long columns - show 3 cards then expand */
+  .cards-list {
+    max-height: none !important;
+    overflow: visible !important;
+  }
 
   /* Touch-friendly buttons */
-  .cbtn { min-width: 30px !important; min-height: 30px !important; font-size: 14px !important; }
-  .col-add { min-width: 30px !important; min-height: 30px !important; }
-  .card { padding: 10px 12px !important; }
+  .cbtn {
+    min-width: 32px !important;
+    min-height: 32px !important;
+    font-size: 15px !important;
+    padding: 4px 6px !important;
+  }
+  .col-add { min-width: 32px !important; min-height: 32px !important; }
+  .card { padding: 10px 12px !important; margin-bottom: 4px !important; }
   .c-title { font-size: 13px !important; }
+  .btn { min-height: 38px !important; padding: 8px 14px !important; font-size: 13px !important; }
 
   /* Toolbar: horizontal scroll */
-  #toolbar, #lb-toolbar { overflow-x: auto !important; -webkit-overflow-scrolling: touch; flex-wrap: nowrap !important; scrollbar-width: none; }
+  #toolbar, #lb-toolbar {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    flex-wrap: nowrap !important;
+    scrollbar-width: none;
+    padding: 0 8px !important;
+    height: 40px !important;
+  }
   #toolbar::-webkit-scrollbar, #lb-toolbar::-webkit-scrollbar { display: none; }
-  .tbb { white-space: nowrap; flex-shrink: 0 !important; font-size: 12px !important; padding: 5px 10px !important; }
+  .tbb {
+    white-space: nowrap;
+    flex-shrink: 0 !important;
+    font-size: 12px !important;
+    padding: 5px 10px !important;
+  }
 
   /* Views */
-  .view-wrap { padding: 12px !important; }
+  .view-wrap { padding: 10px !important; }
 
-  /* Modals: slide up from bottom */
+  /* Modals: full-width, slide up from bottom */
   dialog {
     width: 100% !important;
     max-width: 100% !important;
     min-width: 0 !important;
     margin: 0 !important;
     position: fixed !important;
-    bottom: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    top: auto !important;
+    bottom: 0 !important; left: 0 !important; right: 0 !important; top: auto !important;
     border-radius: 18px 18px 0 0 !important;
-    max-height: 92svh !important;
+    max-height: 90svh !important;
     overflow-y: auto !important;
     border: none !important;
     border-top: 1px solid var(--border) !important;
   }
   .mhdr  { padding: 14px 16px 8px !important; }
   .mbody { padding: 10px 16px !important; gap: 10px !important; }
-  .mfoot { padding: 10px 16px env(safe-area-inset-bottom, 16px) !important; }
+  .mfoot { padding: 10px 16px 20px !important; }
 
-  /* CRITICAL: 16px font on inputs prevents iOS auto-zoom */
-  input, textarea, select {
-    font-size: 16px !important;
-  }
-  .btn { padding: 9px 14px !important; min-height: 38px !important; font-size: 13px !important; }
+  /* CRITICAL: 16px prevents iOS zoom on input focus */
+  input, textarea, select { font-size: 16px !important; }
 
   /* Settings: single column */
-  #settings-grid { grid-template-columns: 1fr !important; gap: 16px !important; }
-  #prefs-section > div { grid-template-columns: 1fr !important; }
+  #settings-grid { grid-template-columns: 1fr !important; }
 
-  /* g2 two-column grids: stack vertically */
+  /* g2 two-column grids → single column */
   .g2 { grid-template-columns: 1fr !important; }
 
   /* AI panel: full-screen */
   #ai-panel {
-    width: 100% !important;
-    max-width: 100% !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
-    top: auto !important;
-    height: 85svh !important;
+    width: 100% !important; max-width: 100% !important;
+    left: 0 !important; right: 0 !important; bottom: 0 !important; top: auto !important;
+    height: 80svh !important;
     border-radius: 18px 18px 0 0 !important;
     border: none !important;
     border-top: 1px solid var(--border) !important;
   }
 
-  /* Archive cards: stack */
-  .archive-card { flex-wrap: wrap !important; gap: 8px !important; }
-  .archive-card > div:last-child { width: 100% !important; justify-content: flex-end; }
+  /* Focus view */
+  #view-focus { padding: 10px !important; }
+  .focus-task-card { padding: 10px !important; }
 
   /* Calendar */
-  .cal-nav { gap: 6px !important; }
-  .cal-day  { min-height: 44px !important; font-size: 11px !important; }
-  .cal-ev   { font-size: 10px !important; padding: 1px 3px !important; }
+  .cal-nav { flex-wrap: wrap !important; gap: 6px !important; }
+  .cal-day { min-height: 44px !important; }
+  .cal-ev  { font-size: 10px !important; }
 
-  /* Habits: horizontal scroll */
+  /* Habits: horizontal scroll per habit */
   #habits-grid > div { overflow-x: auto !important; -webkit-overflow-scrolling: touch; }
 
-  /* Learn board: no sidebar */
+  /* Learn board: full-width columns stacked */
   #lb-sidebar-inner, #task-sidebar-inner { display: none !important; }
-  #lb-board-wrap { overflow-x: auto !important; }
-  .lb-col { min-width: 255px !important; flex-shrink: 0 !important; }
-
-  /* Mobile sidebar toggle button */
-  #mob-sidebar-btn {
-    display: flex !important;
-    align-items: center;
-    justify-content: center;
-    width: 34px; height: 34px;
-    border: 1px solid var(--border);
-    border-radius: var(--rs);
-    background: var(--bg3);
-    cursor: pointer;
-    font-size: 16px;
-    margin-right: 6px;
-    flex-shrink: 0;
+  #lb-board-wrap { overflow-x: hidden !important; overflow-y: auto !important; }
+  #lb-wrap {
+    flex-direction: column !important;
+    overflow-x: hidden !important;
+    overflow-y: visible !important;
+    flex-wrap: nowrap !important;
+  }
+  .lb-col {
+    width: 100% !important;
+    min-width: 0 !important;
+    flex-shrink: 0 !important;
+    border-right: none !important;
+    border-bottom: 1px solid var(--border) !important;
   }
 
-  /* Mobile sidebar overlay */
+  /* Archive: stack buttons */
+  .archive-card {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+
+  /* Mobile sidebar toggle */
+  #mob-sidebar-btn {
+    display: flex !important;
+    align-items: center; justify-content: center;
+    width: 34px; height: 34px;
+    border: 1px solid var(--border); border-radius: var(--rs);
+    background: var(--bg3); cursor: pointer;
+    font-size: 16px; flex-shrink: 0;
+  }
+  /* Sidebar overlay */
   #sidebar.mob-open {
     display: flex !important;
     position: fixed !important;
     top: 0 !important; left: 0 !important;
-    width: 80vw !important;
-    max-width: 300px !important;
+    width: 78vw !important; max-width: 300px !important;
     height: 100svh !important;
     z-index: 300 !important;
-    box-shadow: 4px 0 24px rgba(0,0,0,.25) !important;
+    box-shadow: 4px 0 24px rgba(0,0,0,.3) !important;
     overflow-y: auto !important;
+    flex-direction: column;
   }
   #mob-overlay {
     display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,.4);
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.45);
     z-index: 299;
   }
-  #mob-overlay.show { display: block; }
+  #mob-overlay.show { display: block !important; }
+
+  /* Notes */
+  .note-card { padding: 12px !important; }
+
+  /* Snap-section in settings */
+  #snap-section { grid-column: 1 !important; }
 }
 
 /* Desktop: hide mobile-only elements */
@@ -3150,6 +3218,9 @@ function buildActionCard(action) {
       </div>
     </div>`;
   }
+  // All other actions execute immediately (no confirm step needed)
+  // batch, add_note, edit_note, delete_note, add_lb_card, toggle_habit, add_habit, etc.
+  executeAction(action);
   return '';
 }
 
@@ -5265,12 +5336,18 @@ function mobCloseSidebar() {
   document.body.style.overflow = '';
 }
 // Close sidebar when a sector/category is clicked on mobile
-var _origRenderSidebar = typeof renderSidebar === 'function' ? renderSidebar : null;
 if (window.innerWidth <= 768) {
   document.addEventListener('click', function(e) {
     var btn = e.target.closest('.catbtn');
     if (btn) mobCloseSidebar();
   });
+
+  // Force rows layout on mobile for better UX
+  if (typeof layoutMode !== 'undefined') {
+    layoutMode = 'rows';
+    var board = document.getElementById('board');
+    if (board) board.className = 'rows';
+  }
 }
 
 </script>
