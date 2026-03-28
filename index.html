@@ -2574,25 +2574,28 @@ function appPrompt(msg,defaultVal){
     const yes=document.getElementById('confirm-yes');
     const no=document.getElementById('confirm-no');
     yes.textContent='OK'; no.textContent='Cancel';
-    document.getElementById('confirm-msg').innerHTML=
-      msg.replace(/\n/g,'<br/>')+
-      '<br/><input id="_prompt-inp" type="text" value="'+((defaultVal||'').replace(/"/g,'&quot;'))+
-      '" style="margin-top:10px;width:100%;padding:8px 10px;font-size:13px;border:1px solid var(--border);border-radius:var(--rs);background:var(--bg3);color:var(--text);font-family:var(--font)"'+
-      ' onkeydown="if(event.key==='Enter'){document.getElementById('confirm-yes').click();}"/>';
+    // Build input element via DOM (avoids quote escaping issues)
+    const msgEl=document.getElementById('confirm-msg');
+    msgEl.innerHTML=msg.replace(/\n/g,'<br/>');
+    const inp=document.createElement('input');
+    inp.type='text'; inp.value=defaultVal||'';
+    inp.style.cssText='margin-top:10px;width:100%;padding:8px 10px;font-size:13px;border:1px solid var(--border);border-radius:var(--rs);background:var(--bg3);color:var(--text);font-family:var(--font);box-sizing:border-box';
+    inp.id='_prompt-inp';
+    inp.addEventListener('keydown',function(e){if(e.key==='Enter') yes.click();});
+    msgEl.appendChild(inp);
     function done(ok){
       const val=document.getElementById('_prompt-inp')?.value||'';
       d.close();yes.onclick=null;no.onclick=null;
-      document.getElementById('confirm-msg').textContent='';
+      msgEl.textContent='';
       yes.textContent='Delete';no.textContent='Cancel';
       res(ok?val:null);
     }
     yes.onclick=function(){done(true);};
     no.onclick=function(){done(false);};
     d.showModal();
-    setTimeout(()=>{const inp=document.getElementById('_prompt-inp');if(inp){inp.focus();inp.select();}},30);
+    setTimeout(()=>{inp.focus();inp.select();},30);
   });
 }
-
 
 init();
 
