@@ -2,21 +2,24 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Action Board — Vanderbyl Labs</title>
+  <meta name="description" content="Personal productivity kanban board by Vanderbyl Labs"/>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>◈</text></svg>"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<meta name="description" content="Action Board — personal productivity Kanban by Vanderbyl Labs"/>
-<meta property="og:title" content="Action Board — Vanderbyl Labs"/>
-<meta property="og:description" content="Personal Kanban board with AI assistant, focus mode, calendar, and learning queue."/>
 <title>Action Board — Vanderbyl Labs</title>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'"/>
 <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/></noscript>
 <style>
-/* Inputs are always interactive */
+/* Inputs are always interactive — no drag region interference */
 input,textarea,select{
   -webkit-user-select:text;
   user-select:text;
   pointer-events:auto;
+  -webkit-app-region:no-drag;
   cursor:text;
 }
 button{ user-select:none; cursor:pointer; }
@@ -61,15 +64,16 @@ input,textarea,select{
   display:flex;align-items:center;padding:0 12px;gap:3px;
   flex-shrink:0;position:relative;z-index:100;
 }
+/* All interactive TB elements must explicitly opt out of drag */
+.navtab,.tb-right,.winbtns,.wbtn,.search-wrap,.search-inp,
+#save-status,#sync-indicator,#signout-btn{
+  -webkit-app-region:no-drag;
+}
 .tb-logo{
   display:flex;flex-direction:column;line-height:1;margin-right:18px;
   flex-shrink:0;
 }
-.tb-drag-spacer{
-  flex:1;
-  height:100%;
-  min-width:20px;
-}
+
 .logo{font-size:16px;font-weight:800;color:var(--accent);margin-right:18px;user-select:none}
 .navtabs{display:flex;gap:2px;user-select:none}
 .navtab{
@@ -557,9 +561,15 @@ dialog:not([open]){display:none!important}
 dialog.sm{width:440px}
 dialog.md{width:580px}
 dialog::backdrop{background:rgba(0,0,0,.38)}
+
+/* ── WEB VERSION ── */
+html, body { height: 100%; margin: 0; padding: 0; }
+#app { height: 100vh; }
+#tb { -webkit-app-region: no-drag; }  /* no drag in browser */
+
 </style>
 </head>
-<body>
+<body style="margin:0;padding:0;overflow:hidden">
 <!-- ═══════════════ AUTH SCREEN ═══════════════ -->
 <div id="auth-screen" style="display:none">
   <div class="auth-box" style="position:relative">
@@ -620,7 +630,7 @@ dialog::backdrop{background:rgba(0,0,0,.38)}
     <span style="font-size:16px;font-weight:800;color:var(--accent);letter-spacing:-.01em">◈ Action Board</span>
     <span style="font-size:9px;font-weight:500;color:var(--text4);text-transform:uppercase;margin-top:1px">by Vanderbyl Labs</span>
   </div>
-  <div class="navtabs">
+  <div class="navtabs" style="-webkit-app-region:no-drag">
     <button class="navtab on"  onclick="switchView('board',this)">Board</button>
     <button class="navtab"     onclick="switchView('focus',this)">Focus</button>
     <button class="navtab"     onclick="switchView('calendar',this)">Calendar</button>
@@ -628,8 +638,8 @@ dialog::backdrop{background:rgba(0,0,0,.38)}
     <button class="navtab"     onclick="switchView('notes',this)">Notes</button>
     <button class="navtab"     onclick="switchView('settings',this)">Settings</button>
   </div>
-  <div class="tb-drag-spacer"></div>
-  <div class="tb-right">
+  <div style="flex:1"></div>
+  <div class="tb-right" style="-webkit-app-region:no-drag">
     <span class="save-status" id="save-status"></span>
     <div class="sync-indicator" id="sync-indicator" style="display:none"><div class="sync-dot green" id="sync-dot"></div><span id="sync-label">Synced</span></div>
     <div class="search-wrap">
@@ -639,7 +649,7 @@ dialog::backdrop{background:rgba(0,0,0,.38)}
       <div class="search-drop" id="search-drop"></div>
     </div>
     <button onclick="signOut()" id="signout-btn" style="display:none;font-size:11px;font-weight:600;padding:4px 10px;border:1px solid var(--border);border-radius:var(--rs);background:transparent;cursor:pointer;color:var(--text3);font-family:var(--font)" title="Sign out">Sign out</button>
-    <div class="winbtns" id="winbtns" style="display:none"></div>
+    <div class="winbtns" id="winbtns" style="-webkit-app-region:no-drag"></div>
   </div>
 </div>
 
@@ -780,7 +790,7 @@ dialog::backdrop{background:rgba(0,0,0,.38)}
     <div>
       <label class="flabel" for="f-notes">Notes</label>
       <textarea id="f-notes" rows="4" placeholder="Details, links, context…"></textarea>
-      <div class="hint">Auto-saved and synced to cloud.</div>
+      <div class="hint">Auto-saved and backed up to external drive.</div>
     </div>
     <div class="g3">
       <div>
@@ -1191,11 +1201,14 @@ async function doSave(){
     setSyncStatus('synced');
     setSaveStatus('Synced ✓');
     setTimeout(()=>setSaveStatus(''),2000);
+
+
   } catch(e){
     console.error('Save error:', e.message);
     setSyncStatus('error');
     setSaveStatus('Offline — saved locally');
     setTimeout(()=>setSaveStatus(''),3000);
+
     localStorage.setItem('actionboard-offline',JSON.stringify({...S,lastSaved:now()}));
   }
   clearTimeout(saveTimeout);
@@ -1786,7 +1799,7 @@ function saveTopic(){
   closeTopicModal();renderLearning();scheduleSave();
 }
 async function deleteTopic(id){
-  if(!confirm('Delete this topic?'))return;
+  if(!await (appConfirm('Delete this topic?')))return;
   S.learningTopics=S.learningTopics.filter(t=>t.id!==id);
   renderLearning();scheduleSave();
 }
@@ -1947,7 +1960,7 @@ function saveTask(){
 }
 
 async function deleteTask(){
-  if(!confirm('Delete this task?'))return;
+  if(!await (appConfirm('Delete this task?')))return;
   S.tasks=S.tasks.filter(t=>t.id!==editingId);
   S.focusTasks=S.focusTasks.filter(f=>f!==editingId);
   closeTaskModal();render();scheduleSave();
@@ -1956,7 +1969,7 @@ async function deleteTask(){
 // Quick delete from card (no modal needed)
 async function quickDeleteTask(id, e){
   if(e) e.stopPropagation();
-  if(!confirm('Delete this task?')) return;
+  if(!await (appConfirm('Delete this task?'))) return;
   S.tasks = S.tasks.filter(t => t.id !== id);
   S.focusTasks = S.focusTasks.filter(f => f !== id);
   render(); scheduleSave();
@@ -2190,11 +2203,12 @@ function deleteCurrentCat(){
 // SETTINGS
 // ════════════════════════════════════════════════
 function renderSettings(){
+  const isE = false; // web version
   const syncDot = document.getElementById('sync-dot');
   const syncState = syncDot?.classList.contains('green') ? 'synced'
     : syncDot?.classList.contains('red') ? 'error' : 'pending';
   const syncColor  = {synced:'#22c55e', error:'var(--pri-high)', pending:'#f59e0b'}[syncState];
-  const syncLabel  = {synced:'All data synced to cloud ✓', error:'Cloud unreachable — data saved locally', pending:'Syncing…'}[syncState];
+  const syncLabel  = {synced:'All data synced to cloud ✓', error:'Cloud unreachable — using local backup', pending:'Syncing…'}[syncState];
   const userEmail  = _currentUser?.email || 'Not signed in';
 
   document.getElementById('settings-grid').innerHTML = `
@@ -2231,12 +2245,18 @@ function renderSettings(){
   </div>
 
   <div>
-    <div class="settings-sec-title">Data & Backup</div>
+    <div class="settings-sec-title">Local Backup</div>
     <div class="info-block" style="border-color:var(--pri-med);background:rgba(249,115,22,.07);font-size:12px;line-height:1.7">
-      <strong style="color:var(--pri-med)">💾 Export your data</strong><br/>
-      Download a full JSON backup of your board at any time. Your data is also auto-saved to cloud on every change.
+      <strong style="color:var(--pri-med)">💾 Auto-backup</strong><br/>
+      A JSON file is written to your PC on every cloud save. If Supabase is down, the app loads from this file automatically.
     </div>
-    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">
+    <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:6px">Backup Path</div>
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
+      <div class="path-box" id="backup-path-display" style="flex:1;font-size:11px">Loading…</div>
+      <button class="path-btn" onclick="openBackupInExplorer()">Open ↗</button>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      ${isE?`<button class="btn" onclick="changeLocalBackupPath()">Change Path…</button>`:''}
       <button class="btn" onclick="exportDataJSON()">Export JSON</button>
     </div>
 
@@ -2244,7 +2264,7 @@ function renderSettings(){
     <div class="info-block" style="border-color:var(--accent);background:rgba(99,102,241,.06);font-size:12px;line-height:1.7">
       <strong style="color:var(--accent)">✦ AI + Voice Setup</strong><br/>
       AI chat: Anthropic key. Voice transcription: OpenAI key (Whisper).<br/>
-      Keys stored only in your browser — never sent to cloud.
+      Keys stored only on your PC — never sent to cloud.
     </div>
     <div style="display:flex;flex-direction:column;gap:12px;margin-top:10px">
       <div>
@@ -2280,6 +2300,9 @@ function renderSettings(){
     </div>`).join('')}
     </div>
   </div>`;
+
+
+}
 
 function toggleInputType(id){
   const el = document.getElementById(id);
@@ -2330,14 +2353,12 @@ function startClock(){
 }
 
 function setupWin(){
-  // Web version: no native window controls needed
-  const wb = document.getElementById('winbtns');
-  if(wb) wb.style.display='none';
+  // web: no window chrome needed
 }
 
 async function testAnthropicKey() {
   const key = (localStorage.getItem('anthropic_key')||'').trim();
-  if (!key) { alert('No API key set.'); return; }
+  if (!key) { appAlert('No API key set.'); return; }
   const btn = document.querySelector('[onclick="testAnthropicKey()"]');
   if (btn) btn.textContent = 'Testing…';
   try {
@@ -2357,12 +2378,12 @@ async function testAnthropicKey() {
     });
     const data = await res.json();
     if (data.content) {
-      alert('✓ API key works! AI assistant is ready.');
+      appAlert('✓ API key works!');
     } else {
-      alert('✕ Error: ' + (data.error?.message || JSON.stringify(data)));
+      appAlert('✕ Error: ' + (data.error?.message || JSON.stringify(data)));
     }
   } catch(e) {
-    alert('✕ Connection failed: ' + e.message);
+    appAlert('✕ Connection failed: ' + e.message);
   }
   if (btn) btn.textContent = 'Test connection';
 }
@@ -2520,6 +2541,60 @@ function closeModal(id) {
 
 
 
+// ── IN-APP DIALOGS (web version — replaces native confirm/alert) ──────────────
+function appConfirm(msg, okLabel){
+  return new Promise(function(res){
+    const d=document.getElementById('confirm-dialog');
+    if(!d){res(window.confirm(msg));return;}
+    document.getElementById('confirm-msg').textContent=msg;
+    const yes=document.getElementById('confirm-yes');
+    const no=document.getElementById('confirm-no');
+    yes.textContent=okLabel||'Delete';
+    no.textContent='Cancel';
+    function done(v){d.close();yes.onclick=null;no.onclick=null;res(v);}
+    yes.onclick=function(){done(true);};
+    no.onclick=function(){done(false);};
+    d.showModal();
+  });
+}
+function appAlert(msg){
+  let el=document.getElementById('_toast');
+  if(!el){
+    el=document.createElement('div');
+    el.id='_toast';
+    el.style.cssText='position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg4);padding:10px 22px;border-radius:8px;font-size:13px;z-index:99999;pointer-events:none;opacity:0;transition:opacity .25s';
+    document.body.appendChild(el);
+  }
+  el.textContent=msg;el.style.opacity='1';
+  clearTimeout(el._t);el._t=setTimeout(()=>el.style.opacity='0',2800);
+}
+function appPrompt(msg,defaultVal){
+  return new Promise(function(res){
+    const d=document.getElementById('confirm-dialog');
+    if(!d){res(window.prompt(msg,defaultVal));return;}
+    const yes=document.getElementById('confirm-yes');
+    const no=document.getElementById('confirm-no');
+    yes.textContent='OK'; no.textContent='Cancel';
+    document.getElementById('confirm-msg').innerHTML=
+      msg.replace(/\n/g,'<br/>')+
+      '<br/><input id="_prompt-inp" type="text" value="'+((defaultVal||'').replace(/"/g,'&quot;'))+
+      '" style="margin-top:10px;width:100%;padding:8px 10px;font-size:13px;border:1px solid var(--border);border-radius:var(--rs);background:var(--bg3);color:var(--text);font-family:var(--font)"'+
+      ' onkeydown="if(event.key==='Enter'){document.getElementById('confirm-yes').click();}"/>';
+    function done(ok){
+      const val=document.getElementById('_prompt-inp')?.value||'';
+      d.close();yes.onclick=null;no.onclick=null;
+      document.getElementById('confirm-msg').textContent='';
+      yes.textContent='Delete';no.textContent='Cancel';
+      res(ok?val:null);
+    }
+    yes.onclick=function(){done(true);};
+    no.onclick=function(){done(false);};
+    d.showModal();
+    setTimeout(()=>{const inp=document.getElementById('_prompt-inp');if(inp){inp.focus();inp.select();}},30);
+  });
+}
+
+
 init();
 
 // Wire dialogs after page load
@@ -2554,7 +2629,7 @@ document.addEventListener('mousedown', function(e) {
   const tag = e.target.tagName;
   if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') {
     const el = e.target;
-    setTimeout(function() { el.focus(); }, 0);
+    el.focus();
   }
 }, {capture: true});
 
@@ -3015,7 +3090,7 @@ async function startRecording() {
     cleanupVoiceUI();
     if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
       if (!aiOpen) toggleAI();
-      addAIMessage('ai', '🎤 Microphone access denied. Please allow microphone access in your browser — look for the camera/mic icon in the address bar and click "Allow", then try again.');
+      addAIMessage('ai', '🎤 Microphone access denied by your OS or browser. Fix: go to Windows Settings → Privacy & Security → Microphone → turn on "Let desktop apps access your microphone". Then restart the app.');
     } else if (err.name === 'NotFoundError') {
       if (!aiOpen) toggleAI();
       addAIMessage('ai', 'No microphone found. Plug one in and try again.');
@@ -3056,36 +3131,49 @@ async function processAudio(apiKey, mimeType) {
 
   try {
     const blob = new Blob(audioChunks, { type: mimeType || 'audio/webm' });
+    const reader = new FileReader();
 
-    // Determine file extension from mime type
-    const ext = mimeType?.includes('mp4') ? 'mp4'
-               : mimeType?.includes('ogg') ? 'ogg'
-               : 'webm';
+    reader.onloadend = async () => {
+      const base64 = reader.result.split(',')[1];
+      
+      let transcribedText = '';
 
-    const formData = new FormData();
-    formData.append('file', blob, `audio.${ext}`);
-    formData.append('model', 'whisper-1');
+      // Direct Whisper API call from browser
+      try {
+        const formData = new FormData();
+        formData.append('file', blob, 'audio.webm');
+        formData.append('model', 'whisper-1');
+        const whisperResp = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + apiKey },
+          body: formData
+        });
+        const whisperData = await whisperResp.json();
+        if (whisperData.text) {
+          transcribedText = whisperData.text.trim();
+        } else if (whisperData.error) {
+          addAIMessage('ai', 'Transcription error: ' + (whisperData.error.message || JSON.stringify(whisperData.error)));
+          document.getElementById('ai-status').textContent = 'Ready';
+          return;
+        }
+      } catch (e) {
+        addAIMessage('ai', 'Transcription failed: ' + e.message);
+        document.getElementById('ai-status').textContent = 'Ready';
+        return;
+      }
 
-    const res = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${apiKey}` },
-      body: formData
-    });
+      if (transcribedText) {
+        document.getElementById('ai-input').value = transcribedText;
+        autoResizeAI(document.getElementById('ai-input'));
+        document.getElementById('ai-status').textContent = 'Transcribed — sending…';
+        // Brief pause so user can see what was transcribed, then auto-send
+        setTimeout(() => sendAI(), 500);
+      } else {
+        document.getElementById('ai-status').textContent = 'Ready';
+      }
+    };
 
-    const result = await res.json();
-
-    if (result.text) {
-      const transcribedText = result.text.trim();
-      document.getElementById('ai-input').value = transcribedText;
-      autoResizeAI(document.getElementById('ai-input'));
-      document.getElementById('ai-status').textContent = 'Transcribed — sending…';
-      setTimeout(() => sendAI(), 500);
-    } else if (result.error) {
-      addAIMessage('ai', 'Transcription error: ' + (result.error.message || JSON.stringify(result.error)) + '. Try typing your request instead.');
-      document.getElementById('ai-status').textContent = 'Ready';
-    } else {
-      document.getElementById('ai-status').textContent = 'Ready';
-    }
+    reader.readAsDataURL(blob);
 
   } catch (e) {
     document.getElementById('ai-status').textContent = 'Ready';
@@ -3094,7 +3182,10 @@ async function processAudio(apiKey, mimeType) {
 }
 
 
-// ── SETTINGS HELPERS ──────────────────────────────────────────────────────────
+// ── SETTINGS HELPERS (Supabase version) ──────────────────────────────────────
+function changeLocalBackupPath(){ }
+function openBackupInExplorer(){ }
+function updateBackupPathDisplay(){ }
 
 function exportDataJSON(){
   const blob = new Blob([JSON.stringify(S, null, 2)], {type:'application/json'});
@@ -3195,7 +3286,7 @@ function updateNoteField(id, field, value){
 }
 
 async function deleteNote(id){
-  if(!await Promise.resolve(confirm('Delete this note?'))) return;
+  if(!await (appConfirm('Delete this note?'))) return;
   S.notes = S.notes.filter(n=>n.id!==id);
   renderNotes();
   scheduleSave();
