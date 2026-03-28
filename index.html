@@ -4,8 +4,6 @@
 <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Action Board — Vanderbyl Labs</title>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Action Board — Vanderbyl Labs</title>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'"/>
@@ -68,9 +66,16 @@ input,textarea,select{
 }
 .tb-logo{
   display:flex;flex-direction:column;line-height:1;margin-right:18px;
+  -webkit-app-region:drag;cursor:grab;
   flex-shrink:0;
 }
-
+.tb-logo span{-webkit-app-region:no-drag;pointer-events:none}
+.tb-drag-spacer{
+  flex:1;
+  -webkit-app-region:drag;
+  height:100%;
+  min-width:20px;
+}
 .logo{font-size:16px;font-weight:800;color:var(--accent);margin-right:18px;user-select:none}
 .navtabs{display:flex;gap:2px;user-select:none}
 .navtab{
@@ -633,7 +638,7 @@ html,body{height:100%;margin:0;padding:0}
     <button class="navtab"     onclick="switchView('notes',this)">Notes</button>
     <button class="navtab"     onclick="switchView('settings',this)">Settings</button>
   </div>
-  <div style="flex:1"></div>
+  <div class="tb-drag-spacer"></div>
   <div class="tb-right" style="-webkit-app-region:no-drag">
     <span class="save-status" id="save-status"></span>
     <div class="sync-indicator" id="sync-indicator" style="display:none"><div class="sync-dot green" id="sync-dot"></div><span id="sync-label">Synced</span></div>
@@ -1195,7 +1200,8 @@ async function doSave(){
     S.lastSaved = payload.lastSaved;
     setSyncStatus('synced');
     setSaveStatus('Synced ✓');
-    setTimeout(()=>setSaveStatus(''),2000););
+    setTimeout(()=>setSaveStatus(''),2000);
+);
     }
   } catch(e){
     console.error('Save error:', e.message);
@@ -2371,7 +2377,7 @@ async function testAnthropicKey() {
     if (data.content) {
       alert('✓ API key works! AI assistant is ready.');
     } else {
-      alert('✕ Error: ' + (data.error?.message || JSON.stringify(data))); else alert('✕ Error: ' + (data.error?.message || JSON.stringify(data)));
+      /* removed */; else alert('✕ Error: ' + (data.error?.message || JSON.stringify(data)));
     }
   } catch(e) {
     alert('✕ Connection failed: ' + e.message);
@@ -3081,9 +3087,7 @@ async function processAudio(apiKey, mimeType) {
         fd.append('file', blob, 'audio.webm');
         fd.append('model', 'whisper-1');
         const wr = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-          method: 'POST',
-          headers: { 'Authorization': 'Bearer ' + apiKey },
-          body: fd
+          method: 'POST', headers: {'Authorization': 'Bearer ' + apiKey}, body: fd
         });
         const wd = await wr.json();
         if (wd.text) { transcribedText = wd.text.trim(); }
