@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Action Board — Vanderbyl Labs</title>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Action Board — Vanderbyl Labs</title>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'"/>
@@ -14,7 +14,6 @@ input,textarea,select{
   -webkit-user-select:text;
   user-select:text;
   pointer-events:auto;
-  -webkit-app-region:no-drag;
   cursor:text;
 }
 button{ user-select:none; cursor:pointer; }
@@ -59,20 +58,12 @@ input,textarea,select{
   display:flex;align-items:center;padding:0 12px;gap:3px;
   flex-shrink:0;position:relative;z-index:100;
 }
-/* All interactive TB elements must explicitly opt out of drag */
-.navtab,.tb-right,.winbtns,.wbtn,.search-wrap,.search-inp,
-#save-status,#sync-indicator,#signout-btn{
-  -webkit-app-region:no-drag;
-}
 .tb-logo{
   display:flex;flex-direction:column;line-height:1;margin-right:18px;
-  -webkit-app-region:drag;cursor:grab;
   flex-shrink:0;
 }
-.tb-logo span{-webkit-app-region:no-drag;pointer-events:none}
 .tb-drag-spacer{
   flex:1;
-  -webkit-app-region:drag;
   height:100%;
   min-width:20px;
 }
@@ -555,6 +546,15 @@ canvas{display:block;cursor:crosshair;touch-action:none}
 .saved-tag .tag-del:hover{color:var(--pri-high)}
 
 
+/* ── ARCHIVE ── */
+.archive-card{background:var(--bg4);border:1px solid var(--border);border-radius:var(--r);padding:10px 14px;display:flex;align-items:center;gap:12px}
+.archive-card:hover{background:var(--bg3)}
+/* ── HABITS ── */
+.habit-cell{width:13px;height:13px;border-radius:2px;cursor:pointer;flex-shrink:0}
+.habit-cell.done{background:var(--accent)}
+.habit-cell.empty{background:var(--bg2);border:1px solid var(--border)}
+.habit-cell:hover{opacity:.7}
+.habit-month-label{font-size:10px;font-weight:700;color:var(--text4);margin-bottom:3px}
 /* ── SIDEBAR CROSS-TAB COUNTS ── */
 
 /* Native <dialog> - immune to Electron drag/focus interference */
@@ -563,10 +563,6 @@ dialog:not([open]){display:none!important}
 dialog.sm{width:440px}
 dialog.md{width:580px}
 dialog::backdrop{background:rgba(0,0,0,.38)}
-
-/* web */
-html,body{height:100%;margin:0;padding:0}
-#app{height:100vh}
 </style>
 </head>
 <body>
@@ -630,16 +626,18 @@ html,body{height:100%;margin:0;padding:0}
     <span style="font-size:16px;font-weight:800;color:var(--accent);letter-spacing:-.01em">◈ Action Board</span>
     <span style="font-size:9px;font-weight:500;color:var(--text4);text-transform:uppercase;margin-top:1px">by Vanderbyl Labs</span>
   </div>
-  <div class="navtabs" style="-webkit-app-region:no-drag">
+  <div class="navtabs" style="">
     <button class="navtab on"  onclick="switchView('board',this)">Board</button>
     <button class="navtab"     onclick="switchView('focus',this)">Focus</button>
     <button class="navtab"     onclick="switchView('calendar',this)">Calendar</button>
     <button class="navtab"     onclick="switchView('learning',this)">Learning</button>
     <button class="navtab"     onclick="switchView('notes',this)">Notes</button>
+    <button class="navtab"     onclick="switchView('archive',this)">Archive</button>
+    <button class="navtab"     onclick="switchView('habits',this)">Habits</button>
     <button class="navtab"     onclick="switchView('settings',this)">Settings</button>
   </div>
   <div class="tb-drag-spacer"></div>
-  <div class="tb-right" style="-webkit-app-region:no-drag">
+  <div class="tb-right" style="">
     <span class="save-status" id="save-status"></span>
     <div class="sync-indicator" id="sync-indicator" style="display:none"><div class="sync-dot green" id="sync-dot"></div><span id="sync-label">Synced</span></div>
     <div class="search-wrap">
@@ -649,7 +647,7 @@ html,body{height:100%;margin:0;padding:0}
       <div class="search-drop" id="search-drop"></div>
     </div>
     <button onclick="signOut()" id="signout-btn" style="display:none;font-size:11px;font-weight:600;padding:4px 10px;border:1px solid var(--border);border-radius:var(--rs);background:transparent;cursor:pointer;color:var(--text3);font-family:var(--font)" title="Sign out">Sign out</button>
-    <div class="winbtns" id="winbtns" style="-webkit-app-region:no-drag"></div>
+    <div class="winbtns" id="winbtns" style=""></div>
   </div>
 </div>
 
@@ -758,6 +756,23 @@ html,body{height:100%;margin:0;padding:0}
       <div id="notes-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px"></div>
     </div>
 
+    <div id="view-archive" class="view-wrap" style="display:none">
+      <div class="view-title">Archive</div>
+      <div class="view-sub">Archived tasks. Restore them to the board or delete permanently.</div>
+      <div id="archive-grid" style="display:flex;flex-direction:column;gap:8px"></div>
+    </div>
+    <div id="view-habits" class="view-wrap" style="display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px">
+        <div><div class="view-title">Habits</div><div class="view-sub" style="margin-bottom:0">Click any day to mark it done.</div></div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <button class="btn" onclick="habitNavYear(-1)">← Prev</button>
+          <span id="habit-year-label" style="font-size:16px;font-weight:700;color:var(--text)"></span>
+          <button class="btn" onclick="habitNavYear(1)">Next →</button>
+        </div>
+      </div>
+      <div id="habits-stats" style="display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap"></div>
+      <div id="habits-grid" style="overflow-x:auto"></div>
+    </div>
     <div id="view-settings" class="view-wrap" style="display:none">
       <div class="view-title">Settings</div>
       <div class="view-sub">Storage, backup, and app configuration.</div>
@@ -790,7 +805,7 @@ html,body{height:100%;margin:0;padding:0}
     <div>
       <label class="flabel" for="f-notes">Notes</label>
       <textarea id="f-notes" rows="4" placeholder="Details, links, context…"></textarea>
-      <div class="hint">Auto-saved and backed up to external drive.</div>
+      <div class="hint">Auto-saved and synced to cloud.</div>
     </div>
     <div class="g3">
       <div>
@@ -1201,8 +1216,7 @@ async function doSave(){
     setSyncStatus('synced');
     setSaveStatus('Synced ✓');
     setTimeout(()=>setSaveStatus(''),2000);
-);
-    }
+
   } catch(e){
     console.error('Save error:', e.message);
     setSyncStatus('error');
@@ -2202,7 +2216,6 @@ function deleteCurrentCat(){
 // SETTINGS
 // ════════════════════════════════════════════════
 function renderSettings(){
-  const isE = false;
   const syncDot = document.getElementById('sync-dot');
   const syncState = syncDot?.classList.contains('green') ? 'synced'
     : syncDot?.classList.contains('red') ? 'error' : 'pending';
@@ -2263,7 +2276,7 @@ function renderSettings(){
     <div class="info-block" style="border-color:var(--accent);background:rgba(99,102,241,.06);font-size:12px;line-height:1.7">
       <strong style="color:var(--accent)">✦ AI + Voice Setup</strong><br/>
       AI chat: Anthropic key. Voice transcription: OpenAI key (Whisper).<br/>
-      Keys stored only on your PC — never sent to cloud.
+      Keys stored only in your browser — never sent to cloud.
     </div>
     <div style="display:flex;flex-direction:column;gap:12px;margin-top:10px">
       <div>
@@ -2300,7 +2313,6 @@ function renderSettings(){
     </div>
   </div>`;
 
-  // After render, load async fields
 }
 
 function toggleInputType(id){
@@ -2316,7 +2328,7 @@ function switchView(v,btn){
   curView=v;
   document.querySelectorAll('.navtab').forEach(b=>b.classList.remove('on'));
   btn.classList.add('on');
-  ['board','focus','calendar','learning','notes','settings'].forEach(id=>{
+  ['board','focus','calendar','learning','notes','archive','habits','settings'].forEach(id=>{
     const el=document.getElementById(`view-${id}`);
     if(el) el.style.display=id===v?(id==='board'?'flex':'block'):'none';
   });
@@ -2351,7 +2363,7 @@ function startClock(){
   tick();
 }
 
-function setupWin(){ const w=document.getElementById("winbtns"); if(w) w.style.display="none"; }
+function setupWin(){}
 
 async function testAnthropicKey() {
   const key = (localStorage.getItem('anthropic_key')||'').trim();
@@ -2377,7 +2389,7 @@ async function testAnthropicKey() {
     if (data.content) {
       alert('✓ API key works! AI assistant is ready.');
     } else {
-      /* removed */; else alert('✕ Error: ' + (data.error?.message || JSON.stringify(data)));
+      alert('✕ Error: ' + (data.error?.message || JSON.stringify(data)));
     }
   } catch(e) {
     alert('✕ Connection failed: ' + e.message);
@@ -2572,7 +2584,7 @@ document.addEventListener('mousedown', function(e) {
   const tag = e.target.tagName;
   if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') {
     const el = e.target;
-    el.focus();
+    setTimeout(function() { el.focus(); }, 0);
   }
 }, {capture: true});
 
@@ -3033,7 +3045,7 @@ async function startRecording() {
     cleanupVoiceUI();
     if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
       if (!aiOpen) toggleAI();
-      addAIMessage('ai', '🎤 Microphone access denied by your OS or browser. Fix: go to Windows Settings → Privacy & Security → Microphone → turn on "Let desktop apps access your microphone". Then restart the app.');
+      addAIMessage('ai', '🎤 Microphone access denied. Click the 🔒 or 🎤 icon in your browser address bar and allow microphone access, then try again.');
     } else if (err.name === 'NotFoundError') {
       if (!aiOpen) toggleAI();
       addAIMessage('ai', 'No microphone found. Plug one in and try again.');
@@ -3066,71 +3078,34 @@ function cleanupVoiceUI() {
 async function processAudio(apiKey, mimeType) {
   cleanupVoiceUI();
   document.getElementById('ai-status').textContent = 'Transcribing…';
-
-  if (!audioChunks.length) {
-    document.getElementById('ai-status').textContent = 'Ready';
-    return;
-  }
-
+  if (!audioChunks.length) { document.getElementById('ai-status').textContent = 'Ready'; return; }
   try {
+    const ext = mimeType?.includes('mp4')?'mp4':mimeType?.includes('ogg')?'ogg':'webm';
     const blob = new Blob(audioChunks, { type: mimeType || 'audio/webm' });
-    const reader = new FileReader();
-
-    reader.onloadend = async () => {
-      const base64 = reader.result.split(',')[1];
-      
-      let transcribedText = '';
-
-      // Direct Whisper API call
-      try {
-        const fd = new FormData();
-        fd.append('file', blob, 'audio.webm');
-        fd.append('model', 'whisper-1');
-        const wr = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-          method: 'POST', headers: {'Authorization': 'Bearer ' + apiKey}, body: fd
-        });
-        const wd = await wr.json();
-        if (wd.text) { transcribedText = wd.text.trim(); }
-        else if (wd.error) {
-          addAIMessage('ai', 'Transcription error: ' + (wd.error.message || JSON.stringify(wd.error)));
-          document.getElementById('ai-status').textContent = 'Ready'; return;
-        }
-      } catch (e) {
-        addAIMessage('ai', 'Transcription failed: ' + e.message);
-        document.getElementById('ai-status').textContent = 'Ready'; return;
-      }
-
-      if (transcribedText) {
-        document.getElementById('ai-input').value = transcribedText;
-        autoResizeAI(document.getElementById('ai-input'));
-        document.getElementById('ai-status').textContent = 'Transcribed — sending…';
-        // Brief pause so user can see what was transcribed, then auto-send
-        setTimeout(() => sendAI(), 500);
-      } else {
-        document.getElementById('ai-status').textContent = 'Ready';
-      }
-    };
-
-    reader.readAsDataURL(blob);
-
-  } catch (e) {
+    const fd = new FormData();
+    fd.append('file', blob, 'audio.' + ext);
+    fd.append('model', 'whisper-1');
+    const res = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+      method:'POST', headers:{'Authorization':'Bearer '+apiKey}, body:fd
+    });
+    const result = await res.json();
+    if (result.text) {
+      document.getElementById('ai-input').value = result.text.trim();
+      autoResizeAI(document.getElementById('ai-input'));
+      document.getElementById('ai-status').textContent = 'Transcribed — sending…';
+      setTimeout(() => sendAI(), 500);
+    } else {
+      if(result.error) addAIMessage('ai','Transcription error: '+(result.error.message||'unknown'));
+      document.getElementById('ai-status').textContent = 'Ready';
+    }
+  } catch(e) {
     document.getElementById('ai-status').textContent = 'Ready';
     addAIMessage('ai', 'Error processing audio: ' + e.message);
   }
 }
 
 
-// ── SETTINGS HELPERS (Supabase version) ──────────────────────────────────────
-function changeLocalBackupPath(){});
-  if(p) updateBackupPathDisplay();
-}
-
-function openBackupInExplorer(){});
-}
-
-function updateBackupPathDisplay(){});
-  el.textContent = p || 'Not set';
-}
+// ── SETTINGS HELPERS ──────────────────────────────────────────────────────────
 
 function exportDataJSON(){
   const blob = new Blob([JSON.stringify(S, null, 2)], {type:'application/json'});
@@ -3425,6 +3400,250 @@ function setTopicSector(topicId, sectorId){
   scheduleSave();
 }
 
+// ════════════════════════════════════════════════
+// ARCHIVE
+// ════════════════════════════════════════════════
+function archiveTask(id, e){
+  if(e) e.stopPropagation();
+  const t = S.tasks.find(x=>x.id===id); if(!t) return;
+  if(!S.archive) S.archive = [];
+  S.archive.unshift({...t, archivedAt: now()});
+  S.tasks = S.tasks.filter(x=>x.id!==id);
+  S.focusTasks = S.focusTasks.filter(f=>f!==id);
+  invalidateCardCache(); render(); scheduleSave();
+}
+
+function renderArchive(){
+  if(!S.archive) S.archive = [];
+  const grid = document.getElementById('archive-grid');
+  if(!grid) return;
+  if(!S.archive.length){
+    grid.innerHTML = '<div style="color:var(--text4);font-size:14px;padding:40px 0;text-align:center">No archived tasks yet. Use the 📦 button on any card to archive it.</div>';
+    return;
+  }
+  grid.innerHTML = S.archive.map(t=>{
+    const cat = catById(t.category);
+    const pc = PRI_COLOR[t.priority]||PRI_COLOR.med;
+    const archived = t.archivedAt ? new Date(t.archivedAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '';
+    return `<div class="archive-card">
+      <div style="width:4px;height:40px;border-radius:2px;background:${cat.color};flex-shrink:0"></div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:2px">${esc(t.title)}</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;font-size:11px">
+          <span style="color:${cat.color};font-weight:600">${esc(cat.label)}</span>
+          <span style="color:${pc};font-weight:600">${PRI_LABEL[t.priority]||'Med'}</span>
+          ${archived?`<span style="color:var(--text4)">Archived ${archived}</span>`:''}
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0">
+        <button class="btn" style="font-size:12px;color:var(--pri-low);border-color:var(--pri-low)" onclick="restoreTask('${t.id}')">↩ Restore</button>
+        <button class="btn danger" style="font-size:12px" onclick="permDeleteTask('${t.id}')">🗑 Delete</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function restoreTask(id){
+  if(!S.archive) return;
+  const t = S.archive.find(x=>x.id===id); if(!t) return;
+  const {archivedAt, ...task} = t;
+  task.status = task.status||'backlog';
+  S.tasks.push(task);
+  S.archive = S.archive.filter(x=>x.id!==id);
+  invalidateCardCache(); render(); scheduleSave();
+}
+
+function permDeleteTask(id){
+  if(!confirm('Permanently delete this task? This cannot be undone.')) return;
+  if(!S.archive) return;
+  S.archive = S.archive.filter(x=>x.id!==id);
+  renderArchive(); scheduleSave();
+}
+
+// ════════════════════════════════════════════════
+// HABITS
+// ════════════════════════════════════════════════
+let habitYear = new Date().getFullYear();
+
+function habitNavYear(d){
+  habitYear += d;
+  renderHabits();
+}
+
+function renderHabits(){
+  if(!S.habits) S.habits = {};
+  const el = document.getElementById('habits-grid');
+  const statsEl = document.getElementById('habits-stats');
+  const labelEl = document.getElementById('habit-year-label');
+  if(!el) return;
+  if(labelEl) labelEl.textContent = habitYear;
+
+  // Count stats for this year
+  const yearKeys = Object.keys(S.habits).filter(k=>k.startsWith(habitYear+'-') && S.habits[k]);
+  const total = yearKeys.length;
+  const today = new Date();
+  const dayOfYear = Math.floor((today - new Date(habitYear,0,0)) / 86400000);
+  const pct = habitYear === today.getFullYear() ? Math.round(total/Math.max(dayOfYear,1)*100) : Math.round(total/365*100);
+
+  if(statsEl) statsEl.innerHTML = `
+    <div style="background:var(--bg4);border:1px solid var(--border);border-radius:var(--r);padding:12px 18px;text-align:center">
+      <div style="font-size:28px;font-weight:800;color:var(--accent)">${total}</div>
+      <div style="font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase">Days Done</div>
+    </div>
+    <div style="background:var(--bg4);border:1px solid var(--border);border-radius:var(--r);padding:12px 18px;text-align:center">
+      <div style="font-size:28px;font-weight:800;color:var(--pri-low)">${pct}%</div>
+      <div style="font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase">Completion</div>
+    </div>`;
+
+  // Build 53-week grid (GitHub style)
+  const jan1 = new Date(habitYear, 0, 1);
+  const startOffset = jan1.getDay(); // 0=Sun
+  const daysInYear = ((habitYear%4===0&&habitYear%100!==0)||habitYear%400===0) ? 366 : 365;
+
+  // Build month labels row
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  let monthHTML = '<div style="display:grid;grid-template-columns:repeat(53,13px);gap:2px;margin-bottom:4px">';
+  let monthCols = new Array(53).fill('');
+  let d = new Date(habitYear,0,1);
+  for(let w=0;w<53;w++){
+    const dayNum = w*7 - startOffset;
+    if(dayNum >= 0 && dayNum < daysInYear){
+      const date = new Date(habitYear,0,1+dayNum);
+      if(date.getDate() <= 7) monthCols[w] = months[date.getMonth()];
+    }
+  }
+  monthHTML += monthCols.map(m=>`<div style="font-size:9px;font-weight:700;color:var(--text4);height:12px;overflow:hidden">${m}</div>`).join('');
+  monthHTML += '</div>';
+
+  // Build cells
+  let gridHTML = '<div style="display:grid;grid-template-columns:repeat(53,13px);gap:2px">';
+  for(let w=0;w<53;w++){
+    for(let dow=0;dow<7;dow++){
+      const dayIndex = w*7 + dow - startOffset;
+      if(dayIndex < 0 || dayIndex >= daysInYear){
+        gridHTML += '<div style="width:13px;height:13px"></div>';
+        continue;
+      }
+      const date = new Date(habitYear, 0, 1+dayIndex);
+      const key = date.toISOString().slice(0,10);
+      const done = !!S.habits[key];
+      const isFuture = date > today;
+      const title = key;
+      gridHTML += `<div class="habit-cell ${done?'done':'empty'}" ${isFuture?'style="opacity:.3"':''} onclick="toggleHabit('${key}')" title="${title}"></div>`;
+    }
+  }
+  gridHTML += '</div>';
+
+  el.innerHTML = monthHTML + gridHTML;
+}
+
+function toggleHabit(key){
+  if(!S.habits) S.habits = {};
+  if(S.habits[key]) delete S.habits[key];
+  else S.habits[key] = true;
+  renderHabits(); scheduleSave();
+}
+
+// ════════════════════════════════════════════════
+// AI POPULATE LEARNING CURRICULUM
+// ════════════════════════════════════════════════
+async function aiPopulateTopic(topicId){
+  if(!anthropicKey){
+    alert('Add your Anthropic API key in Settings first.');
+    return;
+  }
+  const topic = S.learningTopics.find(t=>t.id===topicId);
+  if(!topic) return;
+  const btn = document.getElementById('ai-pop-'+topicId);
+  if(btn){ btn.textContent='Generating…'; btn.disabled=true; }
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':anthropicKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514', max_tokens:1500,
+        messages:[{role:'user', content:`Create a practical learning curriculum for: "${topic.name}".
+Return ONLY a JSON object like:
+{"items":[{"text":"Module title","note":"Free resource URL or tip","priority":"high|med|low"}],"resources":[{"title":"Resource name","url":"https://...","type":"🌐|📖|🎬|📝"}]}
+Include 6-10 items ordered from beginner to advanced. Include 3-4 free online resources. Real URLs only.`}]
+      })
+    });
+    const data = await res.json();
+    const text = data.content?.[0]?.text || '';
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if(!jsonMatch) throw new Error('No JSON in response');
+    const result = JSON.parse(jsonMatch[0]);
+    if(result.items?.length){
+      result.items.forEach(item=>{
+        topic.items.push({id:uid(), text:item.text, done:false, priority:item.priority||'med', note:item.note||''});
+      });
+    }
+    if(result.resources?.length){
+      if(!topic.resources) topic.resources=[];
+      result.resources.forEach(r=>{
+        topic.resources.push({id:uid(), title:r.title, url:r.url, type:r.type||'🌐'});
+      });
+    }
+    renderLearning(); scheduleSave();
+  } catch(e){
+    alert('AI populate failed: '+e.message);
+    if(btn){ btn.textContent='✦ AI Populate'; btn.disabled=false; }
+  }
+}
+
+// Patch renderLearning to add AI Populate button to each card header
+const _origCardRenderForAI = renderLearning;
+
+// Add archive button to cardHTML — patch after init
+const _origCardHTML = cardHTML;
+function cardHTML(t){
+  const html = _origCardHTML(t);
+  // Insert archive button next to delete button
+  return html.replace(
+    `<button class="cbtn" onclick="quickDeleteTask('${t.id}',event)" title="Delete task" style="color:var(--pri-high);opacity:.6">🗑</button>`,
+    `<button class="cbtn" onclick="archiveTask('${t.id}',event)" title="Archive task" style="color:var(--text4)">📦</button><button class="cbtn" onclick="quickDeleteTask('${t.id}',event)" title="Delete task" style="color:var(--pri-high);opacity:.6">🗑</button>`
+  );
+}
+
+// Wire render to also call archive/habits when viewing those tabs
+const _origRender = render;
+function render(){
+  _origRender();
+  if(curView==='archive') renderArchive();
+  if(curView==='habits') renderHabits();
+}
+
+// Patch the learning render to add AI Populate button
+const _baseRenderLearning = renderLearning;
+function renderLearning(){
+  // Call the patched version (which handles sector filter)
+  _baseRenderLearning();
+  // Add AI Populate button to each learn card header
+  document.querySelectorAll('.learn-card').forEach(card=>{
+    const hdr = card.querySelector('.learn-card-hdr > div:last-child');
+    if(hdr && !hdr.querySelector('.ai-pop-btn')){
+      const topicId = card.querySelector('[onclick^="deleteTopic"]')?.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
+      if(topicId){
+        const btn = document.createElement('button');
+        btn.id = 'ai-pop-'+topicId;
+        btn.className = 'ai-pop-btn';
+        btn.title = 'AI generate curriculum';
+        btn.style.cssText = 'font-size:11px;font-weight:600;padding:2px 7px;border:1px solid var(--accent);border-radius:var(--rs);background:transparent;color:var(--accent);cursor:pointer;font-family:var(--font)';
+        btn.textContent = '✦ AI Populate';
+        btn.onclick = ()=>aiPopulateTopic(topicId);
+        hdr.insertBefore(btn, hdr.firstChild);
+      }
+    }
+  });
+}
+
+// Ensure archive and habits are initialised on load
+const _origEnsureStateFields = ensureStateFields;
+function ensureStateFields(){
+  _origEnsureStateFields();
+  if(!S.archive) S.archive = [];
+  if(!S.habits) S.habits = {};
+}
 
 </script>
 
