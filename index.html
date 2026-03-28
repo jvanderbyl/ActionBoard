@@ -561,6 +561,149 @@ dialog:not([open]){display:none!important}
 dialog.sm{width:440px}
 dialog.md{width:580px}
 dialog::backdrop{background:rgba(0,0,0,.38)}
+
+/* ═══════════════ MOBILE / IPHONE ═══════════════ */
+@media (max-width: 768px) {
+  /* Hide sidebar, full-width main */
+  #sidebar { display: none !important; }
+  #main    { margin-left: 0 !important; width: 100vw !important; }
+
+  /* Topbar */
+  .topbar  { padding: 0 8px !important; height: 44px !important; position: sticky; top: 0; z-index: 200; }
+  .tb-logo { font-size: 13px !important; }
+
+  /* Nav tabs: horizontal scroll */
+  .navtabs { overflow-x: auto !important; -webkit-overflow-scrolling: touch; flex-wrap: nowrap !important; gap: 0 !important; scrollbar-width: none; }
+  .navtabs::-webkit-scrollbar { display: none; }
+  .navtab  { font-size: 11px !important; padding: 6px 9px !important; white-space: nowrap; flex-shrink: 0 !important; }
+
+  /* Board: horizontal scroll */
+  #board-wrap { overflow-x: auto !important; -webkit-overflow-scrolling: touch; }
+  #board { display: flex !important; flex-wrap: nowrap !important; padding: 8px !important; gap: 8px !important; min-height: calc(100svh - 88px); }
+  .column { min-width: 255px !important; max-width: 275px !important; flex-shrink: 0 !important; }
+  .cards-list { max-height: calc(100svh - 180px) !important; overflow-y: auto !important; -webkit-overflow-scrolling: touch; }
+
+  /* Touch-friendly buttons */
+  .cbtn { min-width: 30px !important; min-height: 30px !important; font-size: 14px !important; }
+  .col-add { min-width: 30px !important; min-height: 30px !important; }
+  .card { padding: 10px 12px !important; }
+  .c-title { font-size: 13px !important; }
+
+  /* Toolbar: horizontal scroll */
+  #toolbar, #lb-toolbar { overflow-x: auto !important; -webkit-overflow-scrolling: touch; flex-wrap: nowrap !important; scrollbar-width: none; }
+  #toolbar::-webkit-scrollbar, #lb-toolbar::-webkit-scrollbar { display: none; }
+  .tbb { white-space: nowrap; flex-shrink: 0 !important; font-size: 12px !important; padding: 5px 10px !important; }
+
+  /* Views */
+  .view-wrap { padding: 12px !important; }
+
+  /* Modals: slide up from bottom */
+  dialog {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: auto !important;
+    border-radius: 18px 18px 0 0 !important;
+    max-height: 92svh !important;
+    overflow-y: auto !important;
+    border: none !important;
+    border-top: 1px solid var(--border) !important;
+  }
+  .mhdr  { padding: 14px 16px 8px !important; }
+  .mbody { padding: 10px 16px !important; gap: 10px !important; }
+  .mfoot { padding: 10px 16px env(safe-area-inset-bottom, 16px) !important; }
+
+  /* CRITICAL: 16px font on inputs prevents iOS auto-zoom */
+  input, textarea, select {
+    font-size: 16px !important;
+  }
+  .btn { padding: 9px 14px !important; min-height: 38px !important; font-size: 13px !important; }
+
+  /* Settings: single column */
+  #settings-grid { grid-template-columns: 1fr !important; gap: 16px !important; }
+  #prefs-section > div { grid-template-columns: 1fr !important; }
+
+  /* g2 two-column grids: stack vertically */
+  .g2 { grid-template-columns: 1fr !important; }
+
+  /* AI panel: full-screen */
+  #ai-panel {
+    width: 100% !important;
+    max-width: 100% !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    top: auto !important;
+    height: 85svh !important;
+    border-radius: 18px 18px 0 0 !important;
+    border: none !important;
+    border-top: 1px solid var(--border) !important;
+  }
+
+  /* Archive cards: stack */
+  .archive-card { flex-wrap: wrap !important; gap: 8px !important; }
+  .archive-card > div:last-child { width: 100% !important; justify-content: flex-end; }
+
+  /* Calendar */
+  .cal-nav { gap: 6px !important; }
+  .cal-day  { min-height: 44px !important; font-size: 11px !important; }
+  .cal-ev   { font-size: 10px !important; padding: 1px 3px !important; }
+
+  /* Habits: horizontal scroll */
+  #habits-grid > div { overflow-x: auto !important; -webkit-overflow-scrolling: touch; }
+
+  /* Learn board: no sidebar */
+  #lb-sidebar-inner, #task-sidebar-inner { display: none !important; }
+  #lb-board-wrap { overflow-x: auto !important; }
+  .lb-col { min-width: 255px !important; flex-shrink: 0 !important; }
+
+  /* Mobile sidebar toggle button */
+  #mob-sidebar-btn {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 34px; height: 34px;
+    border: 1px solid var(--border);
+    border-radius: var(--rs);
+    background: var(--bg3);
+    cursor: pointer;
+    font-size: 16px;
+    margin-right: 6px;
+    flex-shrink: 0;
+  }
+
+  /* Mobile sidebar overlay */
+  #sidebar.mob-open {
+    display: flex !important;
+    position: fixed !important;
+    top: 0 !important; left: 0 !important;
+    width: 80vw !important;
+    max-width: 300px !important;
+    height: 100svh !important;
+    z-index: 300 !important;
+    box-shadow: 4px 0 24px rgba(0,0,0,.25) !important;
+    overflow-y: auto !important;
+  }
+  #mob-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.4);
+    z-index: 299;
+  }
+  #mob-overlay.show { display: block; }
+}
+
+/* Desktop: hide mobile-only elements */
+@media (min-width: 769px) {
+  #mob-sidebar-btn { display: none !important; }
+  #mob-overlay     { display: none !important; }
+}
 </style>
 </head>
 <body>
@@ -620,6 +763,7 @@ dialog::backdrop{background:rgba(0,0,0,.38)}
 
 <!-- TITLEBAR -->
 <div id="tb">
+  <button id="mob-sidebar-btn" onclick="mobToggleSidebar()" title="Sectors">☰</button>
   <div class="tb-logo">
     <span style="font-size:16px;font-weight:800;color:var(--accent);letter-spacing:-.01em">◈ Action Board</span>
     <span style="font-size:9px;font-weight:500;color:var(--text4);text-transform:uppercase;margin-top:1px">by Vanderbyl Labs</span>
@@ -5101,6 +5245,33 @@ openCalEventEdit = function(id) {
     sel.value = ev.sectorId || '';
   }
 };
+
+
+// ── Mobile sidebar toggle ──
+function mobToggleSidebar() {
+  var sb = document.getElementById('sidebar');
+  var ov = document.getElementById('mob-overlay');
+  if (!sb) return;
+  var isOpen = sb.classList.contains('mob-open');
+  sb.classList.toggle('mob-open', !isOpen);
+  if (ov) ov.classList.toggle('show', !isOpen);
+  document.body.style.overflow = isOpen ? '' : 'hidden';
+}
+function mobCloseSidebar() {
+  var sb = document.getElementById('sidebar');
+  var ov = document.getElementById('mob-overlay');
+  if (sb) sb.classList.remove('mob-open');
+  if (ov) ov.classList.remove('show');
+  document.body.style.overflow = '';
+}
+// Close sidebar when a sector/category is clicked on mobile
+var _origRenderSidebar = typeof renderSidebar === 'function' ? renderSidebar : null;
+if (window.innerWidth <= 768) {
+  document.addEventListener('click', function(e) {
+    var btn = e.target.closest('.catbtn');
+    if (btn) mobCloseSidebar();
+  });
+}
 
 </script>
 </body>
