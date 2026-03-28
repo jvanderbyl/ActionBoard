@@ -3239,32 +3239,29 @@ function deleteGlobalTag(tag){
   scheduleSave();
 }
 
-// Patch addTag to save to globalTags
-const _origAddTag = addTag;
-function addTag(){
+// addTag with globalTags support — replaces the earlier addTag definition
+function addTagWithGlobals(){
   const inp = document.getElementById('f-tag');
   const t = inp.value.trim().toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'');
   if(t && !curTags.includes(t)){
     curTags.push(t);
     renderTags();
-    // Save to global tags if not already there
-    if(!S.globalTags.includes(t)){
-      S.globalTags.push(t);
-      S.globalTags.sort();
-    }
+    if(!S.globalTags.includes(t)){ S.globalTags.push(t); S.globalTags.sort(); }
   }
   inp.value=''; inp.focus();
   renderTagManager();
 }
+// Override addTag globally
+addTag = addTagWithGlobals;
 
 // ════════════════════════════════════════════════
 // LEARNING — SECTOR FILTER
 // ════════════════════════════════════════════════
 let learningSectorFilter = 'all';
 
-// Patch renderLearning to add sector filter bar at top
+// renderLearning with sector filter bar — replaces the base renderLearning
 const _origRenderLearning = renderLearning;
-function renderLearning(){
+function renderLearningWithSectorFilter(){
   const grid = document.getElementById('learn-grid');
   if(!grid) return;
 
@@ -3313,7 +3310,7 @@ function renderLearning(){
     return;
   }
 
-  // Render only filtered topics — reuse existing renderLearning logic
+  // Render only filtered topics
   grid.innerHTML = topics.map(topic=>{
     const total=topic.items.length, done=topic.items.filter(i=>i.done).length;
     const pct=total?Math.round(done/total*100):0;
@@ -3381,7 +3378,8 @@ function renderLearning(){
     </div>`;
   }).join('');
 }
-
+// Override renderLearning with the sector-filtered version
+renderLearning = renderLearningWithSectorFilter;
 function setLearningSector(id){
   learningSectorFilter = id;
   notesSectorFilter = id;
@@ -3594,56 +3592,74 @@ Include 6-10 items ordered from beginner to advanced. Include 3-4 free online re
 // Patch renderLearning to add AI Populate button to each card header
 const _origCardRenderForAI = renderLearning;
 
-// Add archive button to cardHTML — patch after init
-const _origCardHTML = cardHTML;
-function cardHTML(t){
-  const html = _origCardHTML(t);
-  // Insert archive button next to delete button
-  return html.replace(
-    `<button class="cbtn" onclick="quickDeleteTask('${t.id}',event)" title="Delete task" style="color:var(--pri-high);opacity:.6">🗑</button>`,
-    `<button class="cbtn" onclick="archiveTask('${t.id}',event)" title="Archive task" style="color:var(--text4)">📦</button><button class="cbtn" onclick="quickDeleteTask('${t.id}',event)" title="Delete task" style="color:var(--pri-high);opacity:.6">🗑</button>`
-  );
-}
+// ── PATCH: add archive button to cards, archive/habits to render, AI populate to learning
+// All patches applied after page load to avoid duplicate declaration errors
+window.addEventListener('DOMContentLoaded', function(){
 
-// Wire render to also call archive/habits when viewing those tabs
-const _origRender = render;
-function render(){
-  _origRender();
-  if(curView==='archive') renderArchive();
-  if(curView==='habits') renderHabits();
-}
+  // Patch cardHTML to add archive button
+  const _origCardHTML = cardHTML;
+  window.cardHTML = function(t){
+    const html = _origCardHTML(t);
+    return html.replace(
+      `<button class="cbtn" onclick="quickDeleteTask('${t.id}',event)" title="Delete task" style="color:var(--pri-high);opacity:.6">🗑</button>`,
+      `<button class="cbtn" onclick="archiveTask('${t.id}',event)" title="Archive task" style="color:var(--text4)">📦</button><button class="cbtn" onclick="quickDeleteTask('${t.id}',event)" title="Delete task" style="color:var(--pri-high);opacity:.6">🗑</button>`
+    );
+  };
 
-// Patch the learning render to add AI Populate button
-const _baseRenderLearning = renderLearning;
-function renderLearning(){
-  // Call the patched version (which handles sector filter)
-  _baseRenderLearning();
-  // Add AI Populate button to each learn card header
-  document.querySelectorAll('.learn-card').forEach(card=>{
-    const hdr = card.querySelector('.learn-card-hdr > div:last-child');
-    if(hdr && !hdr.querySelector('.ai-pop-btn')){
-      const topicId = card.querySelector('[onclick^="deleteTopic"]')?.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
-      if(topicId){
-        const btn = document.createElement('button');
-        btn.id = 'ai-pop-'+topicId;
-        btn.className = 'ai-pop-btn';
-        btn.title = 'AI generate curriculum';
-        btn.style.cssText = 'font-size:11px;font-weight:600;padding:2px 7px;border:1px solid var(--accent);border-radius:var(--rs);background:transparent;color:var(--accent);cursor:pointer;font-family:var(--font)';
-        btn.textContent = '✦ AI Populate';
-        btn.onclick = ()=>aiPopulateTopic(topicId);
-        hdr.insertBefore(btn, hdr.firstChild);
+  // Patch render to also handle archive/habits views
+  const _origRender = render;
+  window.render = function(){
+    _origRender();
+    if(curView==='archive') renderArchive();
+    if(curView==='habits') renderHabits();
+  };
+
+  // Patch renderLearning to add AI Populate buttons
+  const _origRL = renderLearning;
+  window.renderLearning = function(){
+    _origRL();
+    document.querySelectorAll('.learn-card').forEach(function(card){
+      const hdr = card.querySelector('.learn-card-hdr > div:last-child');
+      if(hdr && !hdr.querySelector('.ai-pop-btn')){
+        const delBtn = card.querySelector('[onclick^="deleteTopic"]');
+        const topicId = delBtn?.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
+        if(topicId){
+          const btn = document.createElement('button');
+          btn.id = 'ai-pop-'+topicId;
+          btn.className = 'ai-pop-btn';
+          btn.title = 'AI generate curriculum';
+          btn.style.cssText = 'font-size:11px;font-weight:600;padding:2px 7px;border:1px solid var(--accent);border-radius:var(--rs);background:transparent;color:var(--accent);cursor:pointer;font-family:var(--font)';
+          btn.textContent = '✦ AI Populate';
+          btn.onclick = function(){ aiPopulateTopic(topicId); };
+          hdr.insertBefore(btn, hdr.firstChild);
+        }
       }
-    }
-  });
-}
+    });
+  };
 
-// Ensure archive and habits are initialised on load
-const _origEnsureStateFields = ensureStateFields;
-function ensureStateFields(){
-  _origEnsureStateFields();
-  if(!S.archive) S.archive = [];
-  if(!S.habits) S.habits = {};
-}
+  // Patch ensureStateFields to init archive/habits
+  const _origESF = ensureStateFields;
+  window.ensureStateFields = function(){
+    _origESF();
+    if(!S.archive) S.archive = [];
+    if(!S.habits) S.habits = {};
+  };
+
+  // Patch addTag to also save global tags (replaces the duplicate declaration)
+  const _origAddTag = window.addTag;
+  window.addTag = function(){
+    const inp = document.getElementById('f-tag');
+    const t = inp.value.trim().toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'');
+    if(t && !curTags.includes(t)){
+      curTags.push(t);
+      renderTags();
+      if(!S.globalTags.includes(t)){ S.globalTags.push(t); S.globalTags.sort(); }
+    }
+    inp.value=''; inp.focus();
+    renderTagManager();
+  };
+
+});
 
 </script>
 
