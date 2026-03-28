@@ -2,10 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Action Board — Vanderbyl Labs</title>
-  <meta name="description" content="Personal productivity kanban board by Vanderbyl Labs"/>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>◈</text></svg>"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Action Board — Vanderbyl Labs</title>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -561,14 +559,12 @@ dialog.sm{width:440px}
 dialog.md{width:580px}
 dialog::backdrop{background:rgba(0,0,0,.38)}
 
-/* ── WEB VERSION ── */
-html, body { height: 100%; margin: 0; padding: 0; }
-#app { height: 100vh; }
-#tb { -webkit-app-region: no-drag; }  /* no drag in browser */
-
+/* web */
+html,body{height:100%;margin:0;padding:0}
+#app{height:100vh}
 </style>
 </head>
-<body style="margin:0;padding:0;overflow:hidden">
+<body>
 <!-- ═══════════════ AUTH SCREEN ═══════════════ -->
 <div id="auth-screen" style="display:none">
   <div class="auth-box" style="position:relative">
@@ -1199,15 +1195,13 @@ async function doSave(){
     S.lastSaved = payload.lastSaved;
     setSyncStatus('synced');
     setSaveStatus('Synced ✓');
-    setTimeout(()=>setSaveStatus(''),2000);
-
-
+    setTimeout(()=>setSaveStatus(''),2000););
+    }
   } catch(e){
     console.error('Save error:', e.message);
     setSyncStatus('error');
     setSaveStatus('Offline — saved locally');
     setTimeout(()=>setSaveStatus(''),3000);
-
     localStorage.setItem('actionboard-offline',JSON.stringify({...S,lastSaved:now()}));
   }
   clearTimeout(saveTimeout);
@@ -1798,7 +1792,7 @@ function saveTopic(){
   closeTopicModal();renderLearning();scheduleSave();
 }
 async function deleteTopic(id){
-  if(!await (appConfirm('Delete this topic?')))return;
+  if(!confirm('Delete this topic?'))return;
   S.learningTopics=S.learningTopics.filter(t=>t.id!==id);
   renderLearning();scheduleSave();
 }
@@ -1959,7 +1953,7 @@ function saveTask(){
 }
 
 async function deleteTask(){
-  if(!await (appConfirm('Delete this task?')))return;
+  if(!confirm('Delete this task?'))return;
   S.tasks=S.tasks.filter(t=>t.id!==editingId);
   S.focusTasks=S.focusTasks.filter(f=>f!==editingId);
   closeTaskModal();render();scheduleSave();
@@ -1968,7 +1962,7 @@ async function deleteTask(){
 // Quick delete from card (no modal needed)
 async function quickDeleteTask(id, e){
   if(e) e.stopPropagation();
-  if(!await (appConfirm('Delete this task?'))) return;
+  if(!confirm('Delete this task?')) return;
   S.tasks = S.tasks.filter(t => t.id !== id);
   S.focusTasks = S.focusTasks.filter(f => f !== id);
   render(); scheduleSave();
@@ -2202,7 +2196,7 @@ function deleteCurrentCat(){
 // SETTINGS
 // ════════════════════════════════════════════════
 function renderSettings(){
-  const isE = false; // web version
+  const isE = false;
   const syncDot = document.getElementById('sync-dot');
   const syncState = syncDot?.classList.contains('green') ? 'synced'
     : syncDot?.classList.contains('red') ? 'error' : 'pending';
@@ -2300,7 +2294,7 @@ function renderSettings(){
     </div>
   </div>`;
 
-
+  // After render, load async fields
 }
 
 function toggleInputType(id){
@@ -2351,13 +2345,11 @@ function startClock(){
   tick();
 }
 
-function setupWin(){
-  // web: no window chrome needed
-}
+function setupWin(){ const w=document.getElementById("winbtns"); if(w) w.style.display="none"; }
 
 async function testAnthropicKey() {
   const key = (localStorage.getItem('anthropic_key')||'').trim();
-  if (!key) { appAlert('No API key set.'); return; }
+  if (!key) { alert('No API key set.'); return; }
   const btn = document.querySelector('[onclick="testAnthropicKey()"]');
   if (btn) btn.textContent = 'Testing…';
   try {
@@ -2377,12 +2369,12 @@ async function testAnthropicKey() {
     });
     const data = await res.json();
     if (data.content) {
-      appAlert('✓ API key works!');
+      alert('✓ API key works! AI assistant is ready.');
     } else {
-      appAlert('✕ Error: ' + (data.error?.message || JSON.stringify(data)));
+      alert('✕ Error: ' + (data.error?.message || JSON.stringify(data))); else alert('✕ Error: ' + (data.error?.message || JSON.stringify(data)));
     }
   } catch(e) {
-    appAlert('✕ Connection failed: ' + e.message);
+    alert('✕ Connection failed: ' + e.message);
   }
   if (btn) btn.textContent = 'Test connection';
 }
@@ -2539,63 +2531,6 @@ function closeModal(id) {
 
 
 
-
-// ── IN-APP DIALOGS (web version — replaces native confirm/alert) ──────────────
-function appConfirm(msg, okLabel){
-  return new Promise(function(res){
-    const d=document.getElementById('confirm-dialog');
-    if(!d){res(window.confirm(msg));return;}
-    document.getElementById('confirm-msg').textContent=msg;
-    const yes=document.getElementById('confirm-yes');
-    const no=document.getElementById('confirm-no');
-    yes.textContent=okLabel||'Delete';
-    no.textContent='Cancel';
-    function done(v){d.close();yes.onclick=null;no.onclick=null;res(v);}
-    yes.onclick=function(){done(true);};
-    no.onclick=function(){done(false);};
-    d.showModal();
-  });
-}
-function appAlert(msg){
-  let el=document.getElementById('_toast');
-  if(!el){
-    el=document.createElement('div');
-    el.id='_toast';
-    el.style.cssText='position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg4);padding:10px 22px;border-radius:8px;font-size:13px;z-index:99999;pointer-events:none;opacity:0;transition:opacity .25s';
-    document.body.appendChild(el);
-  }
-  el.textContent=msg;el.style.opacity='1';
-  clearTimeout(el._t);el._t=setTimeout(()=>el.style.opacity='0',2800);
-}
-function appPrompt(msg,defaultVal){
-  return new Promise(function(res){
-    const d=document.getElementById('confirm-dialog');
-    if(!d){res(window.prompt(msg,defaultVal));return;}
-    const yes=document.getElementById('confirm-yes');
-    const no=document.getElementById('confirm-no');
-    yes.textContent='OK'; no.textContent='Cancel';
-    // Build input element via DOM (avoids quote escaping issues)
-    const msgEl=document.getElementById('confirm-msg');
-    msgEl.innerHTML=msg.replace(/\n/g,'<br/>');
-    const inp=document.createElement('input');
-    inp.type='text'; inp.value=defaultVal||'';
-    inp.style.cssText='margin-top:10px;width:100%;padding:8px 10px;font-size:13px;border:1px solid var(--border);border-radius:var(--rs);background:var(--bg3);color:var(--text);font-family:var(--font);box-sizing:border-box';
-    inp.id='_prompt-inp';
-    inp.addEventListener('keydown',function(e){if(e.key==='Enter') yes.click();});
-    msgEl.appendChild(inp);
-    function done(ok){
-      const val=document.getElementById('_prompt-inp')?.value||'';
-      d.close();yes.onclick=null;no.onclick=null;
-      msgEl.textContent='';
-      yes.textContent='Delete';no.textContent='Cancel';
-      res(ok?val:null);
-    }
-    yes.onclick=function(){done(true);};
-    no.onclick=function(){done(false);};
-    d.showModal();
-    setTimeout(()=>{inp.focus();inp.select();},30);
-  });
-}
 
 init();
 
@@ -3140,28 +3075,25 @@ async function processAudio(apiKey, mimeType) {
       
       let transcribedText = '';
 
-      // Direct Whisper API call from browser
+      // Direct Whisper API call
       try {
-        const formData = new FormData();
-        formData.append('file', blob, 'audio.webm');
-        formData.append('model', 'whisper-1');
-        const whisperResp = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+        const fd = new FormData();
+        fd.append('file', blob, 'audio.webm');
+        fd.append('model', 'whisper-1');
+        const wr = await fetch('https://api.openai.com/v1/audio/transcriptions', {
           method: 'POST',
           headers: { 'Authorization': 'Bearer ' + apiKey },
-          body: formData
+          body: fd
         });
-        const whisperData = await whisperResp.json();
-        if (whisperData.text) {
-          transcribedText = whisperData.text.trim();
-        } else if (whisperData.error) {
-          addAIMessage('ai', 'Transcription error: ' + (whisperData.error.message || JSON.stringify(whisperData.error)));
-          document.getElementById('ai-status').textContent = 'Ready';
-          return;
+        const wd = await wr.json();
+        if (wd.text) { transcribedText = wd.text.trim(); }
+        else if (wd.error) {
+          addAIMessage('ai', 'Transcription error: ' + (wd.error.message || JSON.stringify(wd.error)));
+          document.getElementById('ai-status').textContent = 'Ready'; return;
         }
       } catch (e) {
         addAIMessage('ai', 'Transcription failed: ' + e.message);
-        document.getElementById('ai-status').textContent = 'Ready';
-        return;
+        document.getElementById('ai-status').textContent = 'Ready'; return;
       }
 
       if (transcribedText) {
@@ -3185,9 +3117,16 @@ async function processAudio(apiKey, mimeType) {
 
 
 // ── SETTINGS HELPERS (Supabase version) ──────────────────────────────────────
-function changeLocalBackupPath(){ }
-function openBackupInExplorer(){ }
-function updateBackupPathDisplay(){ }
+function changeLocalBackupPath(){});
+  if(p) updateBackupPathDisplay();
+}
+
+function openBackupInExplorer(){});
+}
+
+function updateBackupPathDisplay(){});
+  el.textContent = p || 'Not set';
+}
 
 function exportDataJSON(){
   const blob = new Blob([JSON.stringify(S, null, 2)], {type:'application/json'});
@@ -3288,7 +3227,7 @@ function updateNoteField(id, field, value){
 }
 
 async function deleteNote(id){
-  if(!await (appConfirm('Delete this note?'))) return;
+  if(!confirm('Delete this note?')) return;
   S.notes = S.notes.filter(n=>n.id!==id);
   renderNotes();
   scheduleSave();
