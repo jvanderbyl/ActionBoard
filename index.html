@@ -699,104 +699,124 @@ dialog.sm{width:440px}
 dialog.md{width:580px}
 dialog::backdrop{background:rgba(0,0,0,.38)}
 
-/* ═══════════════ MOBILE / IPHONE ═══════════════
-   Strategy: keep sidebar hidden, use ROWS layout for board,
-   bottom tab bar for navigation, slide-up modals
-   ═══════════════════════════════════════════════ */
+/* ── LEARN BOARD COLUMNS (desktop) ── */
+.lb-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 220px;
+  border-right: 1px solid var(--border);
+}
+.lb-col:last-child { border-right: none; }
+.lb-col > .col-hdr { border-bottom-color: var(--accent) !important; }
 
-/* ── ROWS layout for mobile board ── */
+/* Learn board rows layout mode */
+#lb-board-wrap { display: flex; flex: 1; overflow: hidden; }
+#lb-board-wrap > #lb-wrap { display: flex; flex: 1; overflow-x: auto; overflow-y: hidden; flex-direction: row; }
+#lb-board-wrap.rows { flex-direction: column; overflow-x: hidden; overflow-y: auto; }
+#lb-board-wrap.rows > #lb-wrap { flex-direction: column; overflow: visible; flex: none; width: 100%; }
+#lb-board-wrap.rows .lb-col { min-width: 0; width: 100%; border-right: none; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+#lb-board-wrap.rows .lb-col:last-child { border-bottom: none; }
+#lb-board-wrap.rows .cards-list { max-height: none; }
+
+/* ═══ MOBILE (≤768px) ═══════════════════════════════════
+   Minimal rules — only override what's needed.
+   PC version (>768px) is completely untouched.
+   ════════════════════════════════════════════════════════ */
+
+/* Hide the ☰ button on desktop */
+@media (min-width: 769px) {
+  #mob-sidebar-btn { display: none !important; }
+  #mob-overlay     { display: none !important; }
+}
+
 @media (max-width: 768px) {
 
-  /* Core layout */
-  #sidebar { display: none !important; }
-  #main    { margin-left: 0 !important; width: 100vw !important; min-height: 0; }
+  /* ── Core layout ── */
+  #sidebar { display: none; }   /* hidden until mob-open */
+  #main    { margin-left: 0; width: 100vw; }
 
-  /* Sticky topbar */
-  .topbar {
-    padding: 0 8px !important;
-    height: 46px !important;
-    position: sticky; top: 0; z-index: 200;
+  /* ── Sidebar drawer (slides in) ── */
+  #sidebar.mob-open {
+    display: flex !important;
+    position: fixed;
+    top: 0; left: 0;
+    width: 82vw; max-width: 300px;
+    height: 100dvh;
+    z-index: 300;
+    box-shadow: 4px 0 24px rgba(0,0,0,.35);
+    overflow-y: auto;
+    flex-direction: column;
+    background: var(--bg4);
   }
-  .tb-logo { font-size: 13px !important; }
+  /* Sidebar inner divs — must be visible when drawer is open */
+  #sidebar.mob-open #task-sidebar-inner { display: block !important; }
+  #sidebar.mob-open #lb-sidebar-inner   { display: block !important; }
 
-  /* Nav tabs: horizontal scroll strip */
+  /* Overlay behind sidebar */
+  #mob-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.45);
+    z-index: 299;
+  }
+  #mob-overlay.show { display: block; }
+
+  /* ── Topbar ── */
+  #tb { padding: 0 8px; height: 46px; position: sticky; top: 0; z-index: 200; }
+  .tb-logo { font-size: 12px; }
+  #mob-sidebar-btn {
+    display: flex;
+    align-items: center; justify-content: center;
+    width: 34px; height: 34px; flex-shrink: 0;
+    border: 1px solid var(--border); border-radius: var(--rs);
+    background: var(--bg3); cursor: pointer; font-size: 16px;
+  }
+
+  /* ── Nav tabs: horizontal scroll ── */
   .navtabs {
-    overflow-x: auto !important;
+    overflow-x: auto;
     -webkit-overflow-scrolling: touch;
-    flex-wrap: nowrap !important;
-    gap: 0 !important;
+    flex-wrap: nowrap;
+    gap: 0;
     scrollbar-width: none;
   }
   .navtabs::-webkit-scrollbar { display: none; }
-  .navtab {
-    font-size: 11px !important;
-    padding: 6px 10px !important;
-    white-space: nowrap;
-    flex-shrink: 0 !important;
-  }
+  .navtab { font-size: 11px; padding: 5px 9px; white-space: nowrap; flex-shrink: 0; }
 
-  /* Board: ROWS layout (each column stacks vertically) */
-  #board-wrap {
-    overflow-x: hidden !important;
-    overflow-y: auto !important;
-    -webkit-overflow-scrolling: touch;
-    height: calc(100svh - 90px);
-  }
-  #board {
-    display: flex !important;
-    flex-direction: column !important;
-    flex-wrap: nowrap !important;
-    padding: 8px !important;
-    gap: 8px !important;
-    width: 100% !important;
-  }
-  /* Row mode: columns go full width */
-  #board.rows { flex-direction: column !important; }
-  .column {
-    width: 100% !important;
-    min-width: 0 !important;
-    max-width: 100% !important;
-    flex-shrink: 0 !important;
-  }
-  /* Collapse long columns - show 3 cards then expand */
-  .cards-list {
-    max-height: none !important;
-    overflow: visible !important;
-  }
+  /* ── Board: vertical column stacking ── */
+  #board-wrap { overflow-y: auto; overflow-x: hidden; height: calc(100dvh - 88px); }
+  #board { flex-direction: column; overflow: visible; padding: 8px; gap: 8px; }
+  #board.rows { flex-direction: column; }
+  .column { width: 100%; min-width: 0; max-width: 100%; border-right: none; border-bottom: 1px solid var(--border); }
+  .column:last-child { border-bottom: none; }
+  .cards-list { max-height: none; overflow: visible; }
 
-  /* Touch-friendly buttons */
-  .cbtn {
-    min-width: 32px !important;
-    min-height: 32px !important;
-    font-size: 15px !important;
-    padding: 4px 6px !important;
-  }
-  .col-add { min-width: 32px !important; min-height: 32px !important; }
-  .card { padding: 10px 12px !important; margin-bottom: 4px !important; }
-  .c-title { font-size: 13px !important; }
-  .btn { min-height: 38px !important; padding: 8px 14px !important; font-size: 13px !important; }
+  /* ── Learn board: vertical stacking ── */
+  #lb-board-wrap { overflow-y: auto; overflow-x: hidden; }
+  #lb-wrap { flex-direction: column; overflow: visible; }
+  .lb-col { width: 100%; min-width: 0; border-right: none; border-bottom: 1px solid var(--border); }
+  .lb-col:last-child { border-bottom: none; }
 
-  /* Toolbar: horizontal scroll */
+  /* ── Touch targets ── */
+  .cbtn { min-width: 32px; min-height: 32px; }
+  .btn  { min-height: 38px; }
+  .card { padding: 10px 12px; }
+
+  /* ── Toolbars: horizontal scroll ── */
   #toolbar, #lb-toolbar {
-    overflow-x: auto !important;
+    overflow-x: auto;
     -webkit-overflow-scrolling: touch;
-    flex-wrap: nowrap !important;
+    flex-wrap: nowrap;
     scrollbar-width: none;
-    padding: 0 8px !important;
-    height: 40px !important;
   }
   #toolbar::-webkit-scrollbar, #lb-toolbar::-webkit-scrollbar { display: none; }
-  .tbb {
-    white-space: nowrap;
-    flex-shrink: 0 !important;
-    font-size: 12px !important;
-    padding: 5px 10px !important;
-  }
+  .tbb { white-space: nowrap; flex-shrink: 0; font-size: 12px; }
 
-  /* Views */
-  .view-wrap { padding: 10px !important; }
+  /* ── Views: less padding ── */
+  .view-wrap { padding: 10px; }
 
-  /* Modals: full-width, slide up from bottom */
+  /* ── Modals: slide up from bottom ── */
   dialog {
     width: 100% !important;
     max-width: 100% !important;
@@ -805,110 +825,42 @@ dialog::backdrop{background:rgba(0,0,0,.38)}
     position: fixed !important;
     bottom: 0 !important; left: 0 !important; right: 0 !important; top: auto !important;
     border-radius: 18px 18px 0 0 !important;
-    max-height: 90svh !important;
+    max-height: 90dvh !important;
     overflow-y: auto !important;
     border: none !important;
     border-top: 1px solid var(--border) !important;
   }
-  .mhdr  { padding: 14px 16px 8px !important; }
-  .mbody { padding: 10px 16px !important; gap: 10px !important; }
-  .mfoot { padding: 10px 16px 20px !important; }
 
   /* CRITICAL: 16px prevents iOS zoom on input focus */
   input, textarea, select { font-size: 16px !important; }
 
-  /* Settings: single column */
+  /* ── Settings: single column ── */
   #settings-grid { grid-template-columns: 1fr !important; }
-
-  /* g2 two-column grids → single column */
   .g2 { grid-template-columns: 1fr !important; }
 
-  /* AI panel: full-screen */
+  /* ── AI panel ── */
   #ai-panel {
     width: 100% !important; max-width: 100% !important;
-    left: 0 !important; right: 0 !important; bottom: 0 !important; top: auto !important;
-    height: 80svh !important;
+    left: 0 !important; right: 0 !important;
+    bottom: 0 !important; top: auto !important;
+    height: 78dvh !important;
     border-radius: 18px 18px 0 0 !important;
     border: none !important;
     border-top: 1px solid var(--border) !important;
   }
 
-  /* Focus view */
-  #view-focus { padding: 10px !important; }
-  .focus-task-card { padding: 10px !important; }
+  /* ── Calendar ── */
+  .cal-nav { flex-wrap: wrap; gap: 6px; }
+  .cal-cell { min-height: 44px; }
+  .cal-ev   { font-size: 10px; }
 
-  /* Calendar */
-  .cal-nav { flex-wrap: wrap !important; gap: 6px !important; }
-  .cal-day { min-height: 44px !important; }
-  .cal-ev  { font-size: 10px !important; }
+  /* ── Habits: scroll per row ── */
+  #habits-grid > div { overflow-x: auto; }
 
-  /* Habits: horizontal scroll per habit */
-  #habits-grid > div { overflow-x: auto !important; -webkit-overflow-scrolling: touch; }
-
-  /* Learn board: full-width columns stacked */
-  #lb-sidebar-inner, #task-sidebar-inner { display: none !important; }
-  #lb-board-wrap { overflow-x: hidden !important; overflow-y: auto !important; }
-  #lb-wrap {
-    flex-direction: column !important;
-    overflow-x: hidden !important;
-    overflow-y: visible !important;
-    flex-wrap: nowrap !important;
-  }
-  .lb-col {
-    width: 100% !important;
-    min-width: 0 !important;
-    flex-shrink: 0 !important;
-    border-right: none !important;
-    border-bottom: 1px solid var(--border) !important;
-  }
-
-  /* Archive: stack buttons */
-  .archive-card {
-    flex-wrap: wrap !important;
-    gap: 8px !important;
-  }
-
-  /* Mobile sidebar toggle */
-  #mob-sidebar-btn {
-    display: flex !important;
-    align-items: center; justify-content: center;
-    width: 34px; height: 34px;
-    border: 1px solid var(--border); border-radius: var(--rs);
-    background: var(--bg3); cursor: pointer;
-    font-size: 16px; flex-shrink: 0;
-  }
-  /* Sidebar overlay */
-  #sidebar.mob-open {
-    display: flex !important;
-    position: fixed !important;
-    top: 0 !important; left: 0 !important;
-    width: 78vw !important; max-width: 300px !important;
-    height: 100svh !important;
-    z-index: 300 !important;
-    box-shadow: 4px 0 24px rgba(0,0,0,.3) !important;
-    overflow-y: auto !important;
-    flex-direction: column;
-  }
-  #mob-overlay {
-    display: none;
-    position: fixed; inset: 0;
-    background: rgba(0,0,0,.45);
-    z-index: 299;
-  }
-  #mob-overlay.show { display: block !important; }
-
-  /* Notes */
-  .note-card { padding: 12px !important; }
-
-  /* Snap-section in settings */
+  /* ── Snap section fix ── */
   #snap-section { grid-column: 1 !important; }
 }
 
-/* Desktop: hide mobile-only elements */
-@media (min-width: 769px) {
-  #mob-sidebar-btn { display: none !important; }
-  #mob-overlay     { display: none !important; }
-}
 </style>
 </head>
 <body>
@@ -4216,6 +4168,12 @@ function renderLearnBoard() {
   var wrap = document.getElementById('lb-wrap');
   if (!wrap) return;
 
+  // Sync the rows CSS class on lb-board-wrap
+  var boardWrap = document.getElementById('lb-board-wrap');
+  if (boardWrap) boardWrap.className = (lb.layout === 'rows') ? 'rows' : '';
+  // Clear any inline style that might fight the CSS class
+  wrap.style.flexDirection = '';
+
   // Update sidebar sectors for learn board
   renderLBSidebar();
 
@@ -4234,6 +4192,7 @@ function renderLearnBoard() {
   if(lbLayoutBtn) lbLayoutBtn.textContent = lbLayout==='rows' ? '⇄ Rows' : '⇄ Columns';
 
   var acc = 'var(--accent)';
+  // Layout is controlled by CSS via #lb-board-wrap.rows class (set in lbToggleLayout)
   wrap.innerHTML = lb.columns.map(function(col) {
     var colCards = cards.filter(function(c){ return c.columnId === col.id; });
     var colId = col.id;
@@ -4323,9 +4282,9 @@ function lbSetSector(id) { lbActiveSector = id; renderLearnBoard(); }
 function lbToggleLayout() {
   ensureLearnBoard();
   S.learnBoard.layout = (S.learnBoard.layout === 'rows') ? 'columns' : 'rows';
-  var wrap = document.getElementById('lb-board-wrap');
-  if(wrap) wrap.className = S.learnBoard.layout === 'rows' ? 'rows' : '';
-  renderLearnBoard(); scheduleSave();
+  // CSS class drives the layout — renderLearnBoard will sync it
+  renderLearnBoard();
+  scheduleSave();
 }
 
 function lbDragStart(e, id) {
