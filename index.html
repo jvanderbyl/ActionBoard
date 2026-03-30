@@ -861,6 +861,83 @@ dialog::backdrop{background:rgba(0,0,0,.38)}
   #snap-section { grid-column: 1 !important; }
 }
 
+
+/* ── INSIGHTS STRIP ── */
+#insights-strip{display:none;gap:8px;padding:6px 12px;background:var(--bg3);border-bottom:1px solid var(--border);flex-wrap:wrap;align-items:center;flex-shrink:0}
+.insight-chip{display:flex;align-items:center;gap:5px;padding:4px 10px;font-size:12px;font-weight:600;border:1px solid var(--border);border-radius:20px;background:var(--bg4);color:var(--text2);cursor:pointer;font-family:var(--font);transition:all .15s}
+.insight-chip:hover{border-color:var(--accent);color:var(--accent);background:rgba(99,102,241,.05)}
+
+/* ── COMMAND PALETTE ── */
+#cmd-palette{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9000;align-items:flex-start;justify-content:center;padding-top:15vh}
+#cmd-box{background:var(--bg4);border:1px solid var(--border);border-radius:12px;width:560px;max-width:90vw;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden}
+#cmd-input{width:100%;padding:14px 16px;font-size:15px;border:none;border-bottom:1px solid var(--border);background:transparent;color:var(--text);font-family:var(--font);outline:none}
+#cmd-results{max-height:360px;overflow-y:auto}
+.cmd-item{display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);transition:background .1s}
+.cmd-item:last-child{border-bottom:none}
+.cmd-item:hover,.cmd-item:focus{background:rgba(99,102,241,.07);outline:none}
+.cmd-icon{width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.cmd-label-wrap{flex:1;min-width:0}
+.cmd-label{font-size:13px;font-weight:600;color:var(--text);display:block}
+.cmd-sub{font-size:11px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;margin-top:1px}
+.cmd-kbd{font-size:10px;font-weight:700;padding:2px 6px;background:var(--bg2);border:1px solid var(--border);border-radius:4px;color:var(--text3);font-family:monospace;flex-shrink:0}
+#cmd-hint{padding:8px 14px;font-size:11px;color:var(--text4);border-top:1px solid var(--border);display:flex;gap:12px}
+
+/* ── TIMELINE VIEW ── */
+#view-timeline{display:none;flex-direction:column;flex:1;overflow:hidden}
+#timeline-nav{display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--bg3);border-bottom:1px solid var(--border);flex-shrink:0}
+#timeline-grid{flex:1;overflow:auto;padding:12px}
+.tl-header-row{display:flex;position:sticky;top:0;z-index:10;background:var(--bg4);border-bottom:1px solid var(--border)}
+.tl-header{display:flex;flex-direction:column;align-items:center;padding:4px 2px;font-size:11px;font-weight:600;color:var(--text3);flex-shrink:0;border-right:1px solid var(--border)}
+.tl-today-col{background:rgba(99,102,241,.05)}
+.tl-today-num{background:var(--accent);color:#fff;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.tl-day-name{font-size:9px;color:var(--text4);text-transform:uppercase}
+.tl-day-num{font-size:12px;font-weight:700;color:var(--text);width:20px;height:20px;display:flex;align-items:center;justify-content:center;border-radius:50%}
+.tl-row{display:flex;align-items:center;border-bottom:1px solid var(--border);min-height:32px}
+.tl-row:hover{background:var(--bg3)}
+.tl-row-label{width:160px;flex-shrink:0;padding:4px 10px;font-size:12px;font-weight:600;color:var(--text2);cursor:pointer;display:flex;align-items:center;gap:5px;overflow:hidden;white-space:nowrap;border-right:1px solid var(--border)}
+.tl-row-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.tl-cell{min-width:48px;flex-shrink:0;height:32px;padding:2px;border-right:1px solid var(--border)}
+.tl-task-bar{height:100%;border-radius:4px;padding:0 6px;font-size:10px;font-weight:600;color:#fff;display:flex;align-items:center;cursor:pointer;overflow:hidden;white-space:nowrap}
+.tl-task-bar:hover{opacity:.85}
+.tl-empty{padding:40px;text-align:center;color:var(--text4);font-size:13px}
+.tl-no-date{background:repeating-linear-gradient(-45deg,transparent,transparent 3px,rgba(0,0,0,.03) 3px,rgba(0,0,0,.03) 6px)}
+
+/* ── CARD ENHANCEMENTS ── */
+.c-progress{height:4px;background:var(--bg2);border-radius:2px;margin:4px 0;position:relative;overflow:hidden}
+.c-progress-bar{height:100%;background:var(--accent);border-radius:2px;transition:width .3s}
+.c-progress-label{position:absolute;right:0;top:-1px;font-size:9px;font-weight:700;color:var(--text4);line-height:1}
+.c-blocked{font-size:10px;font-weight:700;color:var(--pri-high);padding:2px 6px;background:rgba(239,68,68,.08);border-radius:3px;margin-bottom:4px;display:inline-block}
+.c-recurring-badge{font-size:10px;color:var(--text4);margin-bottom:2px;display:inline-block}
+
+/* ── GRAPH VIEW ── */
+#view-graph{display:none;flex-direction:column;flex:1;overflow:hidden}
+#graph-canvas{width:100%;flex:1;cursor:default}
+
+/* ── ONBOARDING ── */
+#onboarding-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;align-items:center;justify-content:center}
+.onboard-box{background:var(--bg4);border-radius:16px;padding:40px;max-width:500px;width:90%;box-shadow:0 24px 60px rgba(0,0,0,.3)}
+.onboard-logo{font-size:32px;font-weight:800;color:var(--accent);margin-bottom:8px}
+.onboard-title{font-size:22px;font-weight:700;color:var(--text);margin-bottom:8px}
+.onboard-sub{font-size:14px;color:var(--text3);margin-bottom:24px;line-height:1.7}
+
+/* ── SYNC TOAST ── */
+#sync-toast{position:fixed;bottom:70px;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;padding:8px 16px;border-radius:20px;font-size:13px;font-weight:600;z-index:5000;opacity:0;transition:opacity .3s;pointer-events:none}
+
+/* ── MARKDOWN NOTES ── */
+.note-md-preview{flex:1;padding:6px 8px;overflow-y:auto;font-family:system-ui,sans-serif;font-size:13px;line-height:1.7;color:#111;background:#fff;cursor:pointer}
+body.dark .note-md-preview{color:#e0e0e0;background:#1e1e1e}
+.note-md-preview .md-h1{font-size:18px;font-weight:800;margin:8px 0 4px;color:var(--accent)}
+.note-md-preview .md-h2{font-size:15px;font-weight:700;margin:6px 0 3px}
+.note-md-preview .md-h3{font-size:13px;font-weight:700;margin:4px 0 2px}
+.note-md-preview .md-code{background:#f4f4f4;border-radius:4px;padding:8px;margin:4px 0;font-family:'Courier New',monospace;font-size:12px;overflow-x:auto}
+.note-md-preview .md-inline{background:#f0f0f0;padding:1px 4px;border-radius:3px;font-family:'Courier New',monospace;font-size:12px}
+.note-md-preview .md-li{margin-left:16px;margin-bottom:2px}
+.note-md-preview .md-link{color:var(--accent);text-decoration:underline}
+.note-md-preview .md-hr{border:none;border-top:1px solid var(--border);margin:8px 0}
+body.dark .note-md-preview .md-code{background:#2a2a2a}
+body.dark .note-md-preview .md-inline{background:#333}
+
+/* ── RECURRING MODAL ── */
 </style>
 </head>
 <body>
@@ -933,6 +1010,8 @@ dialog::backdrop{background:rgba(0,0,0,.38)}
     <button class="navtab"     onclick="switchView('notes',this)">Notes</button>
     <button class="navtab"     onclick="switchView('archive',this)">Archive</button>
     <button class="navtab"     onclick="switchView('habits',this)">Habits</button>
+    <button class="navtab"     onclick="switchView('timeline',this)">Timeline</button>
+    <button class="navtab"     onclick="switchView('graph',this)">Graph</button>
     <button class="navtab"     onclick="switchView('settings',this)">Settings</button>
   </div>
   <div class="tb-drag-spacer"></div>
@@ -984,6 +1063,7 @@ dialog::backdrop{background:rgba(0,0,0,.38)}
 
   <!-- CONTENT -->
   <div id="content">
+    <div id="insights-strip"></div>
 
     <!-- BOARD VIEW -->
     <div id="view-board" style="display:flex;flex-direction:column;flex:1;overflow:hidden">
@@ -1092,6 +1172,27 @@ dialog::backdrop{background:rgba(0,0,0,.38)}
       <div id="habits-stats" style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;align-items:center"></div>
       <div id="habits-grid"></div>
     </div>
+    <!-- TIMELINE VIEW -->
+    <div id="view-timeline" style="display:none;flex-direction:column;flex:1;overflow:hidden">
+      <div id="timeline-nav">
+        <button class="btn" onclick="timelineNav(-1)">← Prev Week</button>
+        <span style="font-size:14px;font-weight:700;color:var(--text)">Timeline</span>
+        <button class="btn" onclick="timelineNav(1)">Next Week →</button>
+        <span style="font-size:11px;color:var(--text4);margin-left:8px">Tasks with due dates appear here</span>
+      </div>
+      <div id="timeline-grid"></div>
+    </div>
+
+    <!-- GRAPH VIEW -->
+    <div id="view-graph" style="display:none;flex-direction:column;flex:1;overflow:hidden">
+      <div style="padding:10px 16px;background:var(--bg3);border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:12px">
+        <span style="font-size:14px;font-weight:700;color:var(--text)">Note Graph</span>
+        <span style="font-size:12px;color:var(--text3)">Notes grouped by sector • Click a node to open</span>
+        <button class="btn" onclick="renderNoteGraph()" style="margin-left:auto;font-size:12px">Refresh</button>
+      </div>
+      <canvas id="graph-canvas" style="flex:1;width:100%"></canvas>
+    </div>
+
     <div id="view-settings" class="view-wrap" style="display:none">
       <div class="view-title">Settings</div>
       <div class="view-sub">Storage, backup, and app configuration.</div>
@@ -2857,8 +2958,8 @@ function switchView(v,btn){
   curView=v;
   document.querySelectorAll('.navtab').forEach(b=>b.classList.remove('on'));
   btn.classList.add('on');
-  const flexViews = new Set(['board','learnboard']);
-  ['board','focus','calendar','learning','learnboard','notes','archive','habits','settings'].forEach(id=>{
+  const flexViews = new Set(['board','learnboard','timeline','graph']);
+  ['board','focus','calendar','learning','learnboard','notes','archive','habits','timeline','graph','settings'].forEach(id=>{
     const el=document.getElementById('view-'+id);
     if(el) el.style.display = id===v ? (flexViews.has(id)?'flex':'block') : 'none';
   });
@@ -2871,6 +2972,8 @@ function switchView(v,btn){
   if(v==='learnboard'){ ensureLearnBoard(); renderLearnBoard(); }
   if(v==='habits')     { ensureHabitsV2 && ensureHabitsV2(); renderHabits(); }
   if(v==='archive')    renderArchive();
+  if(v==='timeline')   renderTimeline();
+  if(v==='graph')      { setTimeout(renderNoteGraph, 100); }
   if(v==='settings')   renderSettings();
 }
 
@@ -5665,6 +5768,1245 @@ if (window.innerWidth <= 768) {
     if (board) board.className = 'rows';
   }
 }
+
+</script>
+
+<!-- COMMAND PALETTE -->
+<div id="cmd-palette" role="dialog" aria-label="Command Palette">
+  <div id="cmd-box">
+    <input id="cmd-input" type="text" placeholder="Search commands, tasks, notes…" autocomplete="off" spellcheck="false"/>
+    <div id="cmd-results"></div>
+    <div id="cmd-hint">
+      <span>↑↓ navigate</span>
+      <span>↵ select</span>
+      <span>Esc close</span>
+      <span style="margin-left:auto;font-weight:700;color:var(--accent)">⌘K to open anytime</span>
+    </div>
+  </div>
+</div>
+
+<!-- SYNC TOAST -->
+<div id="sync-toast"></div>
+
+<!-- ONBOARDING OVERLAY -->
+<div id="onboarding-overlay">
+  <div class="onboard-box">
+    <div class="onboard-logo">◈ Action Board</div>
+    <div class="onboard-title">Welcome! Let's set up your board.</div>
+    <div class="onboard-sub">Tell the AI what you're working on and it will create a personalized board for you in seconds. Or skip to start with a blank board.</div>
+    <div style="margin-bottom:16px">
+      <label class="flabel">What are you working on?</label>
+      <input type="text" id="onboard-input" placeholder="e.g. launching a startup, finishing my thesis, managing a design project…" style="font-size:14px"/>
+    </div>
+    <div style="display:flex;gap:10px">
+      <button class="btn" onclick="skipOnboarding()" style="flex:1">Start with blank board</button>
+      <button class="btn pri" onclick="onboardingAISetup()" style="flex:2">✦ Set up with AI</button>
+    </div>
+  </div>
+</div>
+
+<!-- RECURRING TASK MODAL -->
+<dialog id="recurring-modal" class="sm">
+  <div class="mhdr">
+    <span class="mtitle">Add Recurring Task</span>
+    <button class="mclose" onclick="closeModal('recurring-modal')">✕</button>
+  </div>
+  <div class="mbody">
+    <div><label class="flabel">Task Title</label><input type="text" id="rec-title" placeholder="e.g. Weekly review"/></div>
+    <div class="g2">
+      <div>
+        <label class="flabel">Frequency</label>
+        <select id="rec-freq">
+          <option value="daily">Daily</option>
+          <option value="weekday">Weekdays only</option>
+          <option value="weekly" selected>Weekly</option>
+          <option value="monthly">Monthly</option>
+        </select>
+      </div>
+      <div>
+        <label class="flabel">Priority</label>
+        <select id="rec-pri">
+          <option value="high">▲ High</option>
+          <option value="med" selected>■ Medium</option>
+          <option value="low">▼ Low</option>
+        </select>
+      </div>
+    </div>
+    <div><label class="flabel">Category</label><select id="rec-cat"></select></div>
+  </div>
+  <div class="mfoot">
+    <div></div>
+    <div class="row">
+      <button class="btn" onclick="closeModal('recurring-modal')">Cancel</button>
+      <button class="btn pri" onclick="saveRecurring()">Add Recurring Task</button>
+    </div>
+  </div>
+</dialog>
+
+
+<script>
+// ════════════════════════════════════════════════════════════════════
+// ACTION BOARD — INDUSTRY STANDARD FEATURE PACK v10
+// Tier 1: Recurring tasks, dependencies, subtask progress, notifications
+// Tier 2: AI planning, proactive insights, AI memory, voice-to-plan
+// Tier 3: Animations, command palette, timeline view, keyboard nav, onboarding, markdown
+// Tier 4: Realtime collab, graph view, webhooks, public sharing
+// ════════════════════════════════════════════════════════════════════
+
+'use strict';
+
+// ── Utility ──────────────────────────────────────────────────────────
+const isMobile = () => window.innerWidth <= 768;
+const debounce = (fn, ms) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };
+
+// ════════════════════════════════════════════════════════════════════
+// TIER 1A: RECURRING TASKS
+// ════════════════════════════════════════════════════════════════════
+
+function ensureRecurring() {
+  if (!S.recurring) S.recurring = [];
+}
+
+// Check recurring tasks on load — create any that are due
+function processRecurringTasks() {
+  ensureRecurring();
+  const today = new Date().toISOString().slice(0, 10);
+  let changed = false;
+  S.recurring.forEach(r => {
+    const lastGen = r.lastGenerated || '';
+    let shouldGen = false;
+    if (r.frequency === 'daily')   shouldGen = lastGen < today;
+    if (r.frequency === 'weekly')  shouldGen = daysSince(lastGen) >= 7;
+    if (r.frequency === 'monthly') shouldGen = monthsSince(lastGen) >= 1;
+    if (r.frequency === 'weekday') shouldGen = lastGen < today && ![0,6].includes(new Date().getDay());
+    if (shouldGen) {
+      const task = {
+        id: uid(), title: r.title, notes: r.notes || '',
+        category: r.category, status: r.defaultStatus || 'backlog',
+        priority: r.priority || 'med', tags: r.tags || [],
+        dueDate: today, createdAt: now(), updatedAt: now(),
+        recurringId: r.id, sortOrder: 0,
+      };
+      S.tasks.push(task);
+      r.lastGenerated = today;
+      changed = true;
+    }
+  });
+  if (changed) { invalidateCardCache(); render(); scheduleSave(); }
+}
+
+function daysSince(dateStr) {
+  if (!dateStr) return 9999;
+  return Math.floor((Date.now() - new Date(dateStr).getTime()) / 86400000);
+}
+function monthsSince(dateStr) {
+  if (!dateStr) return 9999;
+  const d = new Date(dateStr), now2 = new Date();
+  return (now2.getFullYear() - d.getFullYear()) * 12 + now2.getMonth() - d.getMonth();
+}
+
+// Add recurring task modal
+function openRecurringModal(prefill) {
+  document.getElementById('rec-title').value = prefill?.title || '';
+  document.getElementById('rec-freq').value  = prefill?.frequency || 'weekly';
+  document.getElementById('rec-cat').innerHTML = S.categories.map(c =>
+    `<option value="${c.id}">${esc(c.label)}</option>`).join('');
+  document.getElementById('rec-pri').value = prefill?.priority || 'med';
+  openModal('recurring-modal');
+}
+
+function saveRecurring() {
+  const title = document.getElementById('rec-title').value.trim();
+  if (!title) return;
+  ensureRecurring();
+  S.recurring.push({
+    id: uid(), title,
+    frequency: document.getElementById('rec-freq').value,
+    category: document.getElementById('rec-cat').value,
+    priority: document.getElementById('rec-pri').value,
+    lastGenerated: '', createdAt: now()
+  });
+  closeModal('recurring-modal');
+  renderRecurringList();
+  scheduleSave();
+}
+
+function deleteRecurring(id) {
+  ensureRecurring();
+  S.recurring = S.recurring.filter(r => r.id !== id);
+  renderRecurringList();
+  scheduleSave();
+}
+
+function renderRecurringList() {
+  const el = document.getElementById('recurring-list');
+  if (!el) return;
+  ensureRecurring();
+  if (!S.recurring.length) {
+    el.innerHTML = '<div style="color:var(--text4);font-size:13px;padding:12px 0">No recurring tasks. Add one to auto-generate tasks on a schedule.</div>';
+    return;
+  }
+  el.innerHTML = S.recurring.map(r => {
+    const cat = catById(r.category);
+    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--bg3);border-radius:var(--rs);border:1px solid var(--border);margin-bottom:6px">
+      <span style="width:8px;height:8px;border-radius:50%;background:${cat.color};flex-shrink:0"></span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:700;color:var(--text)">${esc(r.title)}</div>
+        <div style="font-size:11px;color:var(--text3)">${r.frequency} · ${cat.label} · Last: ${r.lastGenerated || 'never'}</div>
+      </div>
+      <button class="btn" onclick="deleteRecurring('${r.id}')" style="font-size:11px;color:var(--pri-high);border-color:var(--pri-high)">Remove</button>
+    </div>`;
+  }).join('');
+}
+
+// ════════════════════════════════════════════════════════════════════
+// TIER 1B: TASK DEPENDENCIES
+// ════════════════════════════════════════════════════════════════════
+
+function getBlockers(taskId) {
+  const t = S.tasks.find(x => x.id === taskId);
+  return (t?.blockedBy || []).map(id => S.tasks.find(x => x.id === id)).filter(Boolean);
+}
+
+function isBlocked(taskId) {
+  return getBlockers(taskId).some(b => b.status !== 'finished');
+}
+
+function toggleBlocker(taskId, blockerId) {
+  const t = S.tasks.find(x => x.id === taskId);
+  if (!t) return;
+  if (!t.blockedBy) t.blockedBy = [];
+  const idx = t.blockedBy.indexOf(blockerId);
+  if (idx > -1) t.blockedBy.splice(idx, 1);
+  else t.blockedBy.push(blockerId);
+  t.updatedAt = now();
+  invalidateCardCache(); renderBoard(); scheduleSave();
+}
+
+// Render dependency picker inside task modal
+function renderDepPicker(taskId) {
+  const el = document.getElementById('dep-picker');
+  if (!el) return;
+  const task = S.tasks.find(t => t.id === taskId);
+  const blockedBy = task?.blockedBy || [];
+  const others = S.tasks.filter(t => t.id !== taskId && t.status !== 'finished');
+  if (!others.length) { el.innerHTML = '<div style="font-size:12px;color:var(--text4)">No other tasks to depend on.</div>'; return; }
+  el.innerHTML = others.map(t => {
+    const checked = blockedBy.includes(t.id);
+    return `<label style="display:flex;align-items:center;gap:7px;padding:4px 0;cursor:pointer;font-size:13px;color:var(--text2)">
+      <input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleBlocker('${taskId}','${t.id}')"/>
+      <span style="font-size:10px;font-weight:700;color:${catById(t.category).color}">${esc(catById(t.category).label)}</span>
+      ${esc(t.title.slice(0, 40))}
+    </label>`;
+  }).join('');
+}
+
+// ════════════════════════════════════════════════════════════════════
+// TIER 1C: SUBTASK PROGRESS BARS on cards (already have subtasks, just improve display)
+// ════════════════════════════════════════════════════════════════════
+
+function getSubtaskProgress(t) {
+  const all = [...(t.subtasks?.backlog || []), ...(t.subtasks?.inprogress || []), ...(t.subtasks?.done || [])];
+  const done = (t.subtasks?.done || []).length;
+  return { total: all.length, done };
+}
+
+// ════════════════════════════════════════════════════════════════════
+// TIER 1D: DUE DATE NOTIFICATIONS
+// ════════════════════════════════════════════════════════════════════
+
+async function requestNotificationPermission() {
+  if (!('Notification' in window)) return false;
+  if (Notification.permission === 'granted') return true;
+  if (Notification.permission !== 'denied') {
+    const perm = await Notification.requestPermission();
+    return perm === 'granted';
+  }
+  return false;
+}
+
+function checkDueNotifications() {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  const today = new Date().toISOString().slice(0, 10);
+  const tmr   = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
+  S.tasks.forEach(t => {
+    if (!t.dueDate || t.status === 'finished') return;
+    const notifiedKey = 'notified_' + t.id + '_' + t.dueDate;
+    if (localStorage.getItem(notifiedKey)) return;
+    let msg = null;
+    if (t.dueDate === today) msg = `Due TODAY: "${t.title}"`;
+    else if (t.dueDate < today) msg = `OVERDUE: "${t.title}" was due ${t.dueDate}`;
+    else if (t.dueDate === tmr) msg = `Due tomorrow: "${t.title}"`;
+    if (msg) {
+      new Notification('Action Board', { body: msg, icon: '/favicon.ico', tag: t.id });
+      localStorage.setItem(notifiedKey, '1');
+    }
+  });
+}
+
+// ════════════════════════════════════════════════════════════════════
+// TIER 2A: AI MULTI-STEP PLANNING
+// ════════════════════════════════════════════════════════════════════
+
+async function aiPlanMyWeek() {
+  if (!anthropicKey) { addAIMessage('ai', 'Add your Anthropic API key in Settings to use AI planning.'); return; }
+  if (!document.getElementById('ai-panel').classList.contains('open')) toggleAI();
+  addAIMessage('ai', '🧠 Analyzing your board and planning your week…');
+  document.getElementById('ai-status').textContent = 'Planning…';
+
+  const today = new Date();
+  const weekEnd = new Date(today.getTime() + 7 * 86400000).toISOString().slice(0, 10);
+  const overdue = S.tasks.filter(t => t.dueDate && t.dueDate < today.toISOString().slice(0,10) && t.status !== 'finished');
+  const highPri = S.tasks.filter(t => t.priority === 'high' && t.status !== 'finished');
+  const noDate  = S.tasks.filter(t => !t.dueDate && t.status !== 'finished');
+
+  const planPrompt = `The user wants a WEEKLY PLAN. Today is ${today.toISOString().slice(0,10)}, week ends ${weekEnd}.
+
+Current state:
+- ${overdue.length} OVERDUE tasks: ${overdue.map(t=>`"${t.title}"`).join(', ')||'none'}
+- ${highPri.length} HIGH priority tasks: ${highPri.map(t=>`"${t.title}" (${t.status})`).join(', ')||'none'}
+- ${noDate.length} tasks with no due date: ${noDate.slice(0,5).map(t=>`"${t.title}"`).join(', ')}
+- Focus tasks: ${S.focusTasks.map(id => S.tasks.find(t=>t.id===id)?.title).filter(Boolean).join(', ') || 'none set'}
+
+Create a realistic weekly plan. For each day Mon-Sun:
+1. Move 1-3 tasks to appropriate due dates based on priority
+2. Set focus tasks for today (max 3)
+3. Add any missing prep tasks for high-priority items
+
+Execute as a batch action. Be decisive — actually set the dates and move tasks. Also give a brief strategic summary of the week plan.`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': anthropicKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+      body: JSON.stringify({ model: 'claude-opus-4-5', max_tokens: 3000, messages: [...aiHistory, { role: 'user', content: planPrompt }] })
+    });
+    const data = await res.json();
+    document.getElementById('ai-status').textContent = 'Ready';
+    const reply = data.content?.[0]?.text || '';
+    const actionMatch = reply.match(/```action\n?([\s\S]*?)```/);
+    let actionData = null;
+    if (actionMatch) { try { actionData = JSON.parse(actionMatch[1].trim()); } catch(e) {} }
+    const displayText = reply.replace(/```action[\s\S]*?```/g, '').trim();
+    addAIMessage('ai', displayText || 'Week planned!', actionData);
+    if (actionData) { buildActionCard(actionData); executeAction(actionData); }
+  } catch(e) {
+    document.getElementById('ai-status').textContent = 'Ready';
+    addAIMessage('ai', 'Planning failed: ' + e.message);
+  }
+}
+
+async function aiDailyBriefing() {
+  if (!anthropicKey) return;
+  const today = new Date().toISOString().slice(0, 10);
+  const lastBriefing = localStorage.getItem('ab-last-briefing');
+  if (lastBriefing === today) return; // already shown today
+
+  const overdue = S.tasks.filter(t => t.dueDate && t.dueDate < today && t.status !== 'finished');
+  const dueToday = S.tasks.filter(t => t.dueDate === today && t.status !== 'finished');
+  const highPri  = S.tasks.filter(t => t.priority === 'high' && t.status !== 'finished').length;
+
+  // Show proactive insight in sidebar
+  const insightEl = document.getElementById('ai-insight');
+  if (!insightEl) return;
+
+  let insight = '';
+  if (overdue.length > 0) insight = `⚠️ ${overdue.length} overdue task${overdue.length>1?'s':''}`;
+  else if (dueToday.length > 0) insight = `📅 ${dueToday.length} due today`;
+  else if (highPri > 0) insight = `🔴 ${highPri} high priority`;
+  else insight = '✅ Board is clear';
+
+  insightEl.textContent = insight;
+  insightEl.style.display = 'block';
+  localStorage.setItem('ab-last-briefing', today);
+}
+
+// ════════════════════════════════════════════════════════════════════
+// TIER 2B: AI MEMORY (store rolling context in Supabase)
+// ════════════════════════════════════════════════════════════════════
+
+function saveAIMemory(summary) {
+  if (!S.aiMemory) S.aiMemory = [];
+  S.aiMemory.unshift({ date: now(), summary: summary.slice(0, 300) });
+  S.aiMemory = S.aiMemory.slice(0, 10); // keep last 10 memories
+  scheduleSave();
+}
+
+function getAIMemoryContext() {
+  if (!S.aiMemory || !S.aiMemory.length) return '';
+  return '\n\nAI MEMORY (recent context from past sessions):\n' +
+    S.aiMemory.slice(0, 5).map(m => `[${m.date.slice(0,10)}] ${m.summary}`).join('\n');
+}
+
+// ════════════════════════════════════════════════════════════════════
+// TIER 2C: PROACTIVE INSIGHTS
+// ════════════════════════════════════════════════════════════════════
+
+function computeInsights() {
+  const insights = [];
+  const today = new Date().toISOString().slice(0, 10);
+
+  // Overdue
+  const overdue = S.tasks.filter(t => t.dueDate && t.dueDate < today && t.status !== 'finished');
+  if (overdue.length) insights.push({ type: 'warning', icon: '⚠️', text: `${overdue.length} overdue task${overdue.length>1?'s':''}`, action: () => { setFilter('all'); renderBoard(); } });
+
+  // Too many in-progress
+  const inprog = S.tasks.filter(t => t.status === 'inprogress');
+  if (inprog.length > 5) insights.push({ type: 'info', icon: '🔄', text: `${inprog.length} tasks in progress — consider focusing`, action: null });
+
+  // Habit streak
+  if (S.habitList && S.habitList.length) {
+    const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+    S.habitList.forEach(h => {
+      if (!S.habitData?.[h.id + '|' + yesterday] && !S.habitData?.[h.id + '|' + today]) {
+        insights.push({ type: 'habit', icon: '🔥', text: `"${h.name}" not checked today`, action: () => switchView('habits', document.querySelector('.navtab:nth-child(7)')) });
+      }
+    });
+  }
+
+  // Nothing in focus
+  if (!S.focusTasks.length && S.tasks.filter(t => t.status !== 'finished').length > 3) {
+    insights.push({ type: 'tip', icon: '🎯', text: 'No focus tasks set for today', action: () => switchView('focus', document.querySelector('.navtab:nth-child(2)')) });
+  }
+
+  return insights.slice(0, 3);
+}
+
+function renderInsights() {
+  const el = document.getElementById('insights-strip');
+  if (!el) return;
+  const insights = computeInsights();
+  if (!insights.length) { el.style.display = 'none'; return; }
+  el.style.display = 'flex';
+  el.innerHTML = insights.map((ins, i) =>
+    `<button class="insight-chip" onclick="dismissInsight(${i})" ${ins.action ? `ondblclick="(${ins.action.toString()})()"` : ''} title="Double-click to act · Click to dismiss">
+      <span>${ins.icon}</span>
+      <span>${ins.text}</span>
+    </button>`
+  ).join('');
+}
+
+function dismissInsight(idx) {
+  const el = document.getElementById('insights-strip');
+  if (el?.children[idx]) el.children[idx].style.opacity = '0';
+  setTimeout(() => renderInsights(), 400);
+}
+
+// ════════════════════════════════════════════════════════════════════
+// TIER 3A: COMMAND PALETTE (⌘K)
+// ════════════════════════════════════════════════════════════════════
+
+let _cmdOpen = false;
+
+function openCommandPalette() {
+  _cmdOpen = true;
+  const pal = document.getElementById('cmd-palette');
+  if (!pal) return;
+  pal.style.display = 'flex';
+  const inp = document.getElementById('cmd-input');
+  if (inp) { inp.value = ''; inp.focus(); }
+  renderCmdResults('');
+}
+
+function closeCommandPalette() {
+  _cmdOpen = false;
+  const pal = document.getElementById('cmd-palette');
+  if (pal) pal.style.display = 'none';
+}
+
+function renderCmdResults(query) {
+  const el = document.getElementById('cmd-results');
+  if (!el) return;
+  const q = query.toLowerCase().trim();
+
+  const commands = [
+    { icon: '＋', label: 'New Task', kbd: 'N', action: () => openNewTask() },
+    { icon: '＋', label: 'New Note', kbd: '', action: () => openNewNote() },
+    { icon: '🎯', label: 'Focus View', kbd: '1', action: () => switchView('focus', document.querySelector('.navtab:nth-child(2)')) },
+    { icon: '📋', label: 'Board View', kbd: '2', action: () => switchView('board', document.querySelector('.navtab:nth-child(1)')) },
+    { icon: '📅', label: 'Calendar', kbd: '3', action: () => switchView('calendar', document.querySelector('.navtab:nth-child(3)')) },
+    { icon: '📝', label: 'Notes', kbd: '4', action: () => switchView('notes', document.querySelector('.navtab:nth-child(5)')) },
+    { icon: '⚙️', label: 'Settings', kbd: ',', action: () => switchView('settings', document.querySelector('.navtab:last-child')) },
+    { icon: '✦', label: 'Open AI Assistant', kbd: '/', action: () => toggleAI() },
+    { icon: '🗓️', label: 'Plan My Week (AI)', kbd: '', action: () => aiPlanMyWeek() },
+    { icon: '🔄', label: 'Add Recurring Task', kbd: '', action: () => openRecurringModal() },
+    { icon: '↕️', label: 'Toggle Board Layout', kbd: 'L', action: () => toggleLayout() },
+    { icon: '📤', label: 'Export Data (JSON)', kbd: '', action: () => exportDataJSON() },
+    { icon: '🌙', label: 'Toggle Dark Mode', kbd: '', action: () => toggleDarkMode() },
+  ];
+
+  // Also search tasks
+  const taskMatches = q.length > 1
+    ? S.tasks.filter(t => t.title.toLowerCase().includes(q)).slice(0, 5).map(t => ({
+        icon: '📌', label: t.title, sub: catById(t.category).label + ' · ' + t.status,
+        action: () => openEditTask(t.id)
+      }))
+    : [];
+
+  // Also search notes
+  const noteMatches = q.length > 1
+    ? (S.notes || []).filter(n => (n.title + n.content).toLowerCase().includes(q)).slice(0, 3).map(n => ({
+        icon: '📄', label: n.title || 'Untitled Note', sub: (n.content || '').slice(0, 50),
+        action: () => { switchView('notes', document.querySelector('.navtab:nth-child(5)')); }
+      }))
+    : [];
+
+  const filtered = q
+    ? commands.filter(c => c.label.toLowerCase().includes(q))
+    : commands;
+
+  const all = [...filtered, ...taskMatches, ...noteMatches];
+
+  if (!all.length) {
+    el.innerHTML = `<div style="padding:16px;text-align:center;color:var(--text4);font-size:13px">No results for "${esc(q)}"</div>`;
+    return;
+  }
+
+  el.innerHTML = all.map((cmd, i) =>
+    `<div class="cmd-item" tabindex="0" onclick="(${cmd.action.toString()})(this);closeCommandPalette()">
+      <span class="cmd-icon">${cmd.icon}</span>
+      <div class="cmd-label-wrap">
+        <span class="cmd-label">${esc(cmd.label)}</span>
+        ${cmd.sub ? `<span class="cmd-sub">${esc(cmd.sub)}</span>` : ''}
+      </div>
+      ${cmd.kbd ? `<kbd class="cmd-kbd">${cmd.kbd}</kbd>` : ''}
+    </div>`
+  ).join('');
+}
+
+// ════════════════════════════════════════════════════════════════════
+// TIER 3B: KEYBOARD NAVIGATION
+// ════════════════════════════════════════════════════════════════════
+
+function initKeyboardNav() {
+  document.addEventListener('keydown', e => {
+    const tag = document.activeElement?.tagName;
+    const inInput = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || document.activeElement?.isContentEditable;
+
+    // ⌘K or Ctrl+K — command palette
+    if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+      e.preventDefault();
+      _cmdOpen ? closeCommandPalette() : openCommandPalette();
+      return;
+    }
+
+    // Escape — close palette, close modals
+    if (e.key === 'Escape') {
+      if (_cmdOpen) { closeCommandPalette(); return; }
+      return;
+    }
+
+    if (inInput || isModalOpen()) return;
+
+    // Number keys — switch views
+    const viewMap = { '1': ['board',0], '2': ['focus',1], '3': ['calendar',2], '4': ['notes',4], '5': ['settings',-1] };
+    if (viewMap[e.key]) {
+      const [view, tabIdx] = viewMap[e.key];
+      const tab = tabIdx >= 0 ? document.querySelectorAll('.navtab')[tabIdx] : document.querySelector('.navtab:last-child');
+      if (tab) switchView(view, tab);
+      return;
+    }
+
+    // N — new task
+    if (e.key === 'n' || e.key === 'N') { openNewTask(); return; }
+
+    // / — open AI
+    if (e.key === '/') { e.preventDefault(); toggleAI(); return; }
+
+    // L — toggle layout
+    if ((e.key === 'l' || e.key === 'L') && curView === 'board') { toggleLayout(); return; }
+
+    // , — settings
+    if (e.key === ',') { const t = document.querySelector('.navtab:last-child'); if(t) switchView('settings', t); return; }
+  });
+}
+
+// ════════════════════════════════════════════════════════════════════
+// TIER 3C: TIMELINE / GANTT VIEW
+// ════════════════════════════════════════════════════════════════════
+
+let timelineOffset = 0; // days from today
+
+function renderTimeline() {
+  const el = document.getElementById('timeline-grid');
+  if (!el) return;
+
+  const today = new Date();
+  const startDate = new Date(today.getTime() + timelineOffset * 86400000);
+  const days = 14; // show 2 weeks
+
+  // Header
+  const headers = [];
+  for (let d = 0; d < days; d++) {
+    const day = new Date(startDate.getTime() + d * 86400000);
+    const isToday = day.toISOString().slice(0,10) === today.toISOString().slice(0,10);
+    headers.push(`<div class="tl-header ${isToday?'tl-today-col':''}" style="min-width:48px">
+      <div class="tl-day-name">${['Su','Mo','Tu','We','Th','Fr','Sa'][day.getDay()]}</div>
+      <div class="tl-day-num ${isToday?'tl-today-num':''}">${day.getDate()}</div>
+    </div>`);
+  }
+
+  // Tasks with due dates
+  const tasksWithDates = S.tasks.filter(t => t.dueDate && t.status !== 'finished')
+    .sort((a, b) => a.dueDate.localeCompare(b.dueDate));
+
+  const rows = tasksWithDates.map(t => {
+    const cat = catById(t.category);
+    const taskDate = new Date(t.dueDate + 'T12:00:00');
+    const dayOffset = Math.round((taskDate - startDate) / 86400000);
+    const visible = dayOffset >= 0 && dayOffset < days;
+    const cells = Array.from({length: days}, (_, i) => {
+      const isTaskDay = i === dayOffset;
+      const isOverdue = t.dueDate < today.toISOString().slice(0,10);
+      return `<div class="tl-cell ${i === Math.round((today - startDate)/86400000) ? 'tl-today-col':''}">${isTaskDay ?
+        `<div class="tl-task-bar" style="background:${isOverdue?'var(--pri-high)':cat.color}" title="${esc(t.title)}" onclick="openEditTask('${t.id}')">
+          <span>${esc(t.title.slice(0,15))}</span>
+        </div>` : ''}</div>`;
+    });
+    return `<div class="tl-row">
+      <div class="tl-row-label" onclick="openEditTask('${t.id}')" title="${esc(t.title)}">
+        <span class="tl-row-dot" style="background:${cat.color}"></span>
+        <span>${esc(t.title.slice(0,22))}</span>
+      </div>
+      ${cells.join('')}
+    </div>`;
+  });
+
+  // Tasks without dates
+  const noDates = S.tasks.filter(t => !t.dueDate && t.status !== 'finished');
+
+  el.innerHTML = `
+    <div class="tl-header-row">
+      <div class="tl-row-label" style="font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase">Task</div>
+      ${headers.join('')}
+    </div>
+    ${rows.join('') || '<div class="tl-empty">No tasks with due dates. Add due dates to tasks to see them here.</div>'}
+    ${noDates.length ? `<div class="tl-no-date-section">
+      <div style="font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;padding:8px 0 4px">No due date (${noDates.length})</div>
+      ${noDates.slice(0,8).map(t => {
+        const cat = catById(t.category);
+        return `<div class="tl-row" style="opacity:.5">
+          <div class="tl-row-label" onclick="openEditTask('${t.id}')">
+            <span class="tl-row-dot" style="background:${cat.color}"></span>
+            <span>${esc(t.title.slice(0,22))}</span>
+          </div>
+          ${Array.from({length:days},()=>'<div class="tl-cell tl-no-date"></div>').join('')}
+        </div>`;
+      }).join('')}
+    </div>` : ''}
+  `;
+}
+
+function timelineNav(dir) { timelineOffset += dir * 7; renderTimeline(); }
+
+// ════════════════════════════════════════════════════════════════════
+// TIER 3D: MARKDOWN RENDERING IN NOTES
+// ════════════════════════════════════════════════════════════════════
+
+function renderMarkdown(text) {
+  if (!text) return '';
+  // Basic markdown: bold, italic, headers, lists, code, links
+  return text
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/```([\s\S]*?)```/g, '<pre class="md-code"><code>$1</code></pre>')
+    .replace(/`([^`]+)`/g, '<code class="md-inline">$1</code>')
+    .replace(/^### (.+)$/gm, '<h3 class="md-h3">$1</h3>')
+    .replace(/^## (.+)$/gm,  '<h2 class="md-h2">$1</h2>')
+    .replace(/^# (.+)$/gm,   '<h1 class="md-h1">$1</h1>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/^\- (.+)$/gm, '<li class="md-li">$1</li>')
+    .replace(/^(\d+)\. (.+)$/gm, '<li class="md-oli">$2</li>')
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" class="md-link">$1</a>')
+    .replace(/^---$/gm, '<hr class="md-hr">')
+    .replace(/\n/g, '<br>');
+}
+
+// Note preview/edit toggle
+function toggleNoteMarkdown(noteId) {
+  const pad = document.querySelector(`[data-note-id="${noteId}"]`);
+  if (!pad) return;
+  const textarea = pad.querySelector('textarea');
+  let preview = pad.querySelector('.note-md-preview');
+  if (preview) {
+    preview.remove();
+    textarea.style.display = '';
+    return;
+  }
+  preview = document.createElement('div');
+  preview.className = 'note-md-preview';
+  preview.innerHTML = renderMarkdown(textarea.value);
+  preview.onclick = () => { preview.remove(); textarea.style.display = ''; textarea.focus(); };
+  textarea.style.display = 'none';
+  textarea.parentNode.insertBefore(preview, textarea);
+}
+
+// ════════════════════════════════════════════════════════════════════
+// TIER 3E: MICRO-ANIMATIONS
+// ════════════════════════════════════════════════════════════════════
+
+function injectAnimationCSS() {
+  const style = document.createElement('style');
+  style.textContent = `
+    /* Card enter animation */
+    @keyframes card-enter { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
+    .card { animation: card-enter .15s ease-out; }
+
+    /* Column header pulse when count changes */
+    @keyframes count-pop { 0%,100%{transform:scale(1)} 50%{transform:scale(1.15)} }
+    .col-count.popped { animation: count-pop .2s ease; }
+
+    /* AI panel slide */
+    @keyframes panel-slide { from { opacity:0; transform:translateY(12px) scale(.98); } to { opacity:1; transform:none; } }
+    #ai-panel.open { animation: panel-slide .18s ease-out; }
+
+    /* Command palette */
+    @keyframes palette-in { from { opacity:0; transform:translateY(-8px) scale(.97); } to { opacity:1; transform:none; } }
+    #cmd-palette { animation: palette-in .16s ease-out; }
+
+    /* Insight chips */
+    @keyframes insight-in { from { opacity:0; transform:translateX(-8px); } to { opacity:1; transform:none; } }
+    .insight-chip { animation: insight-in .2s ease-out both; }
+
+    /* Board view transitions */
+    .view-wrap { animation: card-enter .15s ease-out; }
+
+    /* Smooth focus ring */
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
+
+    /* Card hover lift */
+    .card { transition: box-shadow .12s ease, transform .1s ease; }
+    .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,.1); transform: translateY(-1px); }
+    .card:active { transform: translateY(0); }
+
+    /* Button transitions */
+    .btn, .tbb, .navtab { transition: background .12s, color .12s, border-color .12s; }
+
+    /* Sidebar sector hover */
+    .catbtn { transition: background .1s, border-color .1s; }
+
+    /* Note pad hover */
+    .note-pad { transition: box-shadow .15s; }
+    .note-pad:hover { box-shadow: 5px 5px 16px rgba(0,0,0,.22); }
+  `;
+  document.head.appendChild(style);
+}
+
+// ════════════════════════════════════════════════════════════════════
+// TIER 3F: ONBOARDING FLOW
+// ════════════════════════════════════════════════════════════════════
+
+function checkOnboarding() {
+  if (localStorage.getItem('ab-onboarded') || (S.tasks && S.tasks.length > 1)) return;
+  const el = document.getElementById('onboarding-overlay');
+  if (el) el.style.display = 'flex';
+}
+
+async function onboardingAISetup() {
+  const input = document.getElementById('onboard-input').value.trim();
+  if (!input) return;
+  const el = document.getElementById('onboarding-overlay');
+  if (el) el.style.display = 'none';
+  localStorage.setItem('ab-onboarded', '1');
+
+  if (!anthropicKey) { render(); return; }
+
+  // Let AI set up the board
+  if (!document.getElementById('ai-panel').classList.contains('open')) toggleAI();
+  addAIMessage('ai', `🚀 Setting up your Action Board for: "${input}"…`);
+
+  const setupPrompt = `New user setup. They said: "${input}"
+
+Create a complete, personalized starting board for them. Include:
+1. 8-12 relevant tasks spread across columns (backlog, inprogress, future) with realistic due dates
+2. Set focus tasks (2-3 most important ones)
+3. Create 2-3 starter notes with useful content for their context
+
+Execute everything as a single batch action. Make it feel immediately useful and personal.`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': anthropicKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+      body: JSON.stringify({ model: 'claude-opus-4-5', max_tokens: 3000,
+        system: AI_SYSTEM(),
+        messages: [{ role: 'user', content: setupPrompt }] })
+    });
+    const data = await res.json();
+    const reply = data.content?.[0]?.text || '';
+    const actionMatch = reply.match(/```action\n?([\s\S]*?)```/);
+    if (actionMatch) {
+      try { executeAction(JSON.parse(actionMatch[1].trim())); } catch(e) {}
+    }
+    addAIMessage('ai', reply.replace(/```action[\s\S]*?```/g, '').trim() || "Your board is set up! Let's get to work.");
+  } catch(e) {
+    addAIMessage('ai', 'Setup failed. You can set up your board manually or ask me anything!');
+  }
+}
+
+function skipOnboarding() {
+  localStorage.setItem('ab-onboarded', '1');
+  const el = document.getElementById('onboarding-overlay');
+  if (el) el.style.display = 'none';
+}
+
+// ════════════════════════════════════════════════════════════════════
+// TIER 4A: REAL-TIME COLLABORATION
+// ════════════════════════════════════════════════════════════════════
+
+let _realtimeChannel = null;
+
+function initRealtime() {
+  if (!_supabase || !_currentUser) return;
+  if (_realtimeChannel) { _realtimeChannel.unsubscribe(); _realtimeChannel = null; }
+
+  _realtimeChannel = _supabase
+    .channel('board-' + _currentUser.id)
+    .on('postgres_changes', {
+      event: 'UPDATE', schema: 'public', table: 'boards',
+      filter: 'user_id=eq.' + _currentUser.id
+    }, payload => {
+      // Another device updated the board
+      if (payload.new && payload.new.data) {
+        const remote = payload.new.data;
+        // Only update if remote is newer
+        if (!S.lastSaved || remote.lastSaved > S.lastSaved) {
+          const wasView = curView;
+          S = Object.assign(makeSeed(), remote);
+          ensureStateFields && ensureStateFields();
+          invalidateCardCache();
+          render();
+          // Show sync indicator
+          showSyncToast();
+        }
+      }
+    })
+    .subscribe();
+}
+
+function showSyncToast() {
+  const el = document.getElementById('sync-toast');
+  if (!el) return;
+  el.style.opacity = '1';
+  el.textContent = '🔄 Board updated from another device';
+  setTimeout(() => { el.style.opacity = '0'; }, 3000);
+}
+
+// ════════════════════════════════════════════════════════════════════
+// TIER 4B: GRAPH VIEW FOR NOTES
+// ════════════════════════════════════════════════════════════════════
+
+function renderNoteGraph() {
+  const canvas = document.getElementById('graph-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width = canvas.offsetWidth;
+  const H = canvas.height = canvas.offsetHeight || 500;
+
+  ctx.clearRect(0, 0, W, H);
+
+  const notes = S.notes || [];
+  if (!notes.length) {
+    ctx.fillStyle = 'var(--text4)';
+    ctx.font = '14px system-ui';
+    ctx.textAlign = 'center';
+    ctx.fillText('No notes to graph. Create some notes first.', W/2, H/2);
+    return;
+  }
+
+  // Position nodes in a circle
+  const nodes = notes.map((n, i) => {
+    const angle = (i / notes.length) * Math.PI * 2;
+    const r = Math.min(W, H) * 0.35;
+    return { id: n.id, title: n.title || 'Untitled', x: W/2 + Math.cos(angle)*r, y: H/2 + Math.sin(angle)*r, cat: catById(n.category) };
+  });
+
+  // Also add tasks as nodes (smaller)
+  const taskNodes = S.tasks.slice(0, 10).map((t, i) => {
+    const angle = (i / S.tasks.slice(0,10).length) * Math.PI * 2 + 0.3;
+    const r = Math.min(W, H) * 0.18;
+    return { id: t.id, title: t.title, x: W/2 + Math.cos(angle)*r, y: H/2 + Math.sin(angle)*r, cat: catById(t.category), small: true };
+  });
+
+  const allNodes = [...nodes, ...taskNodes];
+
+  // Draw edges (notes in same category are connected)
+  ctx.strokeStyle = 'rgba(99,102,241,.2)';
+  ctx.lineWidth = 1;
+  for (let i = 0; i < nodes.length; i++) {
+    for (let j = i+1; j < nodes.length; j++) {
+      if (notes[i].category === notes[j].category) {
+        ctx.beginPath();
+        ctx.moveTo(nodes[i].x, nodes[i].y);
+        ctx.lineTo(nodes[j].x, nodes[j].y);
+        ctx.stroke();
+      }
+    }
+  }
+
+  // Draw nodes
+  allNodes.forEach(n => {
+    const r = n.small ? 10 : 18;
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, r, 0, Math.PI * 2);
+    ctx.fillStyle = n.cat.color;
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,.4)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Labels
+    ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--text').trim() || '#111';
+    ctx.font = n.small ? '9px system-ui' : '11px system-ui';
+    ctx.textAlign = 'center';
+    ctx.fillText((n.title || '').slice(0, 14), n.x, n.y + r + 12);
+  });
+}
+
+// ════════════════════════════════════════════════════════════════════
+// TIER 4C: PUBLIC BOARD SHARING
+// ════════════════════════════════════════════════════════════════════
+
+async function generateShareLink() {
+  const btn = document.getElementById('share-btn');
+  if (btn) { btn.textContent = 'Generating…'; btn.disabled = true; }
+
+  // Store a public snapshot in Supabase
+  if (!_supabase || !_currentUser) {
+    alert('Sign in to create a share link.');
+    if (btn) { btn.textContent = 'Generate Share Link'; btn.disabled = false; }
+    return;
+  }
+
+  const shareId = uid();
+  const publicData = {
+    tasks: S.tasks.map(t => ({
+      id: t.id, title: t.title, status: t.status, priority: t.priority,
+      category: t.category, dueDate: t.dueDate, notes: t.notes
+    })),
+    categories: S.categories,
+    statuses: S.statuses,
+    sharedAt: now(),
+    ownerEmail: _currentUser.email
+  };
+
+  try {
+    const { error } = await _supabase.from('public_shares').upsert({
+      id: shareId, user_id: _currentUser.id, data: publicData, created_at: now()
+    });
+    if (error) throw error;
+    const link = window.location.origin + '?share=' + shareId;
+    document.getElementById('share-link-out').value = link;
+    document.getElementById('share-link-out').style.display = 'block';
+    navigator.clipboard?.writeText(link).then(() => {
+      if (btn) btn.textContent = '✓ Copied!';
+    });
+  } catch(e) {
+    alert('Share failed: ' + e.message);
+    if (btn) { btn.textContent = 'Generate Share Link'; btn.disabled = false; }
+  }
+}
+
+// Check for shared board on load
+async function checkSharedBoard() {
+  const params = new URLSearchParams(window.location.search);
+  const shareId = params.get('share');
+  if (!shareId || !_supabase) return;
+  const { data } = await _supabase.from('public_shares').select('data').eq('id', shareId).single();
+  if (data?.data) {
+    showSharedBoard(data.data);
+  }
+}
+
+function showSharedBoard(data) {
+  document.getElementById('auth-screen')?.style && (document.getElementById('auth-screen').style.display = 'none');
+  // Mount a read-only view
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:var(--bg);z-index:99999;overflow:auto;padding:20px';
+  overlay.innerHTML = `
+    <div style="max-width:900px;margin:0 auto">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+        <span style="font-size:22px;font-weight:800;color:var(--accent)">◈ Action Board</span>
+        <span style="font-size:13px;color:var(--text3)">Shared by ${esc(data.ownerEmail || 'unknown')}</span>
+        <a href="${window.location.origin}" style="margin-left:auto;font-size:13px;color:var(--accent);font-weight:600">Get your own →</a>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:12px">
+        ${(data.statuses || []).map(col => `
+          <div style="flex:1;min-width:200px;background:var(--bg4);border:1px solid var(--border);border-radius:var(--r);overflow:hidden">
+            <div style="padding:10px 12px;background:var(--bg3);border-bottom:2px solid var(--accent);font-weight:700;font-size:13px">${esc(col.label)}</div>
+            <div style="padding:8px;display:flex;flex-direction:column;gap:6px">
+              ${data.tasks.filter(t=>t.status===col.id).map(t=>`
+                <div style="background:var(--bg4);border:1px solid var(--border);border-radius:6px;padding:8px 10px">
+                  <div style="font-size:13px;font-weight:700">${esc(t.title)}</div>
+                  ${t.notes?`<div style="font-size:11px;color:var(--text3);margin-top:3px">${esc(t.notes.slice(0,60))}</div>`:''}
+                </div>`).join('')}
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+
+// ════════════════════════════════════════════════════════════════════
+// ENHANCED AI SYSTEM PROMPT — override with memory + fuller context
+// ════════════════════════════════════════════════════════════════════
+
+const _prevAISys = AI_SYSTEM;
+AI_SYSTEM = function() {
+  let base = _prevAISys();
+
+  // Add AI memory
+  const memory = getAIMemoryContext();
+
+  // Add recurring tasks context
+  const recurringCtx = (S.recurring || []).length
+    ? '\nRECURRING TASKS: ' + S.recurring.map(r => `"${r.title}" (${r.frequency})`).join(', ')
+    : '';
+
+  // Add dependencies context
+  const blocked = S.tasks.filter(t => isBlocked(t.id));
+  const blockedCtx = blocked.length
+    ? '\nBLOCKED TASKS: ' + blocked.map(t => `"${t.title}" blocked by ${getBlockers(t.id).map(b=>`"${b.title}"`).join(', ')}`).join('; ')
+    : '';
+
+  // Add plan-my-week action to prompt
+  const extraActions = `
+ADD RECURRING TASK:
+\`\`\`action
+{"action":"add_recurring","title":"...","frequency":"daily|weekly|monthly|weekday","category":"...","priority":"med"}
+\`\`\`
+
+SET TASK DEPENDENCY (taskId is blocked until blockerId is finished):
+\`\`\`action
+{"action":"set_dependency","taskId":"...","blockerId":"..."}
+\`\`\`
+
+PLAN MY WEEK (schedule tasks across next 7 days):
+\`\`\`action
+{"action":"plan_week","assignments":[{"taskId":"...","dueDate":"YYYY-MM-DD"}]}
+\`\`\`
+
+BULK MOVE MULTIPLE TASKS:
+\`\`\`action
+{"action":"batch","actions":[{"action":"move_task","taskId":"...","status":"..."},{"action":"move_task","taskId":"...","status":"..."}]}
+\`\`\`
+`;
+
+  return base + memory + recurringCtx + blockedCtx + '\n\n' + extraActions +
+    '\n- plan_week: assign due dates to multiple tasks intelligently across 7 days' +
+    '\n- Think strategically: consider blockers, priorities, and realistic workload' +
+    '\n- proactively suggest recurring tasks if user mentions habits/routines';
+};
+
+// Extended executeAction to handle new action types
+const _prevExecV10 = executeAction;
+executeAction = function(a) {
+  if (!a || !a.action) return;
+
+  if (a.action === 'add_recurring') {
+    ensureRecurring();
+    S.recurring.push({
+      id: uid(), title: a.title || 'Recurring Task',
+      frequency: a.frequency || 'weekly',
+      category: (S.categories.find(c => c.id === a.category || c.label.toLowerCase() === (a.category||'').toLowerCase()) || S.categories[0]).id,
+      priority: a.priority || 'med',
+      lastGenerated: '', createdAt: now()
+    });
+    render(); scheduleSave();
+    addAIMessage('ai', `✓ Recurring task added: **${a.title}** (${a.frequency})`);
+    return;
+  }
+
+  if (a.action === 'set_dependency') {
+    const t = S.tasks.find(x => x.id === a.taskId);
+    if (t) {
+      if (!t.blockedBy) t.blockedBy = [];
+      if (!t.blockedBy.includes(a.blockerId)) t.blockedBy.push(a.blockerId);
+      t.updatedAt = now();
+      invalidateCardCache(); renderBoard(); scheduleSave();
+      addAIMessage('ai', `✓ Dependency set`);
+    }
+    return;
+  }
+
+  if (a.action === 'plan_week') {
+    let changed = 0;
+    (a.assignments || []).forEach(assign => {
+      const t = S.tasks.find(x => x.id === assign.taskId);
+      if (t) { t.dueDate = assign.dueDate; t.updatedAt = now(); changed++; }
+    });
+    invalidateCardCache(); render(); scheduleSave();
+    addAIMessage('ai', `✓ Week planned — ${changed} tasks scheduled`);
+    return;
+  }
+
+  _prevExecV10(a);
+};
+
+// ════════════════════════════════════════════════════════════════════
+// CARD HTML ENHANCEMENTS — subtask progress, blocked indicator, recurring badge
+// ════════════════════════════════════════════════════════════════════
+
+const _prevCardHTML = cardHTML;
+cardHTML = function(t) {
+  let h = _prevCardHTML(t);
+
+  // Inject subtask progress bar right before c-footer
+  const { total, done } = getSubtaskProgress(t);
+  if (total > 0) {
+    const pct = Math.round((done / total) * 100);
+    const progressBar = `<div class="c-progress" title="${done}/${total} steps done">
+      <div class="c-progress-bar" style="width:${pct}%"></div>
+      <span class="c-progress-label">${done}/${total}</span>
+    </div>`;
+    h = h.replace('<div class="c-footer">', progressBar + '<div class="c-footer">');
+  }
+
+  // Blocked indicator
+  if (isBlocked(t.id)) {
+    const blockers = getBlockers(t.id).map(b => b.title.slice(0,20)).join(', ');
+    const badge = `<div class="c-blocked" title="Blocked by: ${esc(blockers)}">🔒 Blocked</div>`;
+    h = h.replace('<div class="c-footer">', badge + '<div class="c-footer">');
+  }
+
+  // Recurring badge
+  if (t.recurringId) {
+    h = h.replace('<div class="c-footer">', '<div class="c-recurring-badge" title="Recurring task">🔄</div><div class="c-footer">');
+  }
+
+  return h;
+};
+
+// ════════════════════════════════════════════════════════════════════
+// INIT — wire everything up on load
+// ════════════════════════════════════════════════════════════════════
+
+window.addEventListener('load', function() {
+  // Animations
+  injectAnimationCSS();
+
+  // Keyboard nav
+  initKeyboardNav();
+
+  // Command palette input handler
+  const cmdInput = document.getElementById('cmd-input');
+  if (cmdInput) {
+    cmdInput.addEventListener('input', e => renderCmdResults(e.target.value));
+    cmdInput.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closeCommandPalette();
+      if (e.key === 'Enter') {
+        const first = document.querySelector('.cmd-item');
+        if (first) first.click();
+      }
+      if (e.key === 'ArrowDown') {
+        const items = document.querySelectorAll('.cmd-item');
+        const focused = document.activeElement;
+        const idx = Array.from(items).indexOf(focused);
+        if (items[idx+1]) items[idx+1].focus();
+      }
+      if (e.key === 'ArrowUp') {
+        const items = document.querySelectorAll('.cmd-item');
+        const focused = document.activeElement;
+        const idx = Array.from(items).indexOf(focused);
+        if (idx > 0) items[idx-1].focus();
+        else cmdInput.focus();
+      }
+    });
+  }
+
+  // Close command palette on backdrop click
+  document.getElementById('cmd-palette')?.addEventListener('mousedown', e => {
+    if (e.target === document.getElementById('cmd-palette')) closeCommandPalette();
+  });
+
+  // Notification permission request (subtle — only if user has tasks with due dates)
+  const hasDueDates = S.tasks.some(t => t.dueDate);
+  if (hasDueDates && Notification.permission === 'default') {
+    setTimeout(() => requestNotificationPermission().then(granted => {
+      if (granted) checkDueNotifications();
+    }), 5000);
+  } else if (Notification.permission === 'granted') {
+    checkDueNotifications();
+  }
+
+  // Process recurring tasks
+  processRecurringTasks();
+
+  // Daily briefing / insights
+  setTimeout(() => {
+    renderInsights();
+    aiDailyBriefing();
+  }, 1000);
+
+  // Check onboarding
+  setTimeout(checkOnboarding, 500);
+
+  // Check shared board
+  checkSharedBoard();
+
+  // Realtime collaboration
+  setTimeout(() => initRealtime(), 2000);
+
+  // Patch render to include insights
+  const _origRender = render;
+  render = function() {
+    _origRender();
+    renderInsights();
+  };
+
+  // Patch doSave to save AI memory summary
+  const _origDoSave = doSave;
+  doSave = function() {
+    _origDoSave();
+    // Periodically snapshot a brief memory
+    const memKey = 'ab-mem-date';
+    const today = new Date().toISOString().slice(0,10);
+    if (localStorage.getItem(memKey) !== today) {
+      const summary = `${S.tasks.filter(t=>t.status!=='finished').length} active tasks, ` +
+        `${S.tasks.filter(t=>t.status==='finished').length} done, ` +
+        `${(S.notes||[]).length} notes, ` +
+        `focus: ${S.focusTasks.map(id=>S.tasks.find(t=>t.id===id)?.title).filter(Boolean).join(', ')||'none'}`;
+      saveAIMemory(summary);
+      localStorage.setItem(memKey, today);
+    }
+  };
+
+  // Patch renderSettings to add new sections
+  const _origRS = renderSettings;
+  renderSettings = function() {
+    _origRS();
+    setTimeout(() => {
+      const sg = document.getElementById('settings-grid');
+      if (!sg) return;
+
+      // Recurring tasks section
+      if (!sg.querySelector('#recurring-section')) {
+        const div = document.createElement('div');
+        div.id = 'recurring-section';
+        div.style.cssText = 'grid-column:1/-1';
+        div.innerHTML = `
+          <div class="settings-sec-title" style="margin-top:8px">Recurring Tasks</div>
+          <div id="recurring-list"></div>
+          <button class="btn pri" onclick="openRecurringModal()" style="font-size:12px;margin-top:8px">+ Add Recurring Task</button>`;
+        sg.appendChild(div);
+        renderRecurringList();
+      }
+
+      // Public sharing section
+      if (!sg.querySelector('#sharing-section')) {
+        const div = document.createElement('div');
+        div.id = 'sharing-section';
+        div.style.cssText = 'grid-column:1/-1;margin-top:4px';
+        div.innerHTML = `
+          <div class="settings-sec-title">Public Board Sharing</div>
+          <div style="font-size:12px;color:var(--text3);margin-bottom:8px">Share a read-only view of your board with anyone.</div>
+          <button id="share-btn" class="btn" onclick="generateShareLink()" style="font-size:12px">Generate Share Link</button>
+          <input id="share-link-out" type="text" style="display:none;margin-top:8px;font-size:12px" readonly/>`;
+        sg.appendChild(div);
+      }
+    }, 80);
+  };
+});
 
 </script>
 </body>
