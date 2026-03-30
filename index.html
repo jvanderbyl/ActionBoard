@@ -3142,7 +3142,7 @@ init();
 // Wire dialogs after page load
 window.addEventListener('DOMContentLoaded', function(){
   const dialogFns = {
-    'task-modal': ()=>closeTaskModal(),
+    // task-modal intentionally excluded — only closes via Save/Cancel buttons
     'steps-modal': ()=>closeStepsModal(),
     'cat-modal': ()=>closeCatModal(),
     'cat-delete-modal': ()=>closeCatDeleteModal(),
@@ -3158,6 +3158,9 @@ window.addEventListener('DOMContentLoaded', function(){
     // Click backdrop
     el.addEventListener('click', e=>{ if(e.target===el) fn(); });
   });
+  // Task modal: Escape does nothing (only Save/Cancel buttons close it)
+  const taskModal = document.getElementById('task-modal');
+  if(taskModal) taskModal.addEventListener('cancel', e=>e.preventDefault());
 });
 
 // Passive scroll listeners for performance
@@ -3842,17 +3845,38 @@ function renderNotes(){
 
 // ── Note drag (move on canvas) ──
 function noteOpenEdit(id) {
-  // Toggle the inline edit row
   var row = document.getElementById('note-edit-'+id);
   if (!row) return;
   var isOpen = row.style.display === 'flex';
-  // Close all other edit rows first
+  // Close all open edit rows
   document.querySelectorAll('.note-pad-edit-row').forEach(function(r){ r.style.display='none'; });
-  if (!isOpen) {
-    row.style.display = 'flex';
-    var inp = row.querySelector('input');
-    if (inp) { inp.focus(); inp.select(); }
+  if (isOpen) return; // was open, now closed — done
+  // Open this one
+  row.style.display = 'flex';
+  var inp = row.querySelector('input');
+  if (inp) { inp.focus(); inp.select(); }
+  // Close when focus leaves the entire edit row
+  // Use a short delay so the focusin on child elements doesn't immediately fire
+  function onFocusOut(e) {
+    setTimeout(function() {
+      // relatedTarget is where focus went — if it's inside the row, keep open
+      if (row.contains(document.activeElement)) return;
+      row.style.display = 'none';
+      row.removeEventListener('focusout', onFocusOut);
+    }, 100);
   }
+  row.addEventListener('focusout', onFocusOut);
+  // Also close when user clicks anywhere outside the note-pad
+  function onDocClick(e) {
+    if (!row.contains(e.target) && !e.target.closest('.note-pad-btn')) {
+      row.style.display = 'none';
+      document.removeEventListener('mousedown', onDocClick);
+    }
+  }
+  // Small delay so the pencil-button click that opened this doesn't immediately close it
+  setTimeout(function() {
+    document.addEventListener('mousedown', onDocClick);
+  }, 150);
 }
 var _noteDragId=null,_noteDragOx=0,_noteDragOy=0;
 function noteStartDrag(e,id){
