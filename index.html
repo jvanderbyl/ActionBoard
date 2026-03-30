@@ -1270,6 +1270,24 @@ body.dark .note-md-preview .md-inline{background:#333}
     </div>
     <!-- Sketch -->
     <div>
+      <label class="flabel">Blocked By (Dependencies)</label>
+      <div id="dep-picker" style="max-height:120px;overflow-y:auto;padding:4px 0;font-size:13px"></div>
+      <div class="hint">Check tasks that must be finished before this one.</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--bg3);border-radius:var(--rs);border:1px solid var(--border)">
+      <input type="checkbox" id="f-make-recurring" onchange="document.getElementById('f-recurring-opts').style.display=this.checked?'block':'none'" style="width:16px;height:16px;cursor:pointer"/>
+      <label for="f-make-recurring" style="font-size:13px;font-weight:600;color:var(--text);cursor:pointer">Make recurring</label>
+    </div>
+    <div id="f-recurring-opts" style="display:none;padding:8px 12px;background:var(--bg3);border-radius:var(--rs);border:1px solid var(--border)">
+      <label class="flabel">Repeat frequency</label>
+      <select id="f-rec-freq">
+        <option value="daily">Daily</option>
+        <option value="weekday">Weekdays only</option>
+        <option value="weekly" selected>Weekly</option>
+        <option value="monthly">Monthly</option>
+      </select>
+    </div>
+    <div>
       <label class="flabel">Sketch (optional)</label>
       <div class="sketch-area">
         <div class="sketch-toolbar">
@@ -2537,6 +2555,16 @@ function openNewTask(status='backlog'){
   renderTags();renderTagManager();clearCanvas();
   openModal('task-modal');
   focusFirstInput('task-modal');
+  // Populate dependency picker
+  if (typeof renderDepPicker === 'function') renderDepPicker(id);
+  // Restore recurring state
+  const recCheck = document.getElementById('f-make-recurring');
+  const recOpts  = document.getElementById('f-recurring-opts');
+  if (recCheck && recOpts) {
+    const hasRec = (S.recurring||[]).some(r => r.title === (S.tasks.find(x=>x.id===id)||{}).title);
+    recCheck.checked = hasRec;
+    recOpts.style.display = hasRec ? 'block' : 'none';
+  }
 }
 
 function openEditTask(id,e){
@@ -2565,6 +2593,16 @@ function openEditTask(id,e){
   if(t.sketch){const img=new Image();img.onload=()=>ctx.drawImage(img,0,0);img.src=t.sketch;}
   openModal('task-modal');
   focusFirstInput('task-modal');
+  // Populate dependency picker
+  if (typeof renderDepPicker === 'function') renderDepPicker(id);
+  // Restore recurring state
+  const recCheck = document.getElementById('f-make-recurring');
+  const recOpts  = document.getElementById('f-recurring-opts');
+  if (recCheck && recOpts) {
+    const hasRec = (S.recurring||[]).some(r => r.title === (S.tasks.find(x=>x.id===id)||{}).title);
+    recCheck.checked = hasRec;
+    recOpts.style.display = hasRec ? 'block' : 'none';
+  }
 }
 
 function closeTaskModal(){
@@ -2593,6 +2631,21 @@ function saveTask(){
     updatedAt:n};
   if(isNew){S.tasks.push({id:uid(),createdAt:n,...data});}
   else{const idx=S.tasks.findIndex(t=>t.id===editingId);if(idx>-1)S.tasks[idx]={...S.tasks[idx],...data};}
+  // Save dependencies (blockedBy)
+  const savedTask = S.tasks.find(t => t.id === (isNew ? S.tasks[S.tasks.length-1]?.id : editingId));
+  if (savedTask) {
+    const depChecks = document.querySelectorAll('#dep-picker input[type=checkbox]');
+    if (depChecks.length) savedTask.blockedBy = Array.from(depChecks).filter(c=>c.checked).map(c=>c.dataset.taskid).filter(Boolean);
+    // Handle recurring
+    const makeRec = document.getElementById('f-make-recurring');
+    if (makeRec && makeRec.checked) {
+      if (typeof ensureRecurring === 'function') ensureRecurring();
+      if (S.recurring && !S.recurring.find(r => r.title === savedTask.title)) {
+        const freq = document.getElementById('f-rec-freq')?.value || 'weekly';
+        S.recurring.push({id:uid(), title:savedTask.title, frequency:freq, category:savedTask.category, priority:savedTask.priority||'med', lastGenerated:'', createdAt:now()});
+      }
+    }
+  }
   closeTaskModal();invalidateCardCache();render();scheduleSave();
 }
 
@@ -2973,7 +3026,7 @@ function switchView(v,btn){
   if(v==='habits')     { ensureHabitsV2 && ensureHabitsV2(); renderHabits(); }
   if(v==='archive')    renderArchive();
   if(v==='timeline')   renderTimeline();
-  if(v==='graph')      { setTimeout(renderNoteGraph, 100); }
+  if(v==='graph')      { setTimeout(function(){ renderNoteGraph(); initGraphClickHandler(); }, 100); }
   if(v==='settings')   renderSettings();
 }
 
@@ -5990,13 +6043,18 @@ function renderDepPicker(taskId) {
   const task = S.tasks.find(t => t.id === taskId);
   const blockedBy = task?.blockedBy || [];
   const others = S.tasks.filter(t => t.id !== taskId && t.status !== 'finished');
-  if (!others.length) { el.innerHTML = '<div style="font-size:12px;color:var(--text4)">No other tasks to depend on.</div>'; return; }
+  if (!others.length) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--text4)">No other active tasks to depend on.</div>';
+    return;
+  }
   el.innerHTML = others.map(t => {
     const checked = blockedBy.includes(t.id);
+    const cat = catById(t.category);
     return `<label style="display:flex;align-items:center;gap:7px;padding:4px 0;cursor:pointer;font-size:13px;color:var(--text2)">
-      <input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleBlocker('${taskId}','${t.id}')"/>
-      <span style="font-size:10px;font-weight:700;color:${catById(t.category).color}">${esc(catById(t.category).label)}</span>
-      ${esc(t.title.slice(0, 40))}
+      <input type="checkbox" data-taskid="${t.id}" ${checked ? 'checked' : ''}/>
+      <span style="width:8px;height:8px;border-radius:50%;background:${cat.color};flex-shrink:0"></span>
+      <span style="font-size:11px;font-weight:700;color:${cat.color};flex-shrink:0">${esc(cat.label)}</span>
+      ${esc(t.title.slice(0, 45))}
     </label>`;
   }).join('');
 }
@@ -6596,70 +6654,180 @@ function showSyncToast() {
 // TIER 4B: GRAPH VIEW FOR NOTES
 // ════════════════════════════════════════════════════════════════════
 
+// Store node positions for click handling
+var _graphNodeData = [];
+
 function renderNoteGraph() {
   const canvas = document.getElementById('graph-canvas');
   if (!canvas) return;
+
+  // Set canvas size to match container
+  const container = canvas.parentElement;
+  canvas.width  = container.offsetWidth  || 800;
+  canvas.height = (container.offsetHeight || 500) - 50;
+
   const ctx = canvas.getContext('2d');
-  const W = canvas.width = canvas.offsetWidth;
-  const H = canvas.height = canvas.offsetHeight || 500;
+  const W = canvas.width;
+  const H = canvas.height;
+  const isDark = document.body.classList.contains('dark');
 
   ctx.clearRect(0, 0, W, H);
 
+  // Draw background grid
+  ctx.strokeStyle = isDark ? 'rgba(255,255,255,.04)' : 'rgba(0,0,0,.04)';
+  ctx.lineWidth = 1;
+  for (let x = 0; x < W; x += 40) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
+  for (let y = 0; y < H; y += 40) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+
   const notes = S.notes || [];
-  if (!notes.length) {
-    ctx.fillStyle = 'var(--text4)';
+  const tasks = S.tasks.filter(t => t.status !== 'finished').slice(0, 12);
+
+  if (!notes.length && !tasks.length) {
+    ctx.fillStyle = isDark ? '#888' : '#aaa';
     ctx.font = '14px system-ui';
     ctx.textAlign = 'center';
-    ctx.fillText('No notes to graph. Create some notes first.', W/2, H/2);
+    ctx.fillText('No notes yet. Create some notes to see the graph.', W/2, H/2);
     return;
   }
 
-  // Position nodes in a circle
-  const nodes = notes.map((n, i) => {
-    const angle = (i / notes.length) * Math.PI * 2;
-    const r = Math.min(W, H) * 0.35;
-    return { id: n.id, title: n.title || 'Untitled', x: W/2 + Math.cos(angle)*r, y: H/2 + Math.sin(angle)*r, cat: catById(n.category) };
+  // Position note nodes in outer ring
+  const noteNodes = notes.map((n, i) => {
+    const angle = (i / Math.max(notes.length, 1)) * Math.PI * 2 - Math.PI / 2;
+    const r = Math.min(W, H) * 0.36;
+    return {
+      id: n.id, type: 'note', title: n.title || 'Untitled',
+      x: W/2 + Math.cos(angle) * r,
+      y: H/2 + Math.sin(angle) * r,
+      cat: catById(n.category), radius: 20
+    };
   });
 
-  // Also add tasks as nodes (smaller)
-  const taskNodes = S.tasks.slice(0, 10).map((t, i) => {
-    const angle = (i / S.tasks.slice(0,10).length) * Math.PI * 2 + 0.3;
+  // Position task nodes in inner ring
+  const taskNodes = tasks.map((t, i) => {
+    const angle = (i / Math.max(tasks.length, 1)) * Math.PI * 2 - Math.PI / 2;
     const r = Math.min(W, H) * 0.18;
-    return { id: t.id, title: t.title, x: W/2 + Math.cos(angle)*r, y: H/2 + Math.sin(angle)*r, cat: catById(t.category), small: true };
+    return {
+      id: t.id, type: 'task', title: t.title,
+      x: W/2 + Math.cos(angle) * r,
+      y: H/2 + Math.sin(angle) * r,
+      cat: catById(t.category), radius: 12
+    };
   });
 
-  const allNodes = [...nodes, ...taskNodes];
+  _graphNodeData = [...noteNodes, ...taskNodes];
 
-  // Draw edges (notes in same category are connected)
-  ctx.strokeStyle = 'rgba(99,102,241,.2)';
-  ctx.lineWidth = 1;
-  for (let i = 0; i < nodes.length; i++) {
-    for (let j = i+1; j < nodes.length; j++) {
+  // Draw edges between same-sector notes
+  ctx.lineWidth = 1.5;
+  for (let i = 0; i < noteNodes.length; i++) {
+    for (let j = i + 1; j < noteNodes.length; j++) {
       if (notes[i].category === notes[j].category) {
+        const alpha = isDark ? 0.2 : 0.15;
+        ctx.strokeStyle = noteNodes[i].cat.color + Math.round(alpha * 255).toString(16).padStart(2,'0');
         ctx.beginPath();
-        ctx.moveTo(nodes[i].x, nodes[i].y);
-        ctx.lineTo(nodes[j].x, nodes[j].y);
+        ctx.moveTo(noteNodes[i].x, noteNodes[i].y);
+        ctx.lineTo(noteNodes[j].x, noteNodes[j].y);
         ctx.stroke();
       }
     }
   }
 
+  // Draw edges for task dependencies
+  tasks.forEach((t, ti) => {
+    (t.blockedBy || []).forEach(bid => {
+      const blocker = taskNodes.find(n => n.id === bid);
+      if (blocker) {
+        ctx.strokeStyle = 'rgba(239,68,68,.3)';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([4, 3]);
+        ctx.beginPath();
+        ctx.moveTo(blocker.x, blocker.y);
+        ctx.lineTo(taskNodes[ti].x, taskNodes[ti].y);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+    });
+  });
+
   // Draw nodes
-  allNodes.forEach(n => {
-    const r = n.small ? 10 : 18;
+  _graphNodeData.forEach(n => {
+    // Shadow
+    ctx.shadowColor = 'rgba(0,0,0,.2)';
+    ctx.shadowBlur = 8;
+
+    // Circle
     ctx.beginPath();
-    ctx.arc(n.x, n.y, r, 0, Math.PI * 2);
+    ctx.arc(n.x, n.y, n.radius, 0, Math.PI * 2);
     ctx.fillStyle = n.cat.color;
     ctx.fill();
-    ctx.strokeStyle = 'rgba(255,255,255,.4)';
+    ctx.shadowBlur = 0;
+
+    // White border
+    ctx.strokeStyle = isDark ? 'rgba(255,255,255,.3)' : 'rgba(255,255,255,.8)';
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    // Labels
-    ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--text').trim() || '#111';
-    ctx.font = n.small ? '9px system-ui' : '11px system-ui';
+    // Icon in center
+    ctx.fillStyle = '#fff';
+    ctx.font = `${n.radius * 0.7}px system-ui`;
     ctx.textAlign = 'center';
-    ctx.fillText((n.title || '').slice(0, 14), n.x, n.y + r + 12);
+    ctx.textBaseline = 'middle';
+    ctx.fillText(n.type === 'note' ? '📄' : '✓', n.x, n.y);
+
+    // Label below
+    ctx.fillStyle = isDark ? '#ccc' : '#333';
+    ctx.font = `${n.type === 'note' ? 11 : 10}px system-ui`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    const label = n.title.slice(0, 16) + (n.title.length > 16 ? '…' : '');
+    ctx.fillText(label, n.x, n.y + n.radius + 5);
+  });
+
+  // Legend
+  ctx.font = '11px system-ui';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = isDark ? '#888' : '#999';
+  ctx.fillText('● Notes (outer) · ● Tasks (inner) · Click any node to open · Lines = same sector or dependency', 12, H - 16);
+}
+
+// Click handler for graph nodes — wire on load
+function initGraphClickHandler() {
+  const canvas = document.getElementById('graph-canvas');
+  if (!canvas || canvas._graphClickAdded) return;
+  canvas._graphClickAdded = true;
+
+  canvas.addEventListener('click', function(e) {
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+
+    const hit = _graphNodeData.find(n => {
+      const dx = mx - n.x, dy = my - n.y;
+      return Math.sqrt(dx*dx + dy*dy) <= n.radius + 6;
+    });
+
+    if (!hit) return;
+
+    if (hit.type === 'note') {
+      // Switch to notes view and highlight
+      const tab = Array.from(document.querySelectorAll('.navtab')).find(t => t.textContent.trim() === 'Notes');
+      if (tab) switchView('notes', tab);
+    } else {
+      // Open task editor
+      openEditTask(hit.id);
+    }
+  });
+
+  // Cursor change on hover
+  canvas.addEventListener('mousemove', function(e) {
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    const hit = _graphNodeData.find(n => {
+      const dx = mx - n.x, dy = my - n.y;
+      return Math.sqrt(dx*dx + dy*dy) <= n.radius + 6;
+    });
+    canvas.style.cursor = hit ? 'pointer' : 'default';
   });
 }
 
@@ -6946,6 +7114,8 @@ window.addEventListener('load', function() {
 
   // Realtime collaboration
   setTimeout(() => initRealtime(), 2000);
+  // Graph click handler (in case graph tab is already active)
+  setTimeout(initGraphClickHandler, 500);
 
   // Patch render to include insights
   const _origRender = render;
