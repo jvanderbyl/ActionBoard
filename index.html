@@ -519,35 +519,172 @@ canvas{display:block;cursor:crosshair;touch-action:none}
 .sync-dot.red{background:#ef4444}
 
 
-/* ── NOTES ── */
-.note-card{background:var(--bg4);border:1px solid var(--border);border-radius:var(--r);padding:0;overflow:hidden;display:flex;flex-direction:column;}
-.note-card-hdr{padding:10px 13px 8px;display:flex;align-items:flex-start;gap:8px;border-bottom:1px solid var(--border)}
-.note-stripe{width:4px;height:36px;border-radius:2px;flex-shrink:0;margin-top:1px}
-.note-title-input{font-size:14px;font-weight:700;color:var(--text);background:transparent;border:none;outline:none;flex:1;font-family:var(--font);padding:0}
-.note-body{padding:10px 13px;flex:1}
-.note-content{width:100%;font-size:13px;line-height:1.7;font-family:var(--font);background:transparent;border:none;outline:none;resize:none;color:var(--text2);min-height:80px}
-.note-footer{padding:7px 13px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg3)}
-.note-sector-tag{font-size:11px;font-weight:600;padding:2px 7px;border-radius:3px}
-.note-meta{font-size:10px;color:var(--text4)}
-/* ── LEARNING SECTOR FILTER ── */
-.learn-sector-bar{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:16px;align-items:center}
-.learn-sec-btn{font-size:12px;font-weight:600;padding:4px 12px;border:1px solid var(--border);border-radius:3px;background:var(--bg4);cursor:pointer;font-family:var(--font);color:var(--text3)}
-.learn-sec-btn.on{color:#fff;border-color:transparent}
-/* ── TAG MANAGER ── */
-.tag-manager{margin-top:8px}
-.saved-tag{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:2px 6px 2px 8px;border-radius:3px;margin:2px;background:var(--bg2);border:1px solid var(--border);color:var(--text2);cursor:pointer}
-.saved-tag:hover{border-color:var(--accent);color:var(--accent)}
-.saved-tag .tag-del{color:var(--text4);font-size:10px;padding:0 1px;cursor:pointer;line-height:1}
-.saved-tag .tag-del:hover{color:var(--pri-high)}
-
-
-/* ── LEARN BOARD ── */
-.lb-col{flex:1;display:flex;flex-direction:column;min-width:220px;border-right:1px solid var(--border)}
-.lb-col:last-child{border-right:none}
-.lb-col>.col-hdr{border-bottom-color:var(--accent)!important}
-/* ── ARCHIVE ── */
-.archive-card{background:var(--bg4);border:1px solid var(--border);border-radius:var(--r);padding:10px 14px;display:flex;align-items:center;gap:12px}
-.archive-card:hover{background:var(--bg3)}
+/* ── NOTES CANVAS ── */
+#notes-canvas {
+  position: relative;
+  width: 100%;
+  min-height: calc(100vh - 120px);
+  background:
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 28px 28px;
+  background-color: var(--bg2);
+  overflow: hidden;
+  border-radius: var(--r);
+  border: 1px solid var(--border);
+  cursor: default;
+  user-select: none;
+}
+/* Notepad-style note card */
+.note-pad {
+  position: absolute;
+  background: #ffffff;
+  border: 1px solid #c0c0c0;
+  box-shadow: 3px 3px 10px rgba(0,0,0,.2), inset 0 0 0 1px rgba(255,255,255,.6);
+  display: flex;
+  flex-direction: column;
+  min-width: 200px;
+  min-height: 140px;
+  font-family: 'Courier New', Courier, monospace;
+  cursor: default;
+  border-radius: 2px;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+body.dark .note-pad {
+  background: #1e1e1e;
+  border-color: #444;
+  box-shadow: 3px 3px 10px rgba(0,0,0,.5);
+  color: #e0e0e0;
+}
+/* Notepad title bar */
+.note-pad-bar {
+  background: linear-gradient(135deg, #4a7bbd 0%, #3a5fa0 100%);
+  color: #fff;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: grab;
+  user-select: none;
+  flex-shrink: 0;
+  min-height: 22px;
+}
+.note-pad-bar:active { cursor: grabbing; }
+.note-pad-title-text {
+  font-size: 11px;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
+  flex-shrink: 1;
+  pointer-events: none;
+  user-select: none;
+}
+.note-pad-edit-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px 8px;
+  background: rgba(0,0,0,.06);
+  border-bottom: 1px solid rgba(0,0,0,.1);
+  flex-shrink: 0;
+}
+.note-edit-input {
+  width: 100%;
+  box-sizing: border-box;
+  font-size: 12px;
+  padding: 3px 6px;
+  border: 1px solid rgba(0,0,0,.2);
+  border-radius: 3px;
+  background: rgba(255,255,255,.8);
+  color: #222;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  outline: none;
+}
+body.dark .note-edit-input { background: rgba(255,255,255,.1); color: #eee; }
+/* Notepad window control buttons */
+.note-pad-btns {
+  display: flex;
+  gap: 3px;
+  flex-shrink: 0;
+  cursor: default;
+}
+.note-pad-btn {
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  font-size: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800;
+  line-height: 1;
+  padding: 0;
+  color: rgba(0,0,0,.5);
+}
+.note-pad-btn.close { background: #ff5f57; }
+.note-pad-btn.expand { background: #28ca41; }
+.note-pad-btn:hover { opacity: .8; }
+/* Notepad textarea */
+.note-pad textarea {
+  flex: 1;
+  width: 100%;
+  border: none;
+  resize: none;
+  background: #ffffff;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  padding: 6px 8px;
+  color: #111;
+  outline: none;
+  box-sizing: border-box;
+  cursor: text;
+  overflow-y: auto;
+}
+body.dark .note-pad textarea { background: #1e1e1e; color: #e0e0e0; }
+body.dark .note-pad textarea { color: #e0e0e0; background: transparent; }
+/* Notepad sector tag at bottom */
+.note-pad-footer {
+  background: rgba(0,0,0,.06);
+  border-top: 1px solid rgba(0,0,0,.1);
+  padding: 2px 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  font-size: 10px;
+  font-family: 'Segoe UI', Arial, sans-serif;
+}
+/* Resize handle */
+.note-pad-resize {
+  position: absolute;
+  bottom: 0; right: 0;
+  width: 14px; height: 14px;
+  cursor: se-resize;
+  background: linear-gradient(135deg, transparent 50%, rgba(0,0,0,.2) 50%);
+  border-top: none; border-left: none;
+}
+/* Canvas toolbar */
+#notes-canvas-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+/* Stripe on notepad bar to indicate sector */
+.note-pad-stripe {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
 /* ── HABITS ── */
 .habit-cell{border-radius:3px;cursor:pointer;flex-shrink:0;display:inline-block}
 .habit-cell.done{background:var(--accent)}
@@ -983,7 +1120,7 @@ dialog::backdrop{background:rgba(0,0,0,.38)}
           <button class="btn pri" onclick="openNewNote()">+ New Note</button>
         </div>
       </div>
-      <div id="notes-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px"></div>
+      <div id="notes-canvas"></div>
     </div>
 
     <div id="view-archive" class="view-wrap" style="display:none">
@@ -1711,7 +1848,13 @@ function renderBoard(){
   getStatuses().forEach(s=>{
     let col=fil.filter(t=>t.status===s.id);
     if(activeFilter!=='all') col=col.filter(t=>t.priority===activeFilter);
-    col.sort((a,b)=>pri(a)-pri(b));
+    // Sort by sortOrder first, then priority within same order
+    col.sort((a,b)=>{
+      const ao = a.sortOrder !== undefined ? a.sortOrder : 9999;
+      const bo = b.sortOrder !== undefined ? b.sortOrder : 9999;
+      if (ao !== bo) return ao - bo;
+      return pri(a)-pri(b);
+    });
     document.getElementById(`cc-${s.id}`).textContent=col.length;
     const ct=document.getElementById(`cl-${s.id}`);
 
@@ -1783,7 +1926,8 @@ function cardHTML(t){
   return`<div class="card${isFoc?' focused':''}${overdue?' overdue':''}" id="card-${t.id}"
     draggable="true"
     ondragstart="dragStart(event,'${t.id}')"
-    ondragend="dragEnd('${t.id}')">
+    ondragend="dragEnd('${t.id}')"
+    ondragover="onCardDragOver(event,'${t.id}')">
     <div class="c-stripe" style="background:${cat.color}"></div>
     <div class="c-body">
       ${sketchH}
@@ -1819,22 +1963,74 @@ function dragStart(e,id){
   setTimeout(()=>{const el=document.getElementById(`card-${id}`);if(el)el.classList.add('dragging');},0);
 }
 function dragEnd(id){
-  const el=document.getElementById(`card-${id}`);if(el)el.classList.remove('dragging');dragId=null;
+  const el=document.getElementById(`card-${id}`);if(el)el.classList.remove('dragging');
+  dragId=null; _dropTargetId=null;
   document.querySelectorAll('.cards-list').forEach(c=>c.classList.remove('drag-over'));
+  document.querySelectorAll('.card-drop-indicator').forEach(el=>el.remove());
 }
-function onDrop(e,sid){
+// Track which card we're hovering over for reorder
+var _dropTargetId = null;
+var _dropPosition = 'after'; // 'before' or 'after'
+
+function onDrop(e, sid) {
   e.preventDefault();
-  document.querySelectorAll('.cards-list').forEach(c=>c.classList.remove('drag-over'));
-  const id=e.dataTransfer.getData('text/plain');if(!id)return;
-  const t=S.tasks.find(x=>x.id===id);
-  if(t){
-    t.status=sid;
-    t.updatedAt=now();
-    // Only re-render the board cards, don't rebuild columns
-    invalidateCardCache();
-    renderBoard();
-    updateSB();
-    scheduleSave();
+  document.querySelectorAll('.cards-list').forEach(c => c.classList.remove('drag-over'));
+  document.querySelectorAll('.card-drop-indicator').forEach(el => el.remove());
+  const id = e.dataTransfer.getData('text/plain');
+  if (!id) return;
+  const t = S.tasks.find(x => x.id === id);
+  if (!t) return;
+
+  const sameCol = t.status === sid;
+  t.status = sid;
+  t.updatedAt = now();
+
+  // Reorder within column if we have a drop target
+  if (_dropTargetId && _dropTargetId !== id) {
+    const colTasks = S.tasks.filter(x => x.status === sid && x.id !== id);
+    // Ensure all have sortOrder
+    colTasks.forEach((x, i) => { if (x.sortOrder === undefined) x.sortOrder = i * 10; });
+    const targetTask = S.tasks.find(x => x.id === _dropTargetId);
+    if (targetTask) {
+      const targetOrder = targetTask.sortOrder !== undefined ? targetTask.sortOrder : 0;
+      t.sortOrder = _dropPosition === 'before' ? targetOrder - 1 : targetOrder + 1;
+      // Re-normalize all orders in column
+      const all = S.tasks.filter(x => x.status === sid).sort((a,b) => (a.sortOrder||0)-(b.sortOrder||0));
+      all.forEach((x, i) => { x.sortOrder = i * 10; });
+    }
+  } else if (!sameCol) {
+    // Moving to new column — put at end
+    const colTasks = S.tasks.filter(x => x.status === sid && x.id !== id);
+    const maxOrder = colTasks.reduce((m, x) => Math.max(m, x.sortOrder || 0), 0);
+    t.sortOrder = maxOrder + 10;
+  }
+
+  _dropTargetId = null;
+  invalidateCardCache();
+  renderBoard();
+  updateSB();
+  scheduleSave();
+}
+
+// Called when dragging over a card (for within-column reorder indicator)
+function onCardDragOver(e, taskId) {
+  e.preventDefault();
+  e.stopPropagation();
+  const card = document.getElementById('card-' + taskId);
+  if (!card || taskId === dragId) return;
+  const rect = card.getBoundingClientRect();
+  const midY = rect.top + rect.height / 2;
+  _dropPosition = e.clientY < midY ? 'before' : 'after';
+  _dropTargetId = taskId;
+  // Visual indicator
+  document.querySelectorAll('.card-drop-indicator').forEach(el => el.remove());
+  const indicator = document.createElement('div');
+  indicator.className = 'card-drop-indicator';
+  indicator.style.cssText = 'height:2px;background:var(--accent);border-radius:2px;margin:2px 0;';
+  if (_dropPosition === 'before') {
+    card.parentNode.insertBefore(indicator, card);
+  } else {
+    card.parentNode.insertBefore(indicator, card.nextSibling);
   }
 }
 
@@ -3545,62 +3741,199 @@ let notesSectorFilter = 'all';
 let noteSaveTimers = {};
 
 function renderNotes(){
-  // populate sector filter dropdown
+  // Sector filter dropdown
   const sel = document.getElementById('notes-sector-filter');
   if(sel){
     sel.innerHTML = '<option value="all">All Sectors</option>' +
       S.categories.map(c=>`<option value="${c.id}">${esc(c.label)}</option>`).join('');
     sel.value = notesSectorFilter;
   }
-  // Update scope label
   const scopeEl = document.getElementById('notes-scope-label');
   if(scopeEl){
-    if(notesSectorFilter === 'all') scopeEl.textContent = '';
+    if(notesSectorFilter==='all') scopeEl.textContent='';
     else {
-      const cat = S.categories.find(c=>c.id===notesSectorFilter);
-      if(cat) scopeEl.innerHTML = `· <span style="color:${cat.color}">${esc(cat.label)}</span>`;
+      const cat=S.categories.find(c=>c.id===notesSectorFilter);
+      if(cat) scopeEl.innerHTML=`· <span style="color:${cat.color}">${esc(cat.label)}</span>`;
     }
   }
 
-  const grid = document.getElementById('notes-grid');
-  if(!grid) return;
+  const canvas = document.getElementById('notes-canvas');
+  if(!canvas) return;
 
   const filtered = notesSectorFilter==='all'
     ? S.notes
     : S.notes.filter(n=>n.category===notesSectorFilter);
 
   if(!filtered.length){
-    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--text4);font-size:14px">
-      No notes yet${notesSectorFilter!=='all'?' in this sector':''}. Click "+ New Note" to start writing.
-    </div>`;
+    canvas.innerHTML='<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;color:var(--text4);font-size:14px;pointer-events:none">No notes yet. Click "+ New Note" to create one.</div>';
     return;
   }
 
-  grid.innerHTML = filtered.map(note=>{
-    const cat = catById(note.category);
-    const updated = note.updatedAt ? new Date(note.updatedAt).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '';
-    return `<div class="note-card">
-      <div class="note-card-hdr">
-        <div class="note-stripe" style="background:${cat.color}"></div>
-        <input class="note-title-input" value="${esc(note.title||'')}" placeholder="Note title…"
-          oninput="updateNoteField('${note.id}','title',this.value)"/>
-        <select onchange="updateNoteField('${note.id}','category',this.value)"
-          style="font-size:11px;padding:2px 5px;border:1px solid var(--border);border-radius:var(--rs);background:var(--bg3);color:${cat.color};font-family:var(--font);max-width:90px">
+  // Rebuild the canvas — preserve existing positions for notes that already exist
+  // Remove pads that no longer exist
+  const existingIds = new Set(Array.from(canvas.querySelectorAll('.note-pad')).map(el=>el.dataset.noteId));
+  const currentIds = new Set(filtered.map(n=>n.id));
+  existingIds.forEach(id=>{if(!currentIds.has(id)){const el=canvas.querySelector('[data-note-id="'+id+'"]');if(el)el.remove();}});
+  canvas.querySelector('.empty-msg') && canvas.querySelector('.empty-msg').remove();
+
+  filtered.forEach(note=>{
+    const cat=catById(note.category);
+    // Reuse existing pad or create new one
+    let pad = canvas.querySelector('[data-note-id="'+note.id+'"]');
+    const isNew = !pad;
+
+    if(!pad){
+      pad = document.createElement('div');
+      pad.className='note-pad';
+      pad.dataset.noteId = note.id;
+      canvas.appendChild(pad);
+    }
+
+    // Position: use stored position or auto-place
+    const pos = note.canvasPos || null;
+    const size = note.canvasSize || null;
+    if(isNew || !pad.style.left){
+      if(pos){
+        pad.style.left = pos.x+'px';
+        pad.style.top  = pos.y+'px';
+      } else {
+        // Auto-place in a grid
+        const idx = filtered.indexOf(note);
+        const col = idx % 3;
+        const row = Math.floor(idx/3);
+        pad.style.left = (20 + col*280)+'px';
+        pad.style.top  = (20 + row*220)+'px';
+      }
+    }
+    pad.style.width  = size ? size.w+'px' : '260px';
+    pad.style.height = size ? size.h+'px' : '200px';
+
+    // Rebuild inner HTML
+    pad.innerHTML = `
+      <div class="note-pad-bar" onmousedown="noteStartDrag(event,'${note.id}')">
+        <span class="note-pad-title-text">${esc(note.title||'Untitled')}</span>
+        <span style="flex:1"></span>
+        <span class="note-pad-sector-tag" style="background:${cat.color};color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;letter-spacing:.3px;white-space:nowrap;flex-shrink:0;margin-right:4px">${esc(cat.label)}</span>
+        <div class="note-pad-btns" onmousedown="event.stopPropagation()">
+          <button class="note-pad-btn edit" onclick="noteOpenEdit('${note.id}')" title="Edit title & sector" style="background:#f0c040;font-size:9px">✎</button>
+          <button class="note-pad-btn close" onclick="deleteNote('${note.id}')" title="Close">✕</button>
+        </div>
+      </div>
+      <div class="note-pad-edit-row" id="note-edit-${note.id}" style="display:none;padding:4px 8px;background:rgba(0,0,0,.06);border-bottom:1px solid rgba(0,0,0,.1);gap:4px;flex-direction:column">
+        <input type="text" class="note-edit-input" value="${esc(note.title||'')}" placeholder="Note title…"
+          oninput="updateNoteField('${note.id}','title',this.value);this.closest('.note-pad').querySelector('.note-pad-title-text').textContent=this.value||'Untitled'"
+          onmousedown="event.stopPropagation()" />
+        <select class="note-edit-input" onchange="updateNoteField('${note.id}','category',this.value);renderNotes()" onmousedown="event.stopPropagation()" style="font-size:12px">
           ${S.categories.map(c=>`<option value="${c.id}"${c.id===note.category?' selected':''}>${esc(c.label)}</option>`).join('')}
         </select>
-        <button onclick="deleteNote('${note.id}')" style="background:transparent;border:none;color:var(--text4);cursor:pointer;font-size:14px;padding:0 2px;flex-shrink:0">✕</button>
       </div>
-      <div class="note-body">
-        <textarea class="note-content" rows="6" placeholder="Write anything…"
-          oninput="updateNoteField('${note.id}','content',this.value)">${esc(note.content||'')}</textarea>
+      <textarea
+        placeholder="Write anything…"
+        onmousedown="event.stopPropagation()"
+        oninput="updateNoteField('${note.id}','content',this.value)"
+      >${esc(note.content||'')}</textarea>
+      <div class="note-pad-footer">
+        <span style="color:rgba(0,0,0,.35);font-size:10px">${note.updatedAt?new Date(note.updatedAt).toLocaleDateString('en-US',{month:'short',day:'numeric'}):''}</span>
       </div>
-      <div class="note-footer">
-        <span class="note-sector-tag" style="background:${cat.color}18;color:${cat.color}">${esc(cat.label)}</span>
-        <span class="note-meta">${updated}</span>
-      </div>
-    </div>`;
-  }).join('');
+      <div class="note-pad-resize" onmousedown="noteStartResize(event,'${note.id}')"></div>
+    `;
+  });
 }
+
+// ── Note drag (move on canvas) ──
+function noteOpenEdit(id) {
+  // Toggle the inline edit row
+  var row = document.getElementById('note-edit-'+id);
+  if (!row) return;
+  var isOpen = row.style.display === 'flex';
+  // Close all other edit rows first
+  document.querySelectorAll('.note-pad-edit-row').forEach(function(r){ r.style.display='none'; });
+  if (!isOpen) {
+    row.style.display = 'flex';
+    var inp = row.querySelector('input');
+    if (inp) { inp.focus(); inp.select(); }
+  }
+}
+var _noteDragId=null,_noteDragOx=0,_noteDragOy=0;
+function noteStartDrag(e,id){
+  if(e.target.tagName==='INPUT'||e.target.tagName==='BUTTON'||e.target.tagName==='SELECT'||e.target.closest('.note-pad-btns')) return;
+  e.preventDefault();
+  _noteDragId=id;
+  const pad=document.querySelector('[data-note-id="'+id+'"]');
+  if(!pad) return;
+  _noteDragOx=e.clientX-parseInt(pad.style.left||0);
+  _noteDragOy=e.clientY-parseInt(pad.style.top||0);
+  pad.style.zIndex=99;
+  document.addEventListener('mousemove',_noteMoveFn);
+  document.addEventListener('mouseup',_noteUpFn);
+}
+function _noteMoveFn(e){
+  if(!_noteDragId) return;
+  const pad=document.querySelector('[data-note-id="'+_noteDragId+'"]');
+  if(!pad) return;
+  const canvas=document.getElementById('notes-canvas');
+  const cr=canvas.getBoundingClientRect();
+  const x=Math.max(0,e.clientX-_noteDragOx);
+  const y=Math.max(0,e.clientY-_noteDragOy);
+  pad.style.left=x+'px';
+  pad.style.top=y+'px';
+  // Expand canvas if needed
+  const needed=y+pad.offsetHeight+20;
+  if(needed>canvas.offsetHeight) canvas.style.minHeight=needed+'px';
+}
+function _noteUpFn(){
+  if(!_noteDragId) return;
+  const pad=document.querySelector('[data-note-id="'+_noteDragId+'"]');
+  if(pad){
+    pad.style.zIndex='';
+    // Save position
+    const note=S.notes.find(n=>n.id===_noteDragId);
+    if(note){
+      note.canvasPos={x:parseInt(pad.style.left),y:parseInt(pad.style.top)};
+      scheduleSave();
+    }
+  }
+  _noteDragId=null;
+  document.removeEventListener('mousemove',_noteMoveFn);
+  document.removeEventListener('mouseup',_noteUpFn);
+}
+
+// ── Note resize ──
+var _noteResizeId=null,_noteResizeOx=0,_noteResizeOy=0,_noteResizeW=0,_noteResizeH=0;
+function noteStartResize(e,id){
+  e.preventDefault(); e.stopPropagation();
+  _noteResizeId=id;
+  const pad=document.querySelector('[data-note-id="'+id+'"]');
+  if(!pad) return;
+  _noteResizeOx=e.clientX; _noteResizeOy=e.clientY;
+  _noteResizeW=pad.offsetWidth; _noteResizeH=pad.offsetHeight;
+  document.addEventListener('mousemove',_noteResizeFn);
+  document.addEventListener('mouseup',_noteResizeUpFn);
+}
+function _noteResizeFn(e){
+  if(!_noteResizeId) return;
+  const pad=document.querySelector('[data-note-id="'+_noteResizeId+'"]');
+  if(!pad) return;
+  const w=Math.max(160,_noteResizeW+(e.clientX-_noteResizeOx));
+  const h=Math.max(120,_noteResizeH+(e.clientY-_noteResizeOy));
+  pad.style.width=w+'px';
+  pad.style.height=h+'px';
+}
+function _noteResizeUpFn(){
+  if(!_noteResizeId) return;
+  const pad=document.querySelector('[data-note-id="'+_noteResizeId+'"]');
+  if(pad){
+    const note=S.notes.find(n=>n.id===_noteResizeId);
+    if(note){
+      note.canvasSize={w:pad.offsetWidth,h:pad.offsetHeight};
+      scheduleSave();
+    }
+  }
+  _noteResizeId=null;
+  document.removeEventListener('mousemove',_noteResizeFn);
+  document.removeEventListener('mouseup',_noteResizeUpFn);
+}
+
 
 function openNewNote(){
   const catId = notesSectorFilter!=='all' ? notesSectorFilter : (S.categories[0]?.id||'personal');
