@@ -1,4 +1,11 @@
 <!DOCTYPE html>
+<!--
+  Action Board by Vanderbyl Labs
+  Copyright (c) 2026 Joel Vanderbyl. All rights reserved.
+  Unauthorized copying, modification, or distribution of this software
+  is strictly prohibited without express written permission.
+  https://vanderbyllabs.com
+-->
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
@@ -1405,11 +1412,7 @@ body.dark .note-md-preview .md-inline{background:#333}
 
 </div>
 
-<script>
-// ════════════════════════════════════════════════
-// STATE
-// ════════════════════════════════════════════════
-const DEFAULT_CATS = [
+<script>const DEFAULT_CATS = [
   {id:'art',      label:'Art',      color:'#a855f7'},
   {id:'business', label:'Business', color:'#3b82f6'},
   {id:'projects', label:'Projects', color:'#10b981'},
@@ -1417,25 +1420,21 @@ const DEFAULT_CATS = [
   {id:'personal', label:'Personal', color:'#22c55e'},
   {id:'learning', label:'Learning', color:'#ec4899'},
 ];
-
 const STATUSES = [
   {id:'future',     label:'Future Ideas', icon:'◇'},
   {id:'backlog',    label:'Backlog',      icon:'○'},
   {id:'inprogress', label:'In Progress',  icon:'◑'},
   {id:'finished',   label:'Finished',     icon:'●'},
 ];
-
 const PRI_COLOR = {high:'#ef4444', med:'#f97316', low:'#22c55e'};
 const PRI_LABEL = {high:'▲ High',  med:'■ Med',   low:'▼ Low'};
 const COL_ACC   = {backlog:'#3b82f6', inprogress:'#f59e0b', finished:'#10b981', future:'#a855f7'};
-
 let S = {
   tasks:[], focusTasks:[], calEvents:[],
   learningTopics:[], categories:[...DEFAULT_CATS],
   notes:[], globalTags:[],
   lastSaved:null, version:5
 };
-
 let activeCat='all', activeFilter='all', curView='board', layoutMode='columns';
 let editingId=null, isNew=true;
 let curTags=[], curSubtasks={backlog:[],inprogress:[],done:[]};
@@ -1448,16 +1447,9 @@ let calYear=new Date().getFullYear(), calMonth=new Date().getMonth();
 let selectedColor='#a855f7';
 let addingCatId=null;
 let liTopicId=null, resTopicId=null;
-
 const PALETTE=['#a855f7','#3b82f6','#10b981','#f97316','#22c55e','#ec4899','#f59e0b','#06b6d4','#ef4444','#6366f1','#84cc16','#f43f5e'];
-
-// ════════════════════════════════════════════════
-// INIT
-// ════════════════════════════════════════════════
-// ── SUPABASE CONFIG ──────────────────────────────────────────────────────────
 const SUPABASE_URL = 'https://ugkrzslioeiqzvmfievh.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_5blBElzQ5SpO27-OUvE3TA_3L0o1etC';
-
 async function init(){
   buildBoard();
   setupWin();
@@ -1465,23 +1457,17 @@ async function init(){
   initSketch();
   buildCatModal();
   buildTopicModal();
-
   document.addEventListener('keydown', e=>{
     if((e.ctrlKey||e.metaKey)&&e.key==='Enter') saveTask();
-    // Escape is handled natively by <dialog> elements
   });
-
   document.getElementById('f-tag').addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===','){e.preventDefault();addTag();} });
   document.getElementById('cat-name').addEventListener('keydown',e=>{ if(e.key==='Enter')saveCat(); });
   document.getElementById('topic-name').addEventListener('keydown',e=>{ if(e.key==='Enter')saveTopic(); });
   document.getElementById('li-text').addEventListener('keydown',e=>{ if(e.key==='Enter')saveLItem(); });
-
   await bootSupabase();
 }
-
 async function bootSupabase(){
   document.getElementById('auth-screen').style.display='flex';
-  // Wait for Supabase SDK to load (it's deferred)
   let attempts = 0;
   while(typeof supabase === 'undefined' && attempts < 50){
     await new Promise(r=>setTimeout(r,100));
@@ -1498,21 +1484,15 @@ async function bootSupabase(){
     if(session?.user) await onSignedIn(session.user);
     _supabase.auth.onAuthStateChange(async (event, session)=>{
       if(event==='SIGNED_OUT'){ onSignedOut(); return; }
-      // CRITICAL: Only run onSignedIn for the first sign-in.
-      // Supabase fires SIGNED_IN on every JWT token refresh (~60s).
-      // Each onSignedIn call triggers render() which rebuilds DOM and 
-      // permanently breaks input focus in Electron.
       if((event==='SIGNED_IN' || event==='INITIAL_SESSION') && session?.user && !_currentUser){
         await onSignedIn(session.user);
       }
-      // For token refreshes: silently update the session without touching DOM
     });
   } catch(e){
     console.error('Supabase init failed:', e);
     loadOffline();
   }
 }
-
 async function onSignedIn(user){
   _currentUser = user;
   document.getElementById('auth-screen').style.display='none';
@@ -1524,7 +1504,7 @@ async function onSignedIn(user){
       .from('boards').select('data').eq('user_id', user.id).single();
     if(error && error.code !== 'PGRST116') throw error;
     S = data?.data ? Object.assign(makeSeed(), data.data) : makeSeed();
-    if(!data?.data) scheduleSave(); // create row for new user
+    if(!data?.data) scheduleSave(); 
     setSyncStatus('synced');
   } catch(e){
     console.error('Cloud load failed:', e);
@@ -1533,16 +1513,14 @@ async function onSignedIn(user){
     S = raw ? Object.assign(makeSeed(), JSON.parse(raw)) : makeSeed();
   }
   ensureStateFields();
-  renderSidebar._lastKey = ''; // force sidebar rebuild with real data
+  renderSidebar._lastKey = ''; 
   invalidateCardCache();
   render();
-  // Save snapshot if not done today
   setTimeout(function(){
     var today=new Date().toISOString().slice(0,10);
     if(localStorage.getItem('ab-snap-date')!==today) { saveSnapshot && saveSnapshot(); localStorage.setItem('ab-snap-date',today); }
   }, 3000);
 }
-
 function onSignedOut(){
   _currentUser = null;
   document.getElementById('auth-screen').style.display='flex';
@@ -1551,28 +1529,23 @@ function onSignedOut(){
   const ind = document.getElementById('sync-indicator');
   if(ind) ind.style.display='none';
 }
-
 function loadOffline(){
   document.getElementById('auth-screen').style.display='none';
   const raw = localStorage.getItem('actionboard-offline');
   S = raw ? Object.assign(makeSeed(), JSON.parse(raw)) : makeSeed();
   ensureStateFields(); render();
 }
-
 function ensureStateFields(){
   if(!S.categories||!S.categories.length) S.categories=[...DEFAULT_CATS];
   if(!S.notes) S.notes=[];
   if(!S.globalTags) S.globalTags=[];
-  // Migrate: if S.statuses is null (old default), keep as null = use STATUSES constant
   if(!S.statuses||!S.statuses.length) S.statuses=null;
-  // Heal any tasks with missing or invalid status
   var validIds = getStatuses().map(function(s){return s.id;});
   var defaultId = validIds[0] || 'backlog';
   (S.tasks||[]).forEach(function(t){
     if(!t.status || validIds.indexOf(t.status)===-1) t.status = defaultId;
   });
 }
-
 function makeSeed(){
   return{
     tasks:[{
@@ -1592,7 +1565,6 @@ function makeSeed(){
     lastSaved:null,version:5
   };
 }
-
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
 function now(){return new Date().toISOString()}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
@@ -1603,29 +1575,20 @@ function catById(id){
   _catCache[id]=c; return c;
 }
 function invalidateCatCache(){Object.keys(_catCache).forEach(k=>delete _catCache[k]);_aiSysCache=null;_aiSysKey='';}
-
-// ════════════════════════════════════════════════
-// SAVE
-// ════════════════════════════════════════════════
 let _isSaving = false;
 let _pendingStatusTimer = null;
-
 function scheduleSave(){
   clearTimeout(_saveTimer);
   clearTimeout(_pendingStatusTimer);
   _saveTimer = setTimeout(doSave, 1500);
 }
-
 async function doSave(){
   clearTimeout(_pendingStatusTimer);
   if(_isSaving){
-    // Another save is in flight — reschedule for after it finishes
     _saveTimer = setTimeout(doSave, 2000);
     return;
   }
   _isSaving = true;
-
-  // Hard timeout — if save takes >8 seconds, unblock regardless
   const saveTimeout = setTimeout(()=>{
     if(_isSaving){
       _isSaving = false;
@@ -1633,7 +1596,6 @@ async function doSave(){
       setSaveStatus('');
     }
   }, 8000);
-
   if(!_currentUser||!_supabase){
     localStorage.setItem('actionboard-offline',JSON.stringify({...S,lastSaved:now()}));
     setSaveStatus('Saved locally');
@@ -1642,12 +1604,10 @@ async function doSave(){
     _isSaving = false;
     return;
   }
-
   setSyncStatus('pending');
   setSaveStatus('Saving…');
   try {
     const payload = {...S, lastSaved:now()};
-
     const {error} = await _supabase
       .from('boards')
       .upsert({
@@ -1656,12 +1616,10 @@ async function doSave(){
         updated_at: new Date().toISOString()
       }, { onConflict: 'user_id' });
     if(error) throw error;
-
     S.lastSaved = payload.lastSaved;
     setSyncStatus('synced');
     setSaveStatus('Synced ✓');
     setTimeout(()=>setSaveStatus(''),2000);
-
   } catch(e){
     console.error('Save error:', e.message);
     setSyncStatus('error');
@@ -1672,16 +1630,13 @@ async function doSave(){
   clearTimeout(saveTimeout);
   _isSaving = false;
 }
-
 function setSaveStatus(m){
   const el=document.getElementById('save-status');
   if(!el)return;
   el.textContent=m;
   el.style.color=m.includes('error')||m.includes('Error')||m.includes('Offline')?'var(--pri-high)':'#15803d';
-  // When text clears after a successful save, ensure dot stays green
   if(!m && _currentUser) setSyncStatus('synced');
 }
-
 function setSyncStatus(state){
   const dot=document.getElementById('sync-dot');
   const lbl=document.getElementById('sync-label');
@@ -1693,12 +1648,7 @@ function setSyncStatus(state){
   dot.className='sync-dot '+cls;
   lbl.textContent=txt;
 }
-
-// ════════════════════════════════════════════════
-// RENDER
-// ════════════════════════════════════════════════
 function isModalOpen(){
-  // Check native <dialog> elements using .open property
   return ['task-modal','steps-modal','cat-modal','cat-delete-modal',
           'topic-modal','litem-modal','res-modal']
     .some(id=>{
@@ -1706,14 +1656,11 @@ function isModalOpen(){
       return el && el.open === true;
     });
 }
-
 var _boardStatusKey = '';
 function _getBoardKey(){ return getStatuses().map(function(s){return s.id+s.label;}).join('|'); }
-
 function render(){
   renderSidebar();
   if(curView==='board'){
-    // Only rebuild DOM columns when statuses actually changed
     var newKey = _getBoardKey();
     if(_boardStatusKey !== newKey){
       _boardStatusKey = newKey;
@@ -1733,24 +1680,17 @@ function render(){
     if(curView==='settings') renderSettings();
   });
 }
-
-// ════════════════════════════════════════════════
-// SIDEBAR
-// ════════════════════════════════════════════════
 function renderSidebar(){
-  // Only rebuild sidebar if task count changed (avoids DOM churn)
   const sideKey = S.categories.map(c=>c.id+S.tasks.filter(t=>t.category===c.id).length).join('|')+activeCat+S.tasks.length;
   if(renderSidebar._lastKey===sideKey) return;
   renderSidebar._lastKey=sideKey;
   const list = document.getElementById('cat-list');
   const allOn = activeCat==='all';
-
   let html = `<button class="catbtn" onclick="setCategory('all')"
     style="color:${allOn?'var(--accent)':'var(--text2)'};border-left-color:${allOn?'var(--accent)':'transparent'};background:${allOn?'rgba(99,102,241,.08)':'transparent'}">
     <span>All</span>
     <span class="cat-count" style="background:${allOn?'rgba(99,102,241,.15)':'rgba(0,0,0,.06)'};color:${allOn?'var(--accent)':'var(--text3)'}">${S.tasks.length}</span>
   </button>`;
-
   S.categories.forEach(cat=>{
     const on = activeCat===cat.id;
     const count = S.tasks.filter(t=>t.category===cat.id).length;
@@ -1766,19 +1706,16 @@ function renderSidebar(){
   });
   list.innerHTML = html;
 }
-
 function onNotesSectorChange(){
   const sel = document.getElementById('notes-sector-filter');
   const id = sel?.value || 'all';
-  // Update sidebar selection to match
   activeCat = id;
   notesSectorFilter = id;
   learningSectorFilter = id;
   invalidateCardCache();
-  renderSidebar._lastKey = ''; // force sidebar rebuild
+  renderSidebar._lastKey = ''; 
   render();
 }
-
 function setCategory(id){
   activeCat = id;
   notesSectorFilter = id;
@@ -1786,19 +1723,12 @@ function setCategory(id){
   invalidateCardCache();
   const nSel = document.getElementById('notes-sector-filter');
   if(nSel) nSel.value = id;
-  // Don't call render() if a modal is open — would destroy focus chain
   render();
 }
-
-// ════════════════════════════════════════════════
-// BOARD
-// ════════════════════════════════════════════════
 function getStatuses(){
   return (S.statuses && S.statuses.length) ? S.statuses : STATUSES;
 }
 function buildBoard(){
-  // ALWAYS invalidate card cache when rebuilding column DOM
-  // Without this, renderBoard() sees stale cache and skips rendering cards
   invalidateCardCache();
   const board=document.getElementById('board');
   board.className=layoutMode==='rows'?'rows':'';
@@ -1832,7 +1762,7 @@ function renameColumn(id){
     col.label = label.trim();
     if(!S.statuses||!S.statuses.length) S.statuses = JSON.parse(JSON.stringify(getStatuses()));
     var sc = S.statuses.find(function(c){return c.id===id;}); if(sc) sc.label=label.trim();
-    _boardStatusKey = ''; // force DOM rebuild
+    _boardStatusKey = ''; 
     invalidateCardCache(); buildBoard(); renderBoard(); scheduleSave();
   });
 }
@@ -1850,7 +1780,6 @@ function deleteColumn(id){
     invalidateCardCache(); buildBoard(); renderBoard(); updateSB(); scheduleSave();
     return;
   }
-  // Show custom modal with 3 choices
   _colDeleteId = id;
   _colDeleteFirst = first;
   var label = document.getElementById('col-del-label');
@@ -1883,7 +1812,7 @@ function _finishColDelete(){
   S.statuses = S.statuses.filter(function(c){return c.id!==_colDeleteId;});
   _colDeleteId=null; _colDeleteFirst=null;
   closeModal('col-delete-modal');
-  _boardStatusKey = ''; // force DOM rebuild
+  _boardStatusKey = ''; 
   invalidateCardCache(); buildBoard(); renderBoard(); updateSB(); scheduleSave();
 }
 function addBoardColumn(){
@@ -1893,7 +1822,7 @@ function addBoardColumn(){
     var id = 'col-'+uid();
     S.statuses.push({id:id, label:label.trim(), icon:'□'});
     COL_ACC[id] = '#6366f1';
-    _boardStatusKey = ''; // force DOM rebuild on next render
+    _boardStatusKey = ''; 
     invalidateCardCache();
     buildBoard();
     renderBoard();
@@ -1901,10 +1830,7 @@ function addBoardColumn(){
     scheduleSave();
   });
 }
-
-// Cache of last rendered card HTML to avoid unnecessary DOM updates
 const _cardCache = {};
-
 const _focusSet=new Set();
 function renderBoard(){
   _focusSet.clear(); S.focusTasks.forEach(id=>_focusSet.add(id));
@@ -1913,7 +1839,6 @@ function renderBoard(){
   getStatuses().forEach(s=>{
     let col=fil.filter(t=>t.status===s.id);
     if(activeFilter!=='all') col=col.filter(t=>t.priority===activeFilter);
-    // Sort by sortOrder first, then priority within same order
     col.sort((a,b)=>{
       const ao = a.sortOrder !== undefined ? a.sortOrder : 9999;
       const bo = b.sortOrder !== undefined ? b.sortOrder : 9999;
@@ -1922,20 +1847,15 @@ function renderBoard(){
     });
     document.getElementById(`cc-${s.id}`).textContent=col.length;
     const ct=document.getElementById(`cl-${s.id}`);
-
     if(col.length===0){
       if(ct.innerHTML!=='<div class="empty-col">Drop cards here</div>')
         ct.innerHTML='<div class="empty-col">Drop cards here</div>';
       return;
     }
-
-    // Smart diff: only rebuild a column if its task set changed
     const colKey = col.map(t=>t.id+t.status+t.priority+t.updatedAt+(_focusSet.has(t.id)?'f':'')).join('|');
     const cacheKey = `${s.id}:${activeCat}:${activeFilter}`;
-    if(_cardCache[cacheKey]===colKey) return; // nothing changed, skip DOM write
+    if(_cardCache[cacheKey]===colKey) return; 
     _cardCache[cacheKey]=colKey;
-
-    // Use DocumentFragment to batch DOM writes
     const frag=document.createDocumentFragment();
     col.forEach(t=>{
       const div=document.createElement('div');
@@ -1945,13 +1865,9 @@ function renderBoard(){
     ct.replaceChildren(frag);
   });
 }
-
 function invalidateCardCache(){ Object.keys(_cardCache).forEach(k=>delete _cardCache[k]); }
-
 const _NOW=new Date();const _TODAY_STR=_NOW.toDateString();
-// Parse YYYY-MM-DD as LOCAL midnight (not UTC midnight)
 function parseLocalDate(s){if(!s)return null;const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d);}
-// Days difference between a due date string and today (positive = future, negative = past)
 function dueDiff(dateStr){
   const due=parseLocalDate(dateStr);
   if(!due)return null;
@@ -1966,11 +1882,9 @@ function cardHTML(t){
   const dueToday=_diff===0&&t.status!=='finished';
   const pc=PRI_COLOR[t.priority]||PRI_COLOR.med;
   const pl=PRI_LABEL[t.priority]||PRI_LABEL.med;
-
   const tagsH=t.tags?.length?`<div class="c-tags">${t.tags.map(tg=>`<span class="c-tag" style="background:${cat.color}1a;color:${cat.color}">#${esc(tg)}</span>`).join('')}</div>`:'';
   const notesH=t.notes?`<div class="c-notes">${esc(t.notes.slice(0,80))}${t.notes.length>80?'…':''}</div>`:'';
   const sketchH=t.sketch?`<img class="c-sketch" src="${t.sketch}" style="display:block" alt="sketch"/>`:'';
-
   let dueH='';
   if(t.dueDate){
     const diff=_diff;
@@ -1983,11 +1897,9 @@ function cardHTML(t){
       : `Due ${d.toLocaleDateString('en-US',{month:'short',day:'numeric'})}`;
     dueH=`<div class="c-due ${cls}">${lbl}</div>`;
   }
-
   const st=t.subtasks||{backlog:[],inprogress:[],done:[]};
   const stTotal=(st.backlog?.length||0)+(st.inprogress?.length||0)+(st.done?.length||0);
   const stH=stTotal?`<span class="c-steps">⊞ ${st.done?.length||0}/${stTotal}</span>`:'';
-
   return`<div class="card${isFoc?' focused':''}${overdue?' overdue':''}" id="card-${t.id}"
     draggable="true"
     ondragstart="dragStart(event,'${t.id}')"
@@ -2020,8 +1932,6 @@ function cardHTML(t){
     </div>
   </div>`;
 }
-
-// ── Drag ──
 let dragId=null;
 function dragStart(e,id){
   dragId=id;e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',id);
@@ -2033,10 +1943,8 @@ function dragEnd(id){
   document.querySelectorAll('.cards-list').forEach(c=>c.classList.remove('drag-over'));
   document.querySelectorAll('.card-drop-indicator').forEach(el=>el.remove());
 }
-// Track which card we're hovering over for reorder
 var _dropTargetId = null;
-var _dropPosition = 'after'; // 'before' or 'after'
-
+var _dropPosition = 'after'; 
 function onDrop(e, sid) {
   e.preventDefault();
   document.querySelectorAll('.cards-list').forEach(c => c.classList.remove('drag-over'));
@@ -2045,39 +1953,30 @@ function onDrop(e, sid) {
   if (!id) return;
   const t = S.tasks.find(x => x.id === id);
   if (!t) return;
-
   const sameCol = t.status === sid;
   t.status = sid;
   t.updatedAt = now();
-
-  // Reorder within column if we have a drop target
   if (_dropTargetId && _dropTargetId !== id) {
     const colTasks = S.tasks.filter(x => x.status === sid && x.id !== id);
-    // Ensure all have sortOrder
     colTasks.forEach((x, i) => { if (x.sortOrder === undefined) x.sortOrder = i * 10; });
     const targetTask = S.tasks.find(x => x.id === _dropTargetId);
     if (targetTask) {
       const targetOrder = targetTask.sortOrder !== undefined ? targetTask.sortOrder : 0;
       t.sortOrder = _dropPosition === 'before' ? targetOrder - 1 : targetOrder + 1;
-      // Re-normalize all orders in column
       const all = S.tasks.filter(x => x.status === sid).sort((a,b) => (a.sortOrder||0)-(b.sortOrder||0));
       all.forEach((x, i) => { x.sortOrder = i * 10; });
     }
   } else if (!sameCol) {
-    // Moving to new column — put at end
     const colTasks = S.tasks.filter(x => x.status === sid && x.id !== id);
     const maxOrder = colTasks.reduce((m, x) => Math.max(m, x.sortOrder || 0), 0);
     t.sortOrder = maxOrder + 10;
   }
-
   _dropTargetId = null;
   invalidateCardCache();
   renderBoard();
   updateSB();
   scheduleSave();
 }
-
-// Called when dragging over a card (for within-column reorder indicator)
 function onCardDragOver(e, taskId) {
   e.preventDefault();
   e.stopPropagation();
@@ -2087,7 +1986,6 @@ function onCardDragOver(e, taskId) {
   const midY = rect.top + rect.height / 2;
   _dropPosition = e.clientY < midY ? 'before' : 'after';
   _dropTargetId = taskId;
-  // Visual indicator
   document.querySelectorAll('.card-drop-indicator').forEach(el => el.remove());
   const indicator = document.createElement('div');
   indicator.className = 'card-drop-indicator';
@@ -2098,8 +1996,6 @@ function onCardDragOver(e, taskId) {
     card.parentNode.insertBefore(indicator, card.nextSibling);
   }
 }
-
-// ── Layout / Filter ──
 function toggleLayout(){
   layoutMode=layoutMode==='columns'?'rows':'columns';
   const btn=document.getElementById('layout-btn');
@@ -2113,12 +2009,7 @@ function setFilter(f,btn){
   btn.classList.add('on');
   renderBoard();
 }
-
-// ════════════════════════════════════════════════
-// EVENTS PANEL
-// ════════════════════════════════════════════════
 function renderEventsPanel(){
-  // Render focus tasks in sidebar
   const sbFocus=document.getElementById('sb-focus');
   if(sbFocus){
     const fi=S.tasks.filter(t=>S.focusTasks.includes(t.id));
@@ -2133,14 +2024,12 @@ function renderEventsPanel(){
   }
   const el=document.getElementById('sb-events');
   if(!el) return;
-  // Only rebuild if events/tasks changed
   const evKey=(S.calEvents.map(e=>e.date+e.title).join('|'))+'|'+(S.tasks.filter(t=>t.dueDate&&t.status!=='finished').map(t=>t.dueDate+t.title).join('|'));
   const now60=Math.floor(Date.now()/60000);
   if(renderEventsPanel._k===evKey&&renderEventsPanel._t===now60) return;
   renderEventsPanel._k=evKey; renderEventsPanel._t=now60;
   const today=new Date();today.setHours(0,0,0,0);
   const in14=new Date(today);in14.setDate(in14.getDate()+14);
-
   const all=[
     ...S.calEvents.map(e=>({title:e.title,date:e.date,color:'#6366f1'})),
     ...S.tasks.filter(t=>t.dueDate&&t.status!=='finished').map(t=>{
@@ -2150,12 +2039,10 @@ function renderEventsPanel(){
   ].filter(e=>{
     const d=new Date(e.date+'T12:00:00');return d>=today&&d<=in14;
   }).sort((a,b)=>a.date.localeCompare(b.date));
-
   if(!all.length){
     el.innerHTML=`<div style="font-size:11px;color:var(--text4);text-align:center;padding:8px 4px">No upcoming events</div>`;
     return;
   }
-
   let lastDay='',html='';
   all.forEach(ev=>{
     const d=new Date(ev.date+'T12:00:00');
@@ -2170,22 +2057,16 @@ function renderEventsPanel(){
   });
   el.innerHTML=html;
 }
-
-// ════════════════════════════════════════════════
-// FOCUS
-// ════════════════════════════════════════════════
 function toggleFocus(id,e){
   if(e)e.stopPropagation();
   if(S.focusTasks.includes(id)) S.focusTasks=S.focusTasks.filter(f=>f!==id);
   else if(S.focusTasks.length<3) S.focusTasks.push(id);
   invalidateCardCache();render();scheduleSave();
 }
-
 function renderFocus(){
   const focused=S.tasks.filter(t=>S.focusTasks.includes(t.id));
   const avail=S.tasks.filter(t=>!S.focusTasks.includes(t.id)&&t.status!=='finished');
   document.getElementById('focus-badge').textContent=`${focused.length}/3`;
-
   const slots=document.getElementById('focus-slots');
   slots.innerHTML=[0,1,2].map(i=>{
     const t=focused[i];
@@ -2209,7 +2090,6 @@ function renderFocus(){
       </div>
     </div>`;
   }).join('');
-
   const ah=document.getElementById('avail-head'),al=document.getElementById('avail-list');
   if(S.focusTasks.length<3&&avail.length){
     ah.style.display='flex';document.getElementById('avail-badge').textContent=avail.length;
@@ -2225,15 +2105,10 @@ function renderFocus(){
     }).join('');
   } else {ah.style.display='none';al.innerHTML='';}
 }
-
 function markFocusDone(id){
   const t=S.tasks.find(x=>x.id===id);if(t){t.status='finished';t.updatedAt=now();}
   S.focusTasks=S.focusTasks.filter(f=>f!==id);render();scheduleSave();
 }
-
-// ════════════════════════════════════════════════
-// CALENDAR
-// ════════════════════════════════════════════════
 function calNav(d){calMonth+=d;if(calMonth>11){calMonth=0;calYear++;}if(calMonth<0){calMonth=11;calYear--;}renderCalendar();}
 function showCalAddForm(){
   _editingCalId=null;
@@ -2245,7 +2120,6 @@ function showCalAddForm(){
   document.getElementById('cal-add-form').style.display='block';
   setTimeout(()=>document.getElementById('ev-title').focus(),50);
 }
-
 function renderCalendar(){
   const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
   document.getElementById('cal-title').textContent=`${MONTHS[calMonth]} ${calYear}`;
@@ -2253,17 +2127,14 @@ function renderCalendar(){
   const daysInMonth=new Date(calYear,calMonth+1,0).getDate();
   const prevDays=new Date(calYear,calMonth,0).getDate();
   const today=new Date();
-
   const allEvs=[
     ...S.calEvents.map(e=>({...e,evColor:'#6366f1'})),
     ...S.tasks.filter(t=>t.dueDate).map(t=>({id:t.id,title:t.title,date:t.dueDate.slice(0,10),evColor:catById(t.category).color}))
   ];
-
   const days=[];
   for(let i=firstDay-1;i>=0;i--) days.push({day:prevDays-i,cur:false});
   for(let i=1;i<=daysInMonth;i++) days.push({day:i,cur:true});
   while((days.length%7)!==0) days.push({day:days.length-daysInMonth-firstDay+2,cur:false});
-
   const hdrs=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d=>`<div class="cal-hdr">${d}</div>`).join('');
   const cells=days.map(({day,cur})=>{
     const ds=cur?`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`:'';
@@ -2282,12 +2153,10 @@ function renderCalendar(){
   }).join('');
   document.getElementById('cal-grid').innerHTML=`<div class="cal-grid">${hdrs}${cells}</div>`;
 }
-
 function addCalEvent(){
   const t=document.getElementById('ev-title').value.trim();
   const d=document.getElementById('ev-date').value;
   if(!t||!d)return;
-  // If editing existing event, update it
   if(_editingCalId){
     const ev=S.calEvents.find(e=>e.id===_editingCalId);
     if(ev){ev.title=t;ev.date=d;}
@@ -2331,10 +2200,6 @@ function deleteCalEvent(){
   document.getElementById('cal-add-form').style.display='none';
   renderCalendar();renderEventsPanel();scheduleSave();
 }
-
-// ════════════════════════════════════════════════
-// LEARNING
-// ════════════════════════════════════════════════
 function renderLearning(){
   const grid=document.getElementById('learn-grid');
   if(!S.learningTopics.length){
@@ -2343,7 +2208,6 @@ function renderLearning(){
   grid.innerHTML=S.learningTopics.map(topic=>{
     const total=topic.items.length, done=topic.items.filter(i=>i.done).length;
     const pct=total?Math.round(done/total*100):0;
-
     const itemsH=topic.items.map(item=>{
       const pc=PRI_COLOR[item.priority]||PRI_COLOR.med;
       return`<div class="learn-item">
@@ -2360,13 +2224,10 @@ function renderLearning(){
         </div>
       </div>`;
     }).join('');
-
     const resH=topic.resources?.length?`<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:0">
       ${topic.resources.map(r=>`<a class="resource-chip" href="${esc(r.url||'#')}" target="_blank" title="${esc(r.title)}">${r.type} ${esc(r.title.slice(0,22))}</a>`).join('')}
     </div>`:'';
-
     const daysLeft=topic.goalDate?dueDiff(topic.goalDate):null;
-
     return`<div class="learn-card">
       <div class="learn-card-hdr">
         <div>
@@ -2381,21 +2242,15 @@ function renderLearning(){
           <button onclick="deleteTopic('${topic.id}')" title="Delete topic" style="background:transparent;border:none;color:var(--text4);cursor:pointer;font-size:14px">✕</button>
         </div>
       </div>
-
       <div class="learn-meta">
         <span>📊 ${pct}% done</span>
         ${daysLeft!==null?`<span>🎯 Goal: ${daysLeft>0?daysLeft+'d left':daysLeft===0?'today!':Math.abs(daysLeft)+'d overdue'}</span>`:''}
         ${topic.items.filter(i=>i.priority==='high'&&!i.done).length?`<span style="color:var(--pri-high)">▲ ${topic.items.filter(i=>i.priority==='high'&&!i.done).length} high priority</span>`:''}
       </div>
-
       <div class="learn-progress"><div class="learn-bar" style="width:${pct}%;background:${topic.color}"></div></div>
-
       ${itemsH}
-
       <button class="steps-add" style="margin-top:9px" onclick="openLItemModal('${topic.id}')">+ Add item</button>
-
       ${resH}
-
       <div>
         <div style="font-size:10px;font-weight:700;color:var(--text4);text-transform:uppercase;margin:10px 0 4px">Goal Date</div>
         <div class="row" style="gap:6px">
@@ -2404,7 +2259,6 @@ function renderLearning(){
           ${topic.goalDate?`<button style="font-size:11px;padding:4px 8px;border:1px solid var(--border);border-radius:var(--rs);background:transparent;cursor:pointer;color:var(--text3);font-family:var(--font)" onclick="setTopicGoal('${topic.id}','')">Clear</button>`:''}
         </div>
       </div>
-
       <div>
         <div style="font-size:10px;font-weight:700;color:var(--text4);text-transform:uppercase;margin:10px 0 4px">Notes</div>
         <textarea rows="2" placeholder="Notes for this topic…" onchange="setTopicNotes('${topic.id}',this.value)"
@@ -2413,7 +2267,6 @@ function renderLearning(){
     </div>`;
   }).join('');
 }
-
 function openAddTopic(){
   document.getElementById('topic-name').value='';
   document.getElementById('topic-cat').value='';
@@ -2443,8 +2296,6 @@ async function deleteTopic(id){
   S.learningTopics=S.learningTopics.filter(t=>t.id!==id);
   renderLearning();scheduleSave();
 }
-
-// Learning items
 function openLItemModal(topicId){
   liTopicId=topicId;
   document.getElementById('li-text').value='';
@@ -2478,8 +2329,6 @@ function setTopicGoal(id,val){
 function setTopicNotes(id,val){
   const t=S.learningTopics.find(x=>x.id===id);if(t)t.notes=val;scheduleSave();
 }
-
-// Resources
 function openResModal(topicId){
   resTopicId=topicId;
   document.getElementById('res-title').value='';document.getElementById('res-url').value='';
@@ -2494,10 +2343,6 @@ function saveResource(){
   topic.resources.push({id:uid(),title,url:document.getElementById('res-url').value.trim(),type:document.getElementById('res-type').value});
   closeResModal();renderLearning();scheduleSave();
 }
-
-// ════════════════════════════════════════════════
-// SEARCH
-// ════════════════════════════════════════════════
 let _searchTimer=null,_lastQ='';
 function debounceSearch(q){if(q===_lastQ)return;_lastQ=q;clearTimeout(_searchTimer);_searchTimer=setTimeout(()=>onSearch(q),160);}
 function onSearch(q){
@@ -2517,10 +2362,6 @@ function onSearch(q){
 }
 function showSR(){const v=document.getElementById('search-inp').value;if(v)document.getElementById('search-drop').classList.add('open');}
 function hideSR(){document.getElementById('search-drop').classList.remove('open');}
-
-// ════════════════════════════════════════════════
-// TASK MODAL
-// ════════════════════════════════════════════════
 function populateCatSelect(){
   const sel=document.getElementById('f-cat');
   sel.innerHTML=S.categories.map(c=>`<option value="${c.id}">${esc(c.label)}</option>`).join('');
@@ -2532,7 +2373,6 @@ function populateStatusSelect(){
   sel.innerHTML=getStatuses().map(s=>`<option value="${s.id}">${esc(s.label)}</option>`).join('');
   if(current && getStatuses().find(s=>s.id===current)) sel.value=current;
 }
-
 function openNewTask(status='backlog'){
   isNew=true;editingId=null;curTags=[];curSubtasks={backlog:[],inprogress:[],done:[]};
   populateCatSelect();
@@ -2549,7 +2389,6 @@ function openNewTask(status='backlog'){
   renderTags();renderTagManager();clearCanvas();
   openModal('task-modal');
   focusFirstInput('task-modal');
-  // Restore recurring state
   const recCheck = document.getElementById('f-make-recurring');
   const recOpts  = document.getElementById('f-recurring-opts');
   if (recCheck && recOpts) {
@@ -2558,7 +2397,6 @@ function openNewTask(status='backlog'){
     recOpts.style.display = hasRec ? 'block' : 'none';
   }
 }
-
 function openEditTask(id,e){
   if(e)e.stopPropagation();
   const t=S.tasks.find(x=>x.id===id);if(!t)return;
@@ -2585,7 +2423,6 @@ function openEditTask(id,e){
   if(t.sketch){const img=new Image();img.onload=()=>ctx.drawImage(img,0,0);img.src=t.sketch;}
   openModal('task-modal');
   focusFirstInput('task-modal');
-  // Restore recurring state
   const recCheck = document.getElementById('f-make-recurring');
   const recOpts  = document.getElementById('f-recurring-opts');
   if (recCheck && recOpts) {
@@ -2594,14 +2431,11 @@ function openEditTask(id,e){
     recOpts.style.display = hasRec ? 'block' : 'none';
   }
 }
-
 function closeTaskModal(){
   closeModal('task-modal');
   editingId=null;isNew=true;curTags=[];
-  // Now modal is closed, safe to re-render
   render();
 }
-
 function saveTask(){
   const title=document.getElementById('f-title').value.trim();
   if(!title){document.getElementById('f-title').focus();return;}
@@ -2621,7 +2455,6 @@ function saveTask(){
     updatedAt:n};
   if(isNew){S.tasks.push({id:uid(),createdAt:n,...data});}
   else{const idx=S.tasks.findIndex(t=>t.id===editingId);if(idx>-1)S.tasks[idx]={...S.tasks[idx],...data};}
-  // Handle recurring
   const savedTaskRec = S.tasks.find(t => t.id === (isNew ? S.tasks[S.tasks.length-1]?.id : editingId));
   if (savedTaskRec) {
     const makeRec = document.getElementById('f-make-recurring');
@@ -2635,15 +2468,12 @@ function saveTask(){
   }
   closeTaskModal();invalidateCardCache();render();scheduleSave();
 }
-
 async function deleteTask(){
   if(!confirm('Delete this task?'))return;
   S.tasks=S.tasks.filter(t=>t.id!==editingId);
   S.focusTasks=S.focusTasks.filter(f=>f!==editingId);
   closeTaskModal();render();scheduleSave();
 }
-
-// Quick delete from card (no modal needed)
 async function quickDeleteTask(id, e){
   if(e) e.stopPropagation();
   if(!confirm('Delete this task?')) return;
@@ -2651,8 +2481,6 @@ async function quickDeleteTask(id, e){
   S.focusTasks = S.focusTasks.filter(f => f !== id);
   invalidateCardCache(); if(curView==='board') renderBoard(); updateSB(); renderSidebar(); scheduleSave();
 }
-
-// Tags
 function renderTags(){
   document.getElementById('tags-wrap').innerHTML=curTags.map(t=>`
     <span class="tag-chip">#${esc(t)}<button onclick="removeTag('${esc(t)}')">✕</button></span>`).join('');
@@ -2664,10 +2492,6 @@ function addTag(){
   inp.value='';inp.focus();
 }
 function removeTag(t){curTags=curTags.filter(x=>x!==t);renderTags();}
-
-// ════════════════════════════════════════════════
-// STEPS MODAL (separate from edit)
-// ════════════════════════════════════════════════
 function openSteps(id,e){
   if(e)e.stopPropagation();
   const t=S.tasks.find(x=>x.id===id);if(!t)return;
@@ -2684,7 +2508,6 @@ function saveStepsAndClose(){
   if(t){t.subtasks=JSON.parse(JSON.stringify(tempSubtasks));t.updatedAt=now();}
   closeStepsModal();render();scheduleSave();
 }
-
 function renderStepsBoard(){
   const cols=[{id:'backlog',label:'TO DO'},{id:'inprogress',label:'DOING'},{id:'done',label:'DONE'}];
   document.getElementById('steps-board').innerHTML=cols.map(col=>{
@@ -2710,7 +2533,6 @@ function renderStepsBoard(){
     </div>`;
   }).join('');
 }
-
 function commitStep(colId){
   const inp=document.getElementById('step-inp-'+colId);
   if(!inp)return;
@@ -2719,7 +2541,6 @@ function commitStep(colId){
   if(!tempSubtasks[colId])tempSubtasks[colId]=[];
   tempSubtasks[colId].push({id:uid(),text});
   renderStepsBoard();
-  // re-focus the input in that column after re-render
   setTimeout(()=>{const el=document.getElementById('step-inp-'+colId);if(el)el.focus();},30);
 }
 function moveStep(itemId,fromCol,dir){
@@ -2737,16 +2558,11 @@ function delStep(itemId,colId){
   tempSubtasks[colId]=tempSubtasks[colId]?.filter(x=>x.id!==itemId);
   renderStepsBoard();
 }
-
-// ════════════════════════════════════════════════
-// SKETCH
-// ════════════════════════════════════════════════
 function initSketch(){
   const COLORS=['#18140f','#dc2626','#2563eb','#16a34a','#d97706','#7c3aed','#db2777','#ffffff'];
   document.getElementById('swatches').innerHTML=COLORS.map((c,i)=>`
     <div class="swatch${i===0?' on':''}" style="background:${c}" onclick="selSketchColor(this,'${c}')"></div>`).join('');
   document.getElementById('brush-sz').addEventListener('input',function(){sketchSize=+this.value;});
-
   const canvas=document.getElementById('sketch-canvas');
   const getPos=e=>{
     const r=canvas.getBoundingClientRect();
@@ -2789,10 +2605,6 @@ function clearCanvas(){
   const c=document.getElementById('sketch-canvas');
   c.getContext('2d').clearRect(0,0,c.width,c.height);
 }
-
-// ════════════════════════════════════════════════
-// SECTOR (CATEGORY) MANAGEMENT
-// ════════════════════════════════════════════════
 function buildCatModal(){
   document.getElementById('cat-color-swatches').innerHTML=PALETTE.map((c,i)=>`
     <div class="swatch${i===0?' on':''}" style="background:${c}" data-c="${c}" onclick="selCatColor(this,'${c}')"></div>`).join('');
@@ -2818,7 +2630,6 @@ function openEditCat(id){
   document.getElementById('cat-del-btn').style.display='inline-block';
   buildCatModal();
   selectedColor=cat.color;
-  // Pre-select the right swatch
   document.querySelectorAll('#cat-color-swatches .swatch').forEach(el=>{
     if(el.dataset.c===cat.color) el.classList.add('on');
     else el.classList.remove('on');
@@ -2848,21 +2659,17 @@ function openCatDeleteChoice(){
     (taskCount>0
       ? ` This sector has <strong>${taskCount} task${taskCount===1?'':'s'}</strong>. What should happen to them?`
       : ` This sector has no tasks.`);
-  // If no tasks, skip choice and just delete
   if(taskCount===0){ confirmDeleteCat(false); return; }
   openModal('cat-delete-modal');
 }
-
 function closeCatDeleteModal(){
   closeModal('cat-delete-modal');
 }
-
 function confirmDeleteCat(deleteTasks){
   if(!addingCatId)return;
   if(deleteTasks){
     S.tasks=S.tasks.filter(t=>t.category!==addingCatId);
     S.focusTasks=S.focusTasks.filter(id=>!S.tasks.find(t=>t.id===id)===false);
-    // Clean focus list too
     S.focusTasks=S.focusTasks.filter(id=>S.tasks.find(t=>t.id===id));
   }
   S.categories=S.categories.filter(c=>c.id!==addingCatId);
@@ -2871,14 +2678,9 @@ function confirmDeleteCat(deleteTasks){
   closeCatModal();
   invalidateCatCache();invalidateCardCache();render();scheduleSave();
 }
-
 function deleteCurrentCat(){
   openCatDeleteChoice();
 }
-
-// ════════════════════════════════════════════════
-// SETTINGS
-// ════════════════════════════════════════════════
 function renderSettings(){
   const syncDot = document.getElementById('sync-dot');
   const syncState = syncDot?.classList.contains('green') ? 'synced'
@@ -2886,7 +2688,6 @@ function renderSettings(){
   const syncColor  = {synced:'#22c55e', error:'var(--pri-high)', pending:'#f59e0b'}[syncState];
   const syncLabel  = {synced:'All data synced to cloud ✓', error:'Cloud unreachable — using local backup', pending:'Syncing…'}[syncState];
   const userEmail  = _currentUser?.email || 'Not signed in';
-
   document.getElementById('settings-grid').innerHTML = `
   <div>
     <div class="settings-sec-title">Cloud Sync</div>
@@ -2904,7 +2705,6 @@ function renderSettings(){
       <strong style="color:var(--pri-low)">☁ What gets synced</strong><br/>
       Everything — board tasks, calendar events, learning topics, notes, sectors, focus list, sketches, and steps — all saved to your private cloud row within 1.5 seconds of any change.
     </div>
-
     <div style="margin-top:20px"><div class="settings-sec-title">Stats</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
       ${[
@@ -2919,7 +2719,6 @@ function renderSettings(){
         <div class="stat-card-val" style="color:${c}">${v}</div></div>`).join('')}
     </div></div>
   </div>
-
   <div>
     <div class="settings-sec-title">Data &amp; Export</div>
     <div class="info-block" style="border-color:var(--pri-med);background:rgba(249,115,22,.07);font-size:12px;line-height:1.7">
@@ -2929,16 +2728,15 @@ function renderSettings(){
     <div style="display:flex;gap:6px;flex-wrap:wrap">
       <button class="btn" onclick="exportDataJSON()">Export JSON</button>
     </div>
-
     <div style="margin-top:20px"><div class="settings-sec-title">AI Assistant</div>
     <div class="info-block" style="border-color:var(--accent);background:rgba(99,102,241,.06);font-size:12px;line-height:1.7">
       <strong style="color:var(--accent)">✦ AI + Voice Setup</strong><br/>
-      AI chat: Anthropic key. Voice transcription: OpenAI key (Whisper).<br/>
-      Keys stored only in your browser. Anthropic key handles AI + voice.
+      Your Anthropic key is used directly and is never sent to our servers when set here.<br/>
+      With your own key you get unlimited AI usage. Without it, you get 50 AI requests/day free.
     </div>
     <div style="display:flex;flex-direction:column;gap:12px;margin-top:10px">
       <div>
-        <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:5px">Anthropic API Key (AI Chat)</div>
+        <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:5px">Your Anthropic API Key (optional — for unlimited AI)</div>
         <div style="display:flex;gap:8px">
           <input type="password" id="api-key-input" value="${anthropicKey}" placeholder="sk-ant-api03-…"
             style="flex:1;padding:9px 12px;font-size:13px;border:1px solid var(--border);border-radius:var(--rs);background:var(--bg3);color:var(--text);font-family:var(--font)"
@@ -2961,7 +2759,6 @@ function renderSettings(){
         <div style="font-size:11px;color:${openaiKey?'#15803d':'var(--text4)'};margin-top:4px">${openaiKey?'✓ Set':'⚠ Not set'}</div>
       </div>
     </div></div>
-
     <div style="margin-top:20px"><div class="settings-sec-title">Shortcuts</div>
     ${[['Ctrl+Enter','Save task modal'],['Escape','Close modals'],['Drag','Move cards between columns'],['★','Pin to daily focus'],['⊞','Task steps board'],['✎','Edit task or note'],['✦','Open AI assistant'],['🎤','Voice input']].map(([k,d])=>`
     <div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border)">
@@ -2970,8 +2767,6 @@ function renderSettings(){
     </div>`).join('')}
     </div>
   </div>`;
-
-  // Inject snapshots section
   setTimeout(function(){
     var sg=document.getElementById('settings-grid');
     if(!sg||sg.querySelector('#snap-section')) return;
@@ -2984,16 +2779,10 @@ function renderSettings(){
     sg.appendChild(div);
   },50);
 }
-
 function toggleInputType(id){
   const el = document.getElementById(id);
   if(el) el.type = el.type==='password' ? 'text' : 'password';
 }
-// old file-based save functions removed (Supabase version)
-
-// ════════════════════════════════════════════════
-// VIEW / STATUS / CLOCK
-// ════════════════════════════════════════════════
 function switchView(v,btn){
   curView=v;
   document.querySelectorAll('.navtab').forEach(b=>b.classList.remove('on'));
@@ -3003,7 +2792,6 @@ function switchView(v,btn){
     const el=document.getElementById('view-'+id);
     if(el) el.style.display = id===v ? (flexViews.has(id)?'flex':'block') : 'none';
   });
-  // Show/hide the correct sidebar section
   const taskSidebar = document.getElementById('task-sidebar-inner');
   const lbSidebar   = document.getElementById('lb-sidebar-inner');
   if(taskSidebar) taskSidebar.style.display = (v==='learnboard') ? 'none' : '';
@@ -3016,20 +2804,18 @@ function switchView(v,btn){
   if(v==='graph')      { setTimeout(function(){ renderNoteGraph(); initGraphClickHandler(); }, 100); }
   if(v==='settings')   renderSettings();
 }
-
 function updateSB(){
   const active=S.tasks.filter(t=>t.status==='inprogress').length;
   const done=S.tasks.filter(t=>t.status==='finished').length;
   const ov=S.tasks.filter(t=>t.dueDate&&dueDiff(t.dueDate)<0&&t.status!=='finished').length;
   const key=`${active}|${done}|${ov}`;
-  if(updateSB._k===key) return; // nothing changed
+  if(updateSB._k===key) return; 
   updateSB._k=key;
   document.getElementById('sb-active').textContent=active;
   document.getElementById('sb-done').textContent=done;
   const el=document.getElementById('sb-ov');
   el.style.display=ov?'inline':'none';el.textContent=`⚠ Overdue: ${ov}`;
 }
-
 function startClock(){
   const el=document.getElementById('clock');
   let lastSec=-1;
@@ -3040,13 +2826,11 @@ function startClock(){
       const p=v=>String(v).padStart(2,'0');
       el.textContent=`${p(n.getHours())}:${p(n.getMinutes())}:${p(s)}`;
     }
-    setTimeout(tick,250); // check 4x/sec but only write DOM when second changes
+    setTimeout(tick,250); 
   }
   tick();
 }
-
 function setupWin(){}
-
 async function testAnthropicKey() {
   const key = (localStorage.getItem('anthropic_key')||'').trim();
   if (!key) { alert('No API key set.'); return; }
@@ -3078,18 +2862,12 @@ async function testAnthropicKey() {
   }
   if (btn) btn.textContent = 'Test connection';
 }
-
-// ════════════════════════════════════════════════
-// AUTH
-// ════════════════════════════════════════════════
-let _authMode = 'signin'; // 'signin' | 'signup'
-
+let _authMode = 'signin'; 
 function toggleAuthPw(){
   const inp = document.getElementById('auth-password');
   if(!inp) return;
   inp.type = inp.type === 'password' ? 'text' : 'password';
 }
-
 function showResetFlow(){
   document.getElementById('reset-flow').style.display = 'block';
   document.getElementById('auth-forgot-link').style.display = 'none';
@@ -3135,27 +2913,22 @@ function toggleAuthMode(){
   document.getElementById('auth-name-field').style.display = isSignup ? 'block' : 'none';
   document.getElementById('auth-error').textContent = '';
 }
-
 async function authSubmit(){
   const email = document.getElementById('auth-email').value.trim();
   const password = document.getElementById('auth-password').value;
   const errEl = document.getElementById('auth-error');
   const btn = document.getElementById('auth-submit-btn');
-
   if(!email || !password){ errEl.textContent='Please fill in all fields.'; return; }
   if(password.length < 6){ errEl.textContent='Password must be at least 6 characters.'; return; }
-
   btn.textContent = 'Please wait…';
   btn.disabled = true;
   errEl.textContent = '';
-
   try {
     let result;
     if(_authMode === 'signup'){
       result = await _supabase.auth.signUp({ email, password });
       if(result.error) throw result.error;
       if(result.data?.user && !result.data?.session){
-        // Email confirmation required
         errEl.style.color = '#15803d';
         errEl.textContent = '✓ Check your email to confirm your account, then sign in.';
         btn.textContent = 'Sign In';
@@ -3176,13 +2949,10 @@ async function authSubmit(){
     else if(msg.includes('User already registered')) errEl.textContent = 'Account exists — sign in instead.';
     else errEl.textContent = msg || 'Something went wrong. Try again.';
   }
-
   btn.textContent = _authMode==='signup' ? 'Create Account' : 'Sign In';
   btn.disabled = false;
 }
-
 async function signOut(){
-  // Clear any pending save so we don't save after sign out
   clearTimeout(_saveTimer);
   clearTimeout(_pendingStatusTimer);
   _isSaving = false;
@@ -3196,48 +2966,29 @@ async function signOut(){
   if(soBtn) soBtn.style.display='none';
   const ind = document.getElementById('sync-indicator');
   if(ind) ind.style.display='none';
-  // Clear auth session from storage so they don't auto-sign back in
   try {
     Object.keys(localStorage).filter(k=>k.startsWith('sb-')).forEach(k=>localStorage.removeItem(k));
   } catch(e){}
 }
-
-
-
-// Window dragging: handled by the .tb-logo div which is empty space
-// No document-level mousedown listeners needed
-
-
-// Safe modal open - prevents top-layer stack buildup
 function openModal(id) {
   const el = document.getElementById(id);
   if (!el) return;
-  if (el.open) el.close();  // close first if already open - prevents stack
+  if (el.open) el.close();  
   try {
     el.showModal(); el.querySelector && (() => { const i = el.querySelector("input:not([type=hidden]):not([type=range]),textarea"); if(i) i.focus(); })();
   } catch(e) {
     console.warn('showModal failed:', id, e);
   }
 }
-
-// Safe modal close
 function closeModal(id) {
   const el = document.getElementById(id);
   if (el && el.open) {
     try { el.close(); } catch(e) {}
   }
 }
-
-
-
-
-
 init();
-
-// Wire dialogs after page load
 window.addEventListener('DOMContentLoaded', function(){
   const dialogFns = {
-    // task-modal intentionally excluded — only closes via Save/Cancel buttons
     'steps-modal': ()=>closeStepsModal(),
     'cat-modal': ()=>closeCatModal(),
     'cat-delete-modal': ()=>closeCatDeleteModal(),
@@ -3248,23 +2999,14 @@ window.addEventListener('DOMContentLoaded', function(){
   Object.entries(dialogFns).forEach(([id, fn])=>{
     const el = document.getElementById(id);
     if(!el) return;
-    // Escape key
     el.addEventListener('cancel', e=>{ e.preventDefault(); fn(); });
-    // Click backdrop
     el.addEventListener('click', e=>{ if(e.target===el) fn(); });
   });
-  // Task modal: Escape does nothing (only Save/Cancel buttons close it)
   const taskModal = document.getElementById('task-modal');
   if(taskModal) taskModal.addEventListener('cancel', e=>e.preventDefault());
 });
-
-// Passive scroll listeners for performance
 document.addEventListener('touchmove', function(){}, {passive:true});
 document.addEventListener('wheel', function(){}, {passive:true});
-
-// INPUT FOCUS FIX
-// Clicking away and back restores inputs. This replicates that sequence
-// programmatically every time an input is clicked.
 document.addEventListener('mousedown', function(e) {
   const tag = e.target.tagName;
   if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') {
@@ -3272,10 +3014,6 @@ document.addEventListener('mousedown', function(e) {
     setTimeout(function() { el.focus(); }, 0);
   }
 }, {capture: true});
-
-
-
-// focusFirstInput — called when modals open to land focus in the first field
 function focusFirstInput(modalId){
   const modal = document.getElementById(modalId);
   if(!modal || !modal.open) return;
@@ -3283,17 +3021,11 @@ function focusFirstInput(modalId){
   if(!inp) return;
   inp.focus();
 }
-
-
-// ════════════════════════════════════════════════
-// AI ASSISTANT
-// ════════════════════════════════════════════════
 let aiOpen = false;
 let aiListening = false;
 let recognition = null;
-let aiHistory = []; // {role, content}
+let aiHistory = []; 
 let pendingAction = null;
-
 let _aiSysCache=null,_aiSysKey='';
 const AI_SYSTEM = () => {
   const k=S.tasks.length+'|'+S.tasks.map(t=>t.updatedAt).join('|');
@@ -3310,80 +3042,63 @@ const AI_SYSTEM = () => {
   const upcoming = [...S.calEvents,...S.tasks.filter(t=>t.dueDate&&t.status!=='finished').map(t=>({title:t.title,date:t.dueDate}))]
     .filter(e=>new Date(e.date)>=today).sort((a,b)=>a.date.localeCompare(b.date)).slice(0,8)
     .map(e=>`${e.date}: ${e.title}`).join('\n');
-
   _aiSysCache = `You are an intelligent personal productivity AI assistant built into Action Board by Vanderbyl Labs, a personal productivity tool. You have FULL access to the user's data and can take actions directly.
-
 TODAY: ${dateStr}
 SECTORS: ${cats}
 ACTIVE FOCUS TASKS: ${focusTasks.map(t=>t.title).join(', ')||'none'}
 OVERDUE: ${overdueTasks.map(t=>t.title+' (due '+t.dueDate+')').join(', ')||'none'}
 UPCOMING EVENTS:\n${upcoming||'none'}
 LEARNING TOPICS: ${topics||'none'}
-
 NOTES (${(S.notes||[]).length} total):\n${allNotes}\n\nALL TASKS:\n${allTasks||'no tasks yet'}
-
 You can perform these ACTIONS by including a JSON block in your response wrapped in triple backticks with "action":
-
 ADD TASK:
 \`\`\`action
 {"action":"add_task","title":"...","category":"art|business|projects|gamedev|personal|learning","priority":"high|med|low","status":"backlog|inprogress|finished|future","dueDate":"YYYY-MM-DD or null","notes":"...","tags":["tag1"]}
 \`\`\`
-
 ADD CALENDAR EVENT:
 \`\`\`action
 {"action":"add_event","title":"...","date":"YYYY-MM-DD"}
 \`\`\`
-
 MOVE TASK (use exact task ID from the list above):
 \`\`\`action
 {"action":"move_task","taskId":"exact-id-here","status":"backlog|inprogress|finished|future"}
 \`\`\`
-
 DELETE TASK:
 \`\`\`action
 {"action":"delete_task","taskId":"exact-id-here"}
 \`\`\`
-
 SET FOCUS (up to 3 task IDs):
 \`\`\`action
 {"action":"set_focus","taskIds":["id1","id2"]}
 \`\`\`
-
 ADD LEARNING ITEM:
 \`\`\`action
 {"action":"add_learn_item","topicName":"...","text":"...","priority":"high|med|low","note":""}
 \`\`\`
-
 UPDATE TASK NOTES:
 \`\`\`action
 {"action":"update_notes","taskId":"exact-id-here","notes":"new notes text"}
 \`\`\`
-
 ADD NOTE (separate from task notes):
 \`\`\`action
 {"action":"add_note","title":"Note title","content":"Full note content here","category":"sector-name-or-id"}
 \`\`\`
-
 EDIT NOTE:
 \`\`\`action
 {"action":"edit_note","noteId":"EXACT-ID-FROM-NOTES-LIST","title":"new title","content":"new content"}
 \`\`\`
-
 DELETE NOTE:
 \`\`\`action
 {"action":"delete_note","noteId":"EXACT-ID-FROM-NOTES-LIST"}
 \`\`\`
-
 ADD LEARN BOARD CARD:
 \`\`\`action
 {"action":"add_lb_card","title":"card title","notes":"details","columnId":"col-id","sectorId":"sec-id","priority":"high|med|low"}
 \`\`\`
-
 BATCH (multiple actions at once):
 \`\`\`action
 {"action":"batch","actions":[{...},{...}]}
 \`\`\`
-
 IMPORTANT RULES:
 - Always use the exact task ID (looks like "abc123xyz") when referencing existing tasks
 - For dates: calculate from today (${dateStr}). "tomorrow" = ${new Date(today.getTime()+86400000).toISOString().slice(0,10)}, "next week" = ${new Date(today.getTime()+7*86400000).toISOString().slice(0,10)}
@@ -3398,7 +3113,6 @@ IMPORTANT RULES:
 - Batch everything into one action block. Always execute immediately, never just describe.`;
   return _aiSysCache;
 };
-
 function toggleAI() {
   aiOpen = !aiOpen;
   const panel = document.getElementById('ai-panel');
@@ -3408,30 +3122,24 @@ function toggleAI() {
   }
   if (aiOpen) { focusFirstInput('ai-panel'); }
 }
-
 function autoResizeAI(el) {
   el.style.height = 'auto';
   el.style.height = Math.min(el.scrollHeight, 100) + 'px';
 }
-
 function aiSuggest(text) {
   document.getElementById('ai-input').value = text;
   document.getElementById('ai-input').focus();
 }
-
 function addAIMessage(role, content, actionData) {
   aiHistory.push({role: role === 'ai' ? 'assistant' : 'user', content});
   const msgs = document.getElementById('ai-messages');
   const div = document.createElement('div');
   div.className = `ai-msg ${role}`;
-
   let bubbleContent = content.replace(/\n/g, '<br>');
-
   let actionHTML = '';
   if (actionData) {
     actionHTML = buildActionCard(actionData);
   }
-
   div.innerHTML = `
     <div class="ai-avatar">${role === 'ai' ? '✦' : '👤'}</div>
     <div>
@@ -3441,7 +3149,6 @@ function addAIMessage(role, content, actionData) {
   msgs.appendChild(div);
   msgs.scrollTop = msgs.scrollHeight;
 }
-
 function addTypingIndicator() {
   const msgs = document.getElementById('ai-messages');
   const div = document.createElement('div');
@@ -3451,12 +3158,10 @@ function addTypingIndicator() {
   msgs.appendChild(div);
   msgs.scrollTop = msgs.scrollHeight;
 }
-
 function removeTypingIndicator() {
   const el = document.getElementById('ai-typing');
   if (el) el.remove();
 }
-
 function buildActionCard(action) {
   if (action.action === 'add_task') {
     const cat = S.categories.find(c => c.label.toLowerCase() === action.category?.toLowerCase()) || S.categories[0];
@@ -3512,28 +3217,21 @@ function buildActionCard(action) {
       </div>
     </div>`;
   }
-  // All other actions execute immediately (no confirm step needed)
-  // batch, add_note, edit_note, delete_note, add_lb_card, toggle_habit, add_habit, etc.
   executeAction(action);
   return '';
 }
-
 function confirmAIAction() {
   if (!pendingAction) return;
   executeAction(pendingAction);
   pendingAction = null;
 }
-
 function executeAction(a) {
   if (!a || !a.action) return;
-
-  // Handle batch
   if (a.action === 'batch') {
     (a.actions || []).forEach(sub => executeAction(sub));
     addAIMessage('ai', `✓ Done! Completed ${a.actions?.length || 0} actions.`);
     return;
   }
-
   if (a.action === 'add_task') {
     const catId = S.categories.find(c => c.label.toLowerCase() === (a.category||'').toLowerCase())?.id
                 || S.categories.find(c => c.id === a.category)?.id
@@ -3552,14 +3250,12 @@ function executeAction(a) {
     addAIMessage('ai', `✓ Task added: **${task.title}** → ${statusLabel}${task.dueDate?' (due '+task.dueDate+')':''}`);
     return;
   }
-
   if (a.action === 'add_event') {
     S.calEvents.push({id:uid(), title:a.title, date:a.date});
     render(); scheduleSave();
     addAIMessage('ai', `✓ Event added: **${a.title}** on ${a.date}`);
     return;
   }
-
   if (a.action === 'move_task') {
     const task = S.tasks.find(t=>t.id===a.taskId) || S.tasks.find(t=>t.title.toLowerCase().includes((a.title||'').toLowerCase()));
     if (task) {
@@ -3572,7 +3268,6 @@ function executeAction(a) {
     }
     return;
   }
-
   if (a.action === 'delete_task') {
     const task = S.tasks.find(t=>t.id===a.taskId);
     if (task) {
@@ -3584,7 +3279,6 @@ function executeAction(a) {
     }
     return;
   }
-
   if (a.action === 'set_focus') {
     S.focusTasks = (a.taskIds||[]).slice(0,3);
     render(); scheduleSave();
@@ -3592,7 +3286,6 @@ function executeAction(a) {
     addAIMessage('ai', `✓ Focus set to: ${names.join(', ')||'cleared'}`);
     return;
   }
-
   if (a.action === 'update_notes') {
     const task = S.tasks.find(t=>t.id===a.taskId);
     if (task) {
@@ -3602,7 +3295,6 @@ function executeAction(a) {
     }
     return;
   }
-
   if (a.action === 'add_note') {
     const nc2=S.categories.find(c=>c.id===a.category||c.label.toLowerCase()===(a.category||'').toLowerCase())||S.categories[0]||{id:'personal'};
     if(!S.notes)S.notes=[];
@@ -3644,90 +3336,75 @@ function executeAction(a) {
     return;
   }
 }
-
-
+const AI_WORKER_URL = 'https://actionboard-ai.YOUR-SUBDOMAIN.workers.dev/ai';
 async function sendAI() {
   const inp = document.getElementById('ai-input');
   const text = inp.value.trim();
   if (!text) return;
-  if (!anthropicKey) {
-    addAIMessage('ai', 'I need an API key to work. Go to the Settings tab, scroll down to "AI Assistant", and paste in your Anthropic API key. You can get one free at console.anthropic.com.');
-    if (curView !== 'settings') { document.querySelector('.navtab:nth-child(5)').click(); }
-    return;
-  }
   inp.value = '';
   inp.style.height = 'auto';
   addAIMessage('user', text);
   addTypingIndicator();
   document.getElementById('ai-status').textContent = 'Thinking…';
-
   const messages = [
     {role:'user', content: AI_SYSTEM()},
     {role:'assistant', content:'Understood. I\'m ready to help manage your Action Board.'},
-    ...aiHistory.slice(-8), // keep last 8 messages for context
+    ...aiHistory.slice(-8),
     {role:'user', content: text}
   ];
-
+  const ownKey = (localStorage.getItem('anthropic_key')||'').trim();
+  const useOwnKey = ownKey.startsWith('sk-ant-');
+  let userToken = null;
+  if (!useOwnKey && _supabase) {
+    const { data } = await _supabase.auth.getSession();
+    userToken = data?.session?.access_token || null;
+  }
+  if (!useOwnKey && !userToken) {
+    removeTypingIndicator();
+    addAIMessage('ai', 'Please sign in or add your Anthropic API key in Settings to use the AI assistant.');
+    document.getElementById('ai-status').textContent = 'Ready';
+    return;
+  }
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method:'POST',
-      headers:{'Content-Type':'application/json','x-api-key':anthropicKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-      body: JSON.stringify({
-        model:'claude-opus-4-5',
-        max_tokens:2500,
-        messages
-      })
+    const requestBody = { messages, useOwnKey };
+    if (useOwnKey) requestBody.ownKey = ownKey;
+    if (userToken) requestBody.userToken = userToken;
+    const res = await fetch(AI_WORKER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(requestBody)
     });
     const data = await res.json();
     removeTypingIndicator();
-
     if (data.error) {
-      addAIMessage('ai', `Sorry, I ran into an issue: ${data.error.message}. Make sure the app has internet access.`);
-      document.getElementById('ai-status').textContent = 'Error — check connection';
+      if (data.code === 'RATE_LIMITED') {
+        addAIMessage('ai', '⚠️ Daily AI limit reached. Add your own Anthropic API key in Settings for unlimited usage. Get one free at console.anthropic.com.');
+      } else {
+        addAIMessage('ai', 'Error: ' + data.error);
+      }
+      document.getElementById('ai-status').textContent = 'Error';
       return;
     }
-
     const reply = data.content?.[0]?.text || '';
     document.getElementById('ai-status').textContent = 'Ready';
-
-    // Parse action blocks
     const actionMatch = reply.match(/```action\n?([\s\S]*?)```/);
     let actionData = null;
     let displayText = reply.replace(/```action[\s\S]*?```/g, '').trim();
-
-    if (actionMatch) {
-      try { actionData = JSON.parse(actionMatch[1].trim()); } catch(e) {}
-    }
-
-    // Also check for inline JSON (fallback)
+    if (actionMatch) { try { actionData = JSON.parse(actionMatch[1].trim()); } catch(e) {} }
     if (!actionData) {
       const jsonMatch = reply.match(/\{[^{}]*"action"\s*:[^{}]*\}/);
-      if (jsonMatch) {
-        try { actionData = JSON.parse(jsonMatch[0]); } catch(e) {}
-      }
+      if (jsonMatch) { try { actionData = JSON.parse(jsonMatch[0]); } catch(e) {} }
     }
-
     if (!displayText && actionData) displayText = 'Here\'s what I\'ll do:';
     addAIMessage('ai', displayText || '(no response)', actionData);
-
   } catch(err) {
     removeTypingIndicator();
     document.getElementById('ai-status').textContent = 'Offline';
-    addAIMessage('ai', 'I\'m having trouble connecting. Check your internet connection and try again.');
+    addAIMessage('ai', 'Could not reach the AI server. Check your connection and try again.');
   }
 }
-
-// ── VOICE INPUT ──
-// ════════════════════════════════════════════════
-// VOICE / AUDIO RECORDING (MediaRecorder → Whisper)
-// ════════════════════════════════════════════════
-// Strategy: record audio with MediaRecorder API (works in Electron),
-// send blob to OpenAI Whisper via main process IPC, get text back.
-// This bypasses the broken Web Speech API entirely.
-
 let mediaRecorder = null;
 let audioChunks   = [];
-
 function toggleVoice() {
   if (aiListening) {
     stopRecording();
@@ -3735,46 +3412,34 @@ function toggleVoice() {
   }
   startRecording();
 }
-
 async function startRecording() {
   const openaiKey = localStorage.getItem('openai_key') || '';
   const anthropicKey = localStorage.getItem('anthropic_key') || '';
-
   if (!openaiKey && !anthropicKey) {
     if (!aiOpen) toggleAI();
     addAIMessage('ai', 'To use voice, add an OpenAI API key in Settings (for Whisper transcription). You can also just type your request in the text box — that works perfectly fine without any extra key!');
     return;
   }
-
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
     audioChunks = [];
-
-    // Pick best supported format
     const mimeType = ['audio/webm;codecs=opus','audio/webm','audio/ogg;codecs=opus','audio/ogg','audio/mp4']
       .find(m => MediaRecorder.isTypeSupported(m)) || '';
-
     mediaRecorder = new MediaRecorder(stream, mimeType ? { mimeType } : {});
-
     mediaRecorder.ondataavailable = (e) => {
       if (e.data && e.data.size > 0) audioChunks.push(e.data);
     };
-
     mediaRecorder.onstop = async () => {
-      // Stop all mic tracks
       stream.getTracks().forEach(t => t.stop());
       await processAudio(openaiKey || anthropicKey, mimeType);
     };
-
     mediaRecorder.onerror = (e) => {
       stream.getTracks().forEach(t => t.stop());
       cleanupVoiceUI();
       addAIMessage('ai', 'Recording error: ' + e.error?.message);
     };
-
-    mediaRecorder.start(200); // collect chunks every 200ms
+    mediaRecorder.start(200); 
     aiListening = true;
-
     const vbtn = document.getElementById('ai-voice-btn');
     vbtn.innerHTML = '⏹';
     vbtn.classList.add('active');
@@ -3782,7 +3447,6 @@ async function startRecording() {
     document.getElementById('ai-fab').classList.add('listening');
     document.getElementById('ai-status').textContent = '🔴 Recording — click ⏹ to stop & send';
     if (!aiOpen) toggleAI();
-
   } catch (err) {
     cleanupVoiceUI();
     if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
@@ -3797,10 +3461,9 @@ async function startRecording() {
     }
   }
 }
-
 function stopRecording() {
   if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-    mediaRecorder.stop(); // triggers onstop which calls processAudio
+    mediaRecorder.stop(); 
   } else {
     cleanupVoiceUI();
   }
@@ -3808,7 +3471,6 @@ function stopRecording() {
   cleanupVoiceUI();
   document.getElementById('ai-status').textContent = 'Transcribing…';
 }
-
 function cleanupVoiceUI() {
   aiListening = false;
   const vbtn = document.getElementById('ai-voice-btn');
@@ -3816,12 +3478,6 @@ function cleanupVoiceUI() {
   const fab = document.getElementById('ai-fab');
   if (fab) fab.classList.remove('listening');
 }
-
-// processAudio replaced by features.js
-
-
-
-
 function exportDataJSON(){
   const blob = new Blob([JSON.stringify(S, null, 2)], {type:'application/json'});
   const url = URL.createObjectURL(blob);
@@ -3829,17 +3485,9 @@ function exportDataJSON(){
   a.href = url; a.download = `actionboard-export-${new Date().toISOString().slice(0,10)}.json`;
   a.click(); URL.revokeObjectURL(url);
 }
-
-
-
-// ════════════════════════════════════════════════
-// NOTES
-// ════════════════════════════════════════════════
 let notesSectorFilter = 'all';
 let noteSaveTimers = {};
-
 function renderNotes(){
-  // Sector filter dropdown
   const sel = document.getElementById('notes-sector-filter');
   if(sel){
     sel.innerHTML = '<option value="all">All Sectors</option>' +
@@ -3854,40 +3502,29 @@ function renderNotes(){
       if(cat) scopeEl.innerHTML=`· <span style="color:${cat.color}">${esc(cat.label)}</span>`;
     }
   }
-
   const canvas = document.getElementById('notes-canvas');
   if(!canvas) return;
-
   const filtered = notesSectorFilter==='all'
     ? S.notes
     : S.notes.filter(n=>n.category===notesSectorFilter);
-
   if(!filtered.length){
     canvas.innerHTML='<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;color:var(--text4);font-size:14px;pointer-events:none">No notes yet. Click "+ New Note" to create one.</div>';
     return;
   }
-
-  // Rebuild the canvas — preserve existing positions for notes that already exist
-  // Remove pads that no longer exist
   const existingIds = new Set(Array.from(canvas.querySelectorAll('.note-pad')).map(el=>el.dataset.noteId));
   const currentIds = new Set(filtered.map(n=>n.id));
   existingIds.forEach(id=>{if(!currentIds.has(id)){const el=canvas.querySelector('[data-note-id="'+id+'"]');if(el)el.remove();}});
   canvas.querySelector('.empty-msg') && canvas.querySelector('.empty-msg').remove();
-
   filtered.forEach(note=>{
     const cat=catById(note.category);
-    // Reuse existing pad or create new one
     let pad = canvas.querySelector('[data-note-id="'+note.id+'"]');
     const isNew = !pad;
-
     if(!pad){
       pad = document.createElement('div');
       pad.className='note-pad';
       pad.dataset.noteId = note.id;
       canvas.appendChild(pad);
     }
-
-    // Position: use stored position or auto-place
     const pos = note.canvasPos || null;
     const size = note.canvasSize || null;
     if(isNew || !pad.style.left){
@@ -3895,7 +3532,6 @@ function renderNotes(){
         pad.style.left = pos.x+'px';
         pad.style.top  = pos.y+'px';
       } else {
-        // Auto-place in a grid
         const idx = filtered.indexOf(note);
         const col = idx % 3;
         const row = Math.floor(idx/3);
@@ -3905,8 +3541,6 @@ function renderNotes(){
     }
     pad.style.width  = size ? size.w+'px' : '260px';
     pad.style.height = size ? size.h+'px' : '200px';
-
-    // Rebuild inner HTML
     pad.innerHTML = `
       <div class="note-pad-bar" onmousedown="noteStartDrag(event,'${note.id}')">
         <span class="note-pad-title-text">${esc(note.title||'Untitled')}</span>
@@ -3937,38 +3571,29 @@ function renderNotes(){
     `;
   });
 }
-
-// ── Note drag (move on canvas) ──
 function noteOpenEdit(id) {
   var row = document.getElementById('note-edit-'+id);
   if (!row) return;
   var isOpen = row.style.display === 'flex';
-  // Close all open edit rows
   document.querySelectorAll('.note-pad-edit-row').forEach(function(r){ r.style.display='none'; });
-  if (isOpen) return; // was open, now closed — done
-  // Open this one
+  if (isOpen) return; 
   row.style.display = 'flex';
   var inp = row.querySelector('input');
   if (inp) { inp.focus(); inp.select(); }
-  // Close when focus leaves the entire edit row
-  // Use a short delay so the focusin on child elements doesn't immediately fire
   function onFocusOut(e) {
     setTimeout(function() {
-      // relatedTarget is where focus went — if it's inside the row, keep open
       if (row.contains(document.activeElement)) return;
       row.style.display = 'none';
       row.removeEventListener('focusout', onFocusOut);
     }, 100);
   }
   row.addEventListener('focusout', onFocusOut);
-  // Also close when user clicks anywhere outside the note-pad
   function onDocClick(e) {
     if (!row.contains(e.target) && !e.target.closest('.note-pad-btn')) {
       row.style.display = 'none';
       document.removeEventListener('mousedown', onDocClick);
     }
   }
-  // Small delay so the pencil-button click that opened this doesn't immediately close it
   setTimeout(function() {
     document.addEventListener('mousedown', onDocClick);
   }, 150);
@@ -3996,7 +3621,6 @@ function _noteMoveFn(e){
   const y=Math.max(0,e.clientY-_noteDragOy);
   pad.style.left=x+'px';
   pad.style.top=y+'px';
-  // Expand canvas if needed
   const needed=y+pad.offsetHeight+20;
   if(needed>canvas.offsetHeight) canvas.style.minHeight=needed+'px';
 }
@@ -4005,7 +3629,6 @@ function _noteUpFn(){
   const pad=document.querySelector('[data-note-id="'+_noteDragId+'"]');
   if(pad){
     pad.style.zIndex='';
-    // Save position
     const note=S.notes.find(n=>n.id===_noteDragId);
     if(note){
       note.canvasPos={x:parseInt(pad.style.left),y:parseInt(pad.style.top)};
@@ -4016,8 +3639,6 @@ function _noteUpFn(){
   document.removeEventListener('mousemove',_noteMoveFn);
   document.removeEventListener('mouseup',_noteUpFn);
 }
-
-// ── Note resize ──
 var _noteResizeId=null,_noteResizeOx=0,_noteResizeOy=0,_noteResizeW=0,_noteResizeH=0;
 function noteStartResize(e,id){
   e.preventDefault(); e.stopPropagation();
@@ -4052,42 +3673,31 @@ function _noteResizeUpFn(){
   document.removeEventListener('mousemove',_noteResizeFn);
   document.removeEventListener('mouseup',_noteResizeUpFn);
 }
-
-
 function openNewNote(){
   const catId = notesSectorFilter!=='all' ? notesSectorFilter : (S.categories[0]?.id||'personal');
   S.notes.unshift({id:uid(), title:'', content:'', category:catId, createdAt:now(), updatedAt:now()});
   renderNotes();
   scheduleSave();
-  // Focus the first title input
   setTimeout(()=>{
     const inp = document.querySelector('.note-title-input');
     if(inp) inp.focus();
   }, 50);
 }
-
 function updateNoteField(id, field, value){
   const note = S.notes.find(n=>n.id===id);
   if(!note) return;
   note[field] = value;
   note.updatedAt = now();
-  // Debounce save per note
   clearTimeout(noteSaveTimers[id]);
   noteSaveTimers[id] = setTimeout(()=>{ scheduleSave(); }, 800);
-  // If category changed, re-render for color update
   if(field==='category') renderNotes();
 }
-
 async function deleteNote(id){
   if(!confirm('Delete this note?')) return;
   S.notes = S.notes.filter(n=>n.id!==id);
   renderNotes();
   scheduleSave();
 }
-
-// ════════════════════════════════════════════════
-// PERSISTENT TAGS
-// ════════════════════════════════════════════════
 function renderTagManager(){
   const wrap = document.getElementById('tag-manager-area');
   if(!wrap) return;
@@ -4101,18 +3711,14 @@ function renderTagManager(){
     </span>`
   ).join('');
 }
-
 function quickAddTag(tag){
   if(!curTags.includes(tag)){ curTags.push(tag); renderTags(); }
 }
-
 function deleteGlobalTag(tag){
   S.globalTags = S.globalTags.filter(t=>t!==tag);
   renderTagManager();
   scheduleSave();
 }
-
-// Patch addTag to save to globalTags
 const _origAddTag = addTag;
 function addTag(){
   const inp = document.getElementById('f-tag');
@@ -4120,7 +3726,6 @@ function addTag(){
   if(t && !curTags.includes(t)){
     curTags.push(t);
     renderTags();
-    // Save to global tags if not already there
     if(!S.globalTags.includes(t)){
       S.globalTags.push(t);
       S.globalTags.sort();
@@ -4129,19 +3734,11 @@ function addTag(){
   inp.value=''; inp.focus();
   renderTagManager();
 }
-
-// ════════════════════════════════════════════════
-// LEARNING — SECTOR FILTER
-// ════════════════════════════════════════════════
 let learningSectorFilter = 'all';
-
-// Patch renderLearning to add sector filter bar at top
 const _origRenderLearning = renderLearning;
 function renderLearning(){
   const grid = document.getElementById('learn-grid');
   if(!grid) return;
-
-  // Inject sector filter bar before the grid if not present
   let bar = document.getElementById('learn-sector-bar');
   if(!bar){
     bar = document.createElement('div');
@@ -4149,7 +3746,6 @@ function renderLearning(){
     bar.className = 'learn-sector-bar';
     grid.parentNode.insertBefore(bar, grid);
   }
-  // Scope title
   const learnTitle = document.querySelector('#view-learning .view-title');
   if(learnTitle){
     if(learningSectorFilter==='all'){
@@ -4161,7 +3757,6 @@ function renderLearning(){
         : 'Learning Queue';
     }
   }
-
   bar.innerHTML = [
     {id:'all', label:'All', color:'var(--accent)'},
     ...S.categories
@@ -4175,18 +3770,13 @@ function renderLearning(){
       style="${on?`background:${col};border-color:${col}`:''}"
       onclick="setLearningSector('${cat.id}')">${esc(cat.label)} (${count})</button>`;
   }).join('');
-
-  // Filter topics
   const topics = learningSectorFilter==='all'
     ? S.learningTopics
     : S.learningTopics.filter(t=>t.category===learningSectorFilter||t.sectorId===learningSectorFilter);
-
   if(!topics.length){
     grid.innerHTML = `<div style="color:var(--text3);font-size:14px">No topics in this sector yet.</div>`;
     return;
   }
-
-  // Render only filtered topics — reuse existing renderLearning logic
   grid.innerHTML = topics.map(topic=>{
     const total=topic.items.length, done=topic.items.filter(i=>i.done).length;
     const pct=total?Math.round(done/total*100):0;
@@ -4254,7 +3844,6 @@ function renderLearning(){
     </div>`;
   }).join('');
 }
-
 function setLearningSector(id){
   learningSectorFilter = id;
   notesSectorFilter = id;
@@ -4265,20 +3854,12 @@ function setLearningSector(id){
   if(nSel) nSel.value = id;
   render();
 }
-
 function setTopicSector(topicId, sectorId){
   const t = S.learningTopics.find(x=>x.id===topicId);
   if(t){ t.sectorId = sectorId || null; }
   renderLearning();
   scheduleSave();
 }
-
-
-
-// ═══════════════════════════════════════════════════════
-// LEARNING KANBAN — completely separate board + sectors
-// ═══════════════════════════════════════════════════════
-
 function ensureLearnBoard() {
   if (!S.learnBoard) S.learnBoard = {
     sectors: [
@@ -4298,44 +3879,30 @@ function ensureLearnBoard() {
   if (!S.learnBoard.columns) S.learnBoard.columns = [];
   if (!S.learnBoard.cards)   S.learnBoard.cards   = [];
 }
-
 var lbActiveSector = 'all';
 var lbDragId = null;
 var lbEditingCardId = null;
 var lbEditingColTarget = null;
 var lbCurResources = [];
-
 function renderLearnBoard() {
   ensureLearnBoard();
   var lb = S.learnBoard;
   var wrap = document.getElementById('lb-wrap');
   if (!wrap) return;
-
-  // Sync the rows CSS class on lb-board-wrap
   var boardWrap = document.getElementById('lb-board-wrap');
   if (boardWrap) boardWrap.className = (lb.layout === 'rows') ? 'rows' : '';
-  // Clear any inline style that might fight the CSS class
   wrap.style.flexDirection = '';
-
-  // Update sidebar sectors for learn board
   renderLBSidebar();
-
-  // Filter cards by active sector
   var cards = lbActiveSector === 'all'
     ? lb.cards
     : lb.cards.filter(function(c){ return c.sectorId === lbActiveSector; });
-
-  // Render columns + add-column button
   var lbLayout = S.learnBoard.layout || 'columns';
   var boardEl = document.getElementById('lb-board-wrap');
   if(boardEl) boardEl.className = lbLayout==='rows' ? 'rows' : '';
   wrap.className = lbLayout==='rows' ? '' : '';
-  // update layout button
   var lbLayoutBtn = document.getElementById('lb-layout-btn');
   if(lbLayoutBtn) lbLayoutBtn.textContent = lbLayout==='rows' ? '⇄ Rows' : '⇄ Columns';
-
   var acc = 'var(--accent)';
-  // Layout is controlled by CSS via #lb-board-wrap.rows class (set in lbToggleLayout)
   wrap.innerHTML = lb.columns.map(function(col) {
     var colCards = cards.filter(function(c){ return c.columnId === col.id; });
     var colId = col.id;
@@ -4362,7 +3929,6 @@ function renderLearnBoard() {
     + '</div>';
   }).join('');
 }
-
 function renderLBSidebar() {
   ensureLearnBoard();
   var list = document.getElementById('lb-sector-list');
@@ -4387,7 +3953,6 @@ function renderLBSidebar() {
   });
   list.innerHTML = html;
 }
-
 function lbCardHTML(card) {
   var sec = S.learnBoard.sectors.find(function(s){ return s.id === card.sectorId; }) || {label:'',color:'#888'};
   var pc = PRI_COLOR[card.priority] || PRI_COLOR.med;
@@ -4419,17 +3984,13 @@ function lbCardHTML(card) {
     + '</div>'
   + '</div>';
 }
-
 function lbSetSector(id) { lbActiveSector = id; renderLearnBoard(); }
-
 function lbToggleLayout() {
   ensureLearnBoard();
   S.learnBoard.layout = (S.learnBoard.layout === 'rows') ? 'columns' : 'rows';
-  // CSS class drives the layout — renderLearnBoard will sync it
   renderLearnBoard();
   scheduleSave();
 }
-
 function lbDragStart(e, id) {
   lbDragId = id;
   e.dataTransfer.effectAllowed = 'move';
@@ -4449,7 +4010,6 @@ function lbDrop(e, colId) {
   if (card) { card.columnId = colId; card.updatedAt = now(); }
   renderLearnBoard(); scheduleSave();
 }
-
 function lbAddCol() {
   openCustomPrompt('New column name:', '', function(label) {
     if (!label || !label.trim()) return;
@@ -4476,7 +4036,6 @@ function lbDeleteCol(colId) {
   S.learnBoard.columns = S.learnBoard.columns.filter(function(c){ return c.id!==colId; });
   renderLearnBoard(); scheduleSave();
 }
-
 function lbAddSectorFromBtn() {
   openCustomPrompt('New learning sector name:', '', function(label) {
     if (!label || !label.trim()) return;
@@ -4504,8 +4063,6 @@ function lbEditSector(id) {
     }
   });
 }
-
-// ── Card Modal ──
 function lbNewCard(colId) {
   ensureLearnBoard();
   lbEditingCardId = null;
@@ -4530,7 +4087,6 @@ function lbPopulateModal(card) {
   document.getElementById('lb-cm-title').value = card.title || '';
   document.getElementById('lb-cm-notes').value = card.notes || '';
   document.getElementById('lb-cm-pri').value = card.priority || 'med';
-  // Sector select
   var sel = document.getElementById('lb-cm-sector');
   ensureLearnBoard();
   sel.innerHTML = '<option value="">— No sector —</option>'
@@ -4598,10 +4154,7 @@ function lbDeleteCard(cardId, e) {
   S.learnBoard.cards = S.learnBoard.cards.filter(function(c){ return c.id!==cardId; });
   renderLearnBoard(); scheduleSave();
 }
-
 function lbClosCardModal() { closeModal('lb-card-modal'); }
-
-// AI Populate
 function lbAIPopulate() {
   if (!anthropicKey) { alert('Add your Anthropic API key in Settings first.'); return; }
   openCustomPrompt('What topic should I build a learning plan for?\ne.g. "Blender 3D", "React hooks", "Music theory"', '', function(topic) {
@@ -4609,7 +4162,6 @@ function lbAIPopulate() {
     var btn = document.getElementById('lb-ai-btn');
     if (btn) { btn.textContent = 'Generating…'; btn.disabled = true; }
     ensureLearnBoard();
-    // Find or create sector
     var topicLabel = topic.trim();
     var sec = S.learnBoard.sectors.find(function(s){ return s.label.toLowerCase() === topicLabel.toLowerCase(); });
     if (!sec) {
@@ -4652,14 +4204,7 @@ function lbAIPopulate() {
     });
   });
 }
-
-
-// ═══════════════════════════════════════════════════════
-// CUSTOM PROMPT DIALOG (replaces browser prompt())
-// ═══════════════════════════════════════════════════════
-
 var _promptCallback = null;
-
 function openCustomPrompt(label, defaultVal, callback) {
   _promptCallback = callback;
   document.getElementById('cp-label').textContent = label;
@@ -4676,28 +4221,18 @@ function cancelCustomPrompt() {
   closeModal('custom-prompt-modal');
   _promptCallback = null;
 }
-
-
-// ═══════════════════════════════════════════════════════
-// HABITS V2 — named habits, each with its own yearly grid
-// ═══════════════════════════════════════════════════════
-
 var habitYear = new Date().getFullYear();
-
 function ensureHabitsV2() {
   if (!S.habitList) {
     S.habitList = [{id:'h-default', name:'Daily Practice', color:'var(--accent)'}];
     S.habitData = {};
-    // migrate old single-habit data
     if (S.habits) {
       Object.keys(S.habits).forEach(function(k){ if(S.habits[k]) S.habitData['h-default|'+k]=true; });
     }
   }
   if (!S.habitData) S.habitData = {};
 }
-
 function habitNavYear(d) { habitYear += d; renderHabits(); }
-
 function renderHabits() {
   ensureHabitsV2();
   var el = document.getElementById('habits-grid');
@@ -4705,7 +4240,6 @@ function renderHabits() {
   var labelEl = document.getElementById('habit-year-label');
   if (!el) return;
   if (labelEl) labelEl.textContent = habitYear;
-
   var today = new Date();
   var jan1 = new Date(habitYear, 0, 1);
   var startOffset = jan1.getDay();
@@ -4713,13 +4247,10 @@ function renderHabits() {
   var daysInYear = isLeap ? 366 : 365;
   var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   var dayNow = Math.floor((today - jan1) / 86400000);
-
-  // Total across all habits
   var totalDone = 0;
   S.habitList.forEach(function(h) {
     Object.keys(S.habitData).forEach(function(k){ if(k.startsWith(h.id+'|') && S.habitData[k]) totalDone++; });
   });
-
   if (statsEl) statsEl.innerHTML =
     '<div style="background:var(--bg4);border:1px solid var(--border);border-radius:var(--r);padding:10px 16px;text-align:center">'
       +'<div style="font-size:24px;font-weight:800;color:var(--accent)">'+S.habitList.length+'</div>'
@@ -4730,8 +4261,6 @@ function renderHabits() {
       +'<div style="font-size:10px;font-weight:700;color:var(--text4);text-transform:uppercase">Total Check-ins '+habitYear+'</div>'
     +'</div>'
     +'<button class="btn pri" onclick="habitAddNew()" style="font-size:12px;align-self:center">+ New Habit</button>';
-
-  // Shared month-label row
   var monthCols = new Array(53).fill('');
   for (var w=0;w<53;w++) {
     var dn = w*7-startOffset;
@@ -4740,19 +4269,16 @@ function renderHabits() {
       if (d2.getDate()<=7) monthCols[w]=months[d2.getMonth()];
     }
   }
-  // day-of-week labels
   var dowLabels = ['Su','Mo','Tu','We','Th','Fr','Sa'];
   var dowCol = '<div style="display:flex;flex-direction:column;gap:2px;margin-right:6px;flex-shrink:0">'
     + dowLabels.map(function(d){ return '<div style="height:16px;font-size:9px;font-weight:700;color:var(--text4);display:flex;align-items:center">'+d+'</div>'; }).join('')
     + '</div>';
-
   var headerRow = '<div style="display:flex;margin-left:192px;margin-bottom:2px;gap:2px">'
     + monthCols.map(function(m,i){
         return '<div style="width:16px;font-size:9px;font-weight:700;color:var(--text4);overflow:hidden;text-align:center;flex-shrink:0">'+m+'</div>'
           +(i<52?'<div style="width:2px"></div>':'');
       }).join('')
     +'</div>';
-
   var habitRows = S.habitList.map(function(h) {
     var habitDone = 0;
     var cols = '';
@@ -4797,10 +4323,8 @@ function renderHabits() {
       +'</div>'
     +'</div>';
   }).join('');
-
   el.innerHTML = headerRow + habitRows;
 }
-
 function toggleHabitDay(habitId, dateKey) {
   ensureHabitsV2();
   var key = habitId+'|'+dateKey;
@@ -4830,18 +4354,11 @@ function habitDelete(id) {
   Object.keys(S.habitData).forEach(function(k){ if(k.startsWith(id+'|')) delete S.habitData[k]; });
   renderHabits(); scheduleSave();
 }
-
-
-// ═══════════════════════════════════════════════════════
-// DAILY SNAPSHOTS
-// ═══════════════════════════════════════════════════════
-
 function saveSnapshot() {
   try {
     var today = new Date().toISOString().slice(0,10);
     var snaps = JSON.parse(localStorage.getItem('ab-snaps')||'{}');
     snaps[today] = JSON.stringify(S);
-    // Keep last 7
     var keys = Object.keys(snaps).sort().reverse().slice(0,7);
     var trimmed = {};
     keys.forEach(function(k){ trimmed[k]=snaps[k]; });
@@ -4849,12 +4366,10 @@ function saveSnapshot() {
     localStorage.setItem('ab-snap-date', today);
   } catch(e) { console.warn('Snapshot failed',e); }
 }
-
 function getSnapshots() {
   try { return JSON.parse(localStorage.getItem('ab-snaps')||'{}'); }
   catch(e) { return {}; }
 }
-
 function renderSnapshotList() {
   var snaps = getSnapshots();
   var keys = Object.keys(snaps).sort().reverse();
@@ -4871,7 +4386,6 @@ function renderSnapshotList() {
     +'</div>';
   }).join('');
 }
-
 function restoreSnapshot(dateKey) {
   if (!confirm('Restore board to snapshot from '+dateKey+'?\nCurrent data will be replaced.')) return;
   try {
@@ -4886,12 +4400,6 @@ function restoreSnapshot(dateKey) {
     alert('Restored to '+dateKey+'.');
   } catch(e) { alert('Restore failed: '+e.message); }
 }
-
-
-// ═══════════════════════════════════════════════════════
-// ARCHIVE
-// ═══════════════════════════════════════════════════════
-
 function archiveTask(id, e) {
   if(e) e.stopPropagation();
   var t = S.tasks.find(function(x){return x.id===id;}); if(!t) return;
@@ -4899,7 +4407,6 @@ function archiveTask(id, e) {
   S.archive.unshift(Object.assign({}, t, {archivedAt:now()}));
   S.tasks = S.tasks.filter(function(x){return x.id!==id;});
   S.focusTasks = S.focusTasks.filter(function(f){return f!==id;});
-  // Don't call render() — just update what changed (avoids buildBoard destroying DOM)
   invalidateCardCache();
   if(curView==='board') renderBoard();
   updateSB();
@@ -4939,13 +4446,11 @@ function restoreArchivedTask(id){
   if(!S.archive) return;
   var t=S.archive.find(function(x){return x.id===id;}); if(!t) return;
   var task=Object.assign({},t); delete task.archivedAt;
-  // Restore to first available column if original status column no longer exists
   var cols = getStatuses();
   if(!cols.find(function(c){return c.id===task.status;})) task.status=cols[0]?cols[0].id:'backlog';
   S.tasks.push(task);
   S.archive=S.archive.filter(function(x){return x.id!==id;});
   invalidateCardCache();
-  // Switch to board view so user can see the restored task
   var boardTab = document.querySelector('.navtab');
   if(boardTab && curView!=='board') switchView('board', boardTab);
   renderBoard();
@@ -4963,12 +4468,6 @@ function permDeleteTask(id){
   if(before===after){ console.warn('permDeleteTask: no item matched id', id); }
   renderArchive(); scheduleSave();
 }
-
-
-// ═══════════════════════════════════════════════════════
-// CLAUDE VOICE — Anthropic only, no OpenAI needed
-// ═══════════════════════════════════════════════════════
-
 processAudio = async function(apiKey, mimeType) {
   cleanupVoiceUI();
   document.getElementById('ai-status').textContent = 'Transcribing…';
@@ -4991,7 +4490,6 @@ processAudio = async function(apiKey, mimeType) {
     });
     var data = await response.json();
     if (data.error) {
-      // Claude audio not supported — fall back to OpenAI if key available
       var oaKey = localStorage.getItem('openai_key');
       if (oaKey) {
         var ext=mimeType&&mimeType.includes('mp4')?'mp4':mimeType&&mimeType.includes('ogg')?'ogg':'webm';
@@ -5007,12 +4505,6 @@ processAudio = async function(apiKey, mimeType) {
     else document.getElementById('ai-status').textContent='Ready';
   } catch(e) { document.getElementById('ai-status').textContent='Ready'; addAIMessage('ai','Audio error: '+e.message); }
 };
-
-
-// ═══════════════════════════════════════════════════════
-// ENHANCED AI — bulk ops, learning board, habits
-// ═══════════════════════════════════════════════════════
-
 var _baseAISys = AI_SYSTEM;
 AI_SYSTEM = function() {
   var base = _baseAISys();
@@ -5036,7 +4528,6 @@ AI_SYSTEM = function() {
     +'\n- For voice: extract every distinct task idea and batch-create them all'
     +'\n- Never ask for confirmation — just do it and report a clear summary';
 };
-
 var _baseExecute = executeAction;
 executeAction = function(a) {
   if (!a||!a.action) return;
@@ -5062,19 +4553,10 @@ executeAction = function(a) {
   }
   _baseExecute(a);
 };
-
-
-// ═══════════════════════════════════════════════════════
-// WIRE UP ON LOAD
-// ═══════════════════════════════════════════════════════
-
 window.addEventListener('load', function() {
-  // Init state
   if (!S.archive) S.archive = [];
   ensureLearnBoard();
   ensureHabitsV2();
-
-  // Patch render
   var _r = render;
   render = function() {
     _r();
@@ -5082,51 +4564,32 @@ window.addEventListener('load', function() {
     if (curView==='learnboard') renderLearnBoard();
     if (curView==='habits')     renderHabits();
   };
-
-  // Archive button is now built into cardHTML directly
-
-  // Patch addTag — save to globalTags
   addTag = function() {
     var inp=document.getElementById('f-tag');
     var t=inp.value.trim().toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'');
     if(t&&curTags.indexOf(t)===-1){ curTags.push(t); renderTags(); if(S.globalTags.indexOf(t)===-1){S.globalTags.push(t);S.globalTags.sort();} }
     inp.value=''; inp.focus(); renderTagManager();
   };
-
-  // Patch ensureStateFields
   var _esf = ensureStateFields;
   ensureStateFields = function() {
     _esf(); if(!S.archive) S.archive=[]; ensureLearnBoard(); ensureHabitsV2();
   };
-
-  // Patch doSave — daily snapshot
   var _ds = doSave;
   doSave = async function() {
     await _ds();
     var today=new Date().toISOString().slice(0,10);
     if (localStorage.getItem('ab-snap-date')!==today) saveSnapshot();
   };
-
-  // renderSettings patched inline in renderSettings function
-
-  // Wire custom-prompt enter key
   var cpInput = document.getElementById('cp-input');
   if (cpInput) cpInput.addEventListener('keydown', function(e){ if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();confirmCustomPrompt();} });
-
-  // Wire lb-card-modal enter key on title
   var lbTitle = document.getElementById('lb-cm-title');
   if (lbTitle) lbTitle.addEventListener('keydown', function(e){ if(e.key==='Enter'){e.preventDefault();document.getElementById('lb-cm-notes').focus();} });
-
-  // Register new dialogs for backdrop-click-to-close
   ['lb-card-modal','custom-prompt-modal','col-delete-modal'].forEach(function(id){
     var el=document.getElementById(id); if(!el) return;
     el.addEventListener('cancel',function(e){e.preventDefault();closeModal(id);});
     el.addEventListener('click',function(e){if(e.target===el)closeModal(id);});
   });
-});
-
-
-</script>
+});</script>
 
 <!-- ═══════════════════ AI ASSISTANT ═══════════════════ -->
 <button id="ai-fab" onclick="toggleAI()" title="AI Assistant">✦</button>
@@ -5244,21 +4707,9 @@ window.addEventListener('load', function() {
   </div>
 </dialog>
 
-<script>
-// ═══════════════════════════════════════════════════════
-// FEATURE PACK — appended to main script, no conflicts
-// Safe-delete, dark mode, archive v2, voice, AI notes,
-// calendar sectors, sidebar event colors
-// ═══════════════════════════════════════════════════════
-
-// ── Safe-delete state ──
-var safeDelete = localStorage.getItem('safe_delete') !== 'off';
+<script>var safeDelete = localStorage.getItem('safe_delete') !== 'off';
 var darkMode   = localStorage.getItem('dark_mode') === 'on';
-
-// Apply dark mode immediately on load
 if (darkMode) document.body.classList.add('dark');
-
-// ── confirmDelete: custom modal instead of browser confirm() ──
 function confirmDelete(msg) {
   if (!safeDelete) return Promise.resolve(true);
   return new Promise(function(resolve) {
@@ -5266,10 +4717,8 @@ function confirmDelete(msg) {
     var inp = document.getElementById('cp-input');
     if (lbl) lbl.textContent = msg;
     if (inp) { inp.style.display = 'none'; inp.value = ''; }
-
     var _ok = window.confirmCustomPrompt;
     var _ca = window.cancelCustomPrompt;
-
     window.confirmCustomPrompt = function() {
       if (inp) inp.style.display = '';
       window.confirmCustomPrompt = _ok;
@@ -5287,25 +4736,18 @@ function confirmDelete(msg) {
     openModal('custom-prompt-modal');
   });
 }
-
 function toggleSafeDelete() {
   safeDelete = !safeDelete;
   localStorage.setItem('safe_delete', safeDelete ? 'on' : 'off');
   renderSettings();
 }
-
 function toggleDarkMode() {
   darkMode = !darkMode;
   localStorage.setItem('dark_mode', darkMode ? 'on' : 'off');
   document.body.classList.toggle('dark', darkMode);
   renderSettings();
 }
-
-// ── Override all confirm() delete calls ──
-// We override the existing async functions by wrapping them
 window.addEventListener('load', function() {
-
-  // Wrap quickDeleteTask
   var _qd = quickDeleteTask;
   quickDeleteTask = async function(id, e) {
     if (e) e.stopPropagation();
@@ -5316,8 +4758,6 @@ window.addEventListener('load', function() {
     if (curView === 'board') renderBoard();
     updateSB(); renderSidebar(); scheduleSave();
   };
-
-  // Wrap deleteTask (modal delete button)
   var _dt = deleteTask;
   deleteTask = async function() {
     if (!await confirmDelete('Delete this task?')) return;
@@ -5325,24 +4765,18 @@ window.addEventListener('load', function() {
     S.focusTasks = S.focusTasks.filter(function(f) { return f !== editingId; });
     closeTaskModal(); invalidateCardCache(); renderBoard(); updateSB(); scheduleSave();
   };
-
-  // Wrap deleteNote
   var _dn = deleteNote;
   deleteNote = async function(id) {
     if (!await confirmDelete('Delete this note?')) return;
     S.notes = S.notes.filter(function(n) { return n.id !== id; });
     renderNotes(); scheduleSave();
   };
-
-  // Wrap deleteTopic
   var _dtop = deleteTopic;
   deleteTopic = async function(id) {
     if (!await confirmDelete('Delete this topic?')) return;
     S.learningTopics = S.learningTopics.filter(function(t) { return t.id !== id; });
     renderLearning(); scheduleSave();
   };
-
-  // Wrap permDeleteTask
   var _pdt = permDeleteTask;
   permDeleteTask = async function(id) {
     if (!id || id.length < 2) return;
@@ -5350,8 +4784,6 @@ window.addEventListener('load', function() {
     S.archive = (S.archive || []).filter(function(x) { return x.id !== id; });
     renderArchive(); scheduleSave();
   };
-
-  // Wrap habitDelete
   var _hd = habitDelete;
   habitDelete = async function(id) {
     if (!await confirmDelete('Delete this habit and all its history?')) return;
@@ -5362,8 +4794,6 @@ window.addEventListener('load', function() {
     });
     renderHabits(); scheduleSave();
   };
-
-  // Wrap lbDeleteCard
   var _ldc = lbDeleteCard;
   lbDeleteCard = async function(cardId, e) {
     if (e) e.stopPropagation();
@@ -5372,19 +4802,14 @@ window.addEventListener('load', function() {
     S.learnBoard.cards = S.learnBoard.cards.filter(function(c) { return c.id !== cardId; });
     renderLearnBoard(); scheduleSave();
   };
-
-  // ── Patch renderSettings to inject Preferences ──
   var _rs = renderSettings;
   renderSettings = function() {
     _rs();
-    // inject preferences section after settings grid renders
     setTimeout(function() {
       var sg = document.getElementById('settings-grid');
       if (!sg) return;
-      // Remove old prefs if present
       var old = sg.querySelector('#prefs-section');
       if (old) old.remove();
-
       var div = document.createElement('div');
       div.id = 'prefs-section';
       div.style.cssText = 'grid-column:1/-1;margin-bottom:4px';
@@ -5410,24 +4835,18 @@ window.addEventListener('load', function() {
               + (darkMode ? 'On' : 'Off') + '</button>'
           + '</div>'
         + '</div>';
-
-      // Insert BEFORE the first child of settings-grid
       sg.insertBefore(div, sg.firstChild);
     }, 60);
   };
-
-  // ── Sidebar events: use sector color ──
   var _rep = renderEventsPanel;
   renderEventsPanel = function() {
     _rep();
-    // Re-color events in sidebar using sector color
     var sbEvents = document.getElementById('sb-events');
     if (!sbEvents) return;
     (S.calEvents || []).forEach(function(ev) {
       if (!ev.sectorId) return;
       var cat = S.categories.find(function(c) { return c.id === ev.sectorId; });
       if (!cat) return;
-      // Find the div for this event by title match (best we can do without IDs)
       var divs = sbEvents.querySelectorAll('div[title]');
       divs.forEach(function(d) {
         if (d.title === ev.title) {
@@ -5437,10 +4856,7 @@ window.addEventListener('load', function() {
       });
     });
   };
-
 });
-
-// ── Dark mode CSS ──
 (function() {
   var style = document.createElement('style');
   style.textContent =
@@ -5452,18 +4868,13 @@ window.addEventListener('load', function() {
     + '  background:var(--bg3)!important;color:var(--text)!important;border-color:var(--border)!important}';
   document.head.appendChild(style);
 })();
-
-// ── Archive v2: checkboxes + bulk ops + stay on page ──
 var _archSel = new Set();
-
 var _origRenderArchive = renderArchive;
 renderArchive = function() {
   if (!S.archive) S.archive = [];
   var grid = document.getElementById('archive-grid');
   var hdr  = document.getElementById('archive-header');
   if (!grid) return;
-
-  // Header
   if (hdr) {
     hdr.innerHTML = S.archive.length
       ? '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap">'
@@ -5477,12 +4888,10 @@ renderArchive = function() {
         + '</div>'
       : '';
   }
-
   if (!S.archive.length) {
     grid.innerHTML = '<div style="color:var(--text4);font-size:14px;padding:40px 0;text-align:center">No archived tasks yet. Use the 📦 button on any card.</div>';
     return;
   }
-
   grid.innerHTML = S.archive.map(function(t) {
     var cat = catById(t.category);
     var pc  = PRI_COLOR[t.priority] || PRI_COLOR.med;
@@ -5507,7 +4916,6 @@ renderArchive = function() {
     + '</div>';
   }).join('');
 };
-
 function _archToggle(id, v) { if (v) _archSel.add(id); else _archSel.delete(id); renderArchive(); }
 function _archSelAll()  { _archSel = new Set((S.archive||[]).map(function(t){return t.id;})); renderArchive(); }
 function _archSelNone() { _archSel = new Set(); renderArchive(); }
@@ -5522,8 +4930,6 @@ async function _archDelAll() {
   if (!await confirmDelete('Delete ALL ' + S.archive.length + ' archived tasks?')) return;
   S.archive = []; _archSel = new Set(); renderArchive(); scheduleSave();
 }
-
-// Restore that stays on archive page
 function restoreArchivedTask2(id) {
   if (!S.archive) return;
   var t = S.archive.find(function(x) { return x.id === id; });
@@ -5536,11 +4942,9 @@ function restoreArchivedTask2(id) {
   S.archive = S.archive.filter(function(x) { return x.id !== id; });
   invalidateCardCache();
   renderBoard(); updateSB(); renderSidebar();
-  renderArchive(); // stay on archive
+  renderArchive(); 
   scheduleSave();
 }
-
-// ── Archive header div in HTML ──
 (function() {
   var grid = document.getElementById('archive-grid');
   if (grid && !document.getElementById('archive-header')) {
@@ -5549,8 +4953,6 @@ function restoreArchivedTask2(id) {
     grid.parentNode.insertBefore(hdr, grid);
   }
 })();
-
-// ── Voice: clear message when no OpenAI key ──
 processAudio = async function(apiKey, mimeType) {
   cleanupVoiceUI();
   document.getElementById('ai-status').textContent = 'Transcribing\u2026';
@@ -5588,20 +4990,14 @@ processAudio = async function(apiKey, mimeType) {
     addAIMessage('ai', 'Audio error: ' + e.message);
   }
 };
-
-// ── AI: Full context + Notes + Learn Board actions ──
 var _baseAISys = AI_SYSTEM;
 AI_SYSTEM = function() {
   var base = _baseAISys();
-
-  // Build notes context
   var notesCtx = (S.notes || []).slice(0, 15).map(function(n) {
     var cat = S.categories.find(function(c) { return c.id === n.category; });
     return '[note:' + n.id + '] "' + (n.title || 'Untitled').slice(0, 40) + '" sector='
       + (cat ? cat.label : '?') + ' content="' + (n.content || '').slice(0, 80) + '"';
   }).join('\n') || 'none';
-
-  // Build learn board context
   var lbCtx = 'none';
   if (S.learnBoard && S.learnBoard.cards) {
     lbCtx = S.learnBoard.cards.slice(0, 15).map(function(c) {
@@ -5609,11 +5005,7 @@ AI_SYSTEM = function() {
       return '[lb:' + c.id + '] "' + c.title + '" col=' + (col ? col.label : '?');
     }).join('\n') || 'none';
   }
-
-  // Habits context
   var habitsCtx = (S.habitList || []).map(function(h) { return h.id + '=' + h.name; }).join(', ') || 'none';
-
-  // Note actions to append to the base prompt
   var noteActions = '\n\nNOTES (' + (S.notes || []).length + ' total):\n' + notesCtx
     + '\n\nLEARN BOARD:\n' + lbCtx
     + '\n\nHABITS: ' + habitsCtx
@@ -5627,15 +5019,11 @@ AI_SYSTEM = function() {
     + '\n- When adding notes, match sector from context clues'
     + '\n- You have complete access to all user data: tasks, notes, calendar, habits, learn board'
     + '\n- For bulk requests: create everything in one batch action, never ask for confirmation';
-
   return base + noteActions;
 };
-
-// Execute note/learn actions
 var _baseExec = executeAction;
 executeAction = function(a) {
   if (!a || !a.action) return;
-
   if (a.action === 'add_note') {
     var catId = (S.categories.find(function(c) {
       return c.id === a.category || c.label.toLowerCase() === (a.category || '').toLowerCase();
@@ -5647,7 +5035,6 @@ executeAction = function(a) {
     addAIMessage('ai', '\u2713 Note added: **' + (a.title || 'Untitled') + '**');
     return;
   }
-
   if (a.action === 'edit_note') {
     var nid = (a.noteId || '').replace('note:', '');
     var nn = (S.notes || []).find(function(x) { return x.id === nid; });
@@ -5662,7 +5049,6 @@ executeAction = function(a) {
     }
     return;
   }
-
   if (a.action === 'delete_note') {
     var dnid = (a.noteId || '').replace('note:', '');
     var dn = (S.notes || []).find(function(x) { return x.id === dnid; });
@@ -5675,7 +5061,6 @@ executeAction = function(a) {
     }
     return;
   }
-
   if (a.action === 'add_lb_card') {
     ensureLearnBoard();
     var col = S.learnBoard.columns.find(function(c) { return c.id === a.columnId; }) || S.learnBoard.columns[0];
@@ -5689,12 +5074,8 @@ executeAction = function(a) {
     addAIMessage('ai', '\u2713 Added to Learn Board: **' + a.title + '**');
     return;
   }
-
   _baseExec(a);
 };
-
-// ── Calendar events: sector field ──
-// Patch addCalEvent to save sectorId
 var _origAddCalEvent = addCalEvent;
 addCalEvent = function() {
   var t = document.getElementById('ev-title').value.trim();
@@ -5715,22 +5096,13 @@ addCalEvent = function() {
   document.getElementById('cal-add-form').style.display = 'none';
   renderCalendar(); renderEventsPanel(); scheduleSave();
 };
-
-// Patch renderCalendar to filter events by activeCat and use sector color
 var _origRenderCalendar = renderCalendar;
 renderCalendar = function() {
   _origRenderCalendar();
 };
-
-// Actually override the allEvs array construction inside renderCalendar is hard
-// Instead patch the calendar AFTER render to recolor event chips
-// The cleanest approach: override renderCalendar completely to add sector support
-// We'll just add the sector select field to the DOM
 (function() {
-  // Add sector select to calendar add form if not present
   var calForm = document.getElementById('cal-add-form');
   if (calForm && !document.getElementById('ev-sector')) {
-    // Find where to insert - after the g2 div
     var g2 = calForm.querySelector('.g2');
     if (g2) {
       var wrapper = document.createElement('div');
@@ -5746,8 +5118,6 @@ renderCalendar = function() {
     }
   }
 })();
-
-// Patch showCalAddForm to populate sector dropdown
 var _origShowCalAddForm = showCalAddForm;
 showCalAddForm = function() {
   _origShowCalAddForm();
@@ -5760,8 +5130,6 @@ showCalAddForm = function() {
     sel.value = '';
   }
 };
-
-// Patch openCalEventEdit to load sector
 var _origOpenCalEventEdit = openCalEventEdit;
 openCalEventEdit = function(id) {
   _origOpenCalEventEdit(id);
@@ -5775,9 +5143,6 @@ openCalEventEdit = function(id) {
     sel.value = ev.sectorId || '';
   }
 };
-
-
-// ── Mobile sidebar toggle ──
 function mobToggleSidebar() {
   var sb = document.getElementById('sidebar');
   var ov = document.getElementById('mob-overlay');
@@ -5794,22 +5159,17 @@ function mobCloseSidebar() {
   if (ov) ov.classList.remove('show');
   document.body.style.overflow = '';
 }
-// Close sidebar when a sector/category is clicked on mobile
 if (window.innerWidth <= 768) {
   document.addEventListener('click', function(e) {
     var btn = e.target.closest('.catbtn');
     if (btn) mobCloseSidebar();
   });
-
-  // Force rows layout on mobile for better UX
   if (typeof layoutMode !== 'undefined') {
     layoutMode = 'rows';
     var board = document.getElementById('board');
     if (board) board.className = 'rows';
   }
-}
-
-</script>
+}</script>
 
 <!-- COMMAND PALETTE -->
 <div id="cmd-palette" role="dialog" aria-label="Command Palette">
@@ -5884,30 +5244,12 @@ if (window.innerWidth <= 768) {
 </dialog>
 
 
-<script>
-// ════════════════════════════════════════════════════════════════════
-// ACTION BOARD — INDUSTRY STANDARD FEATURE PACK v10
-// Tier 1: Recurring tasks, dependencies, subtask progress, notifications
-// Tier 2: AI planning, proactive insights, AI memory, voice-to-plan
-// Tier 3: Animations, command palette, timeline view, keyboard nav, onboarding, markdown
-// Tier 4: Realtime collab, graph view, webhooks, public sharing
-// ════════════════════════════════════════════════════════════════════
-
-'use strict';
-
-// ── Utility ──────────────────────────────────────────────────────────
+<script>'use strict';
 const isMobile = () => window.innerWidth <= 768;
 const debounce = (fn, ms) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };
-
-// ════════════════════════════════════════════════════════════════════
-// TIER 1A: RECURRING TASKS
-// ════════════════════════════════════════════════════════════════════
-
 function ensureRecurring() {
   if (!S.recurring) S.recurring = [];
 }
-
-// Check recurring tasks on load — create any that are due
 function processRecurringTasks() {
   ensureRecurring();
   const today = new Date().toISOString().slice(0, 10);
@@ -5934,7 +5276,6 @@ function processRecurringTasks() {
   });
   if (changed) { invalidateCardCache(); render(); scheduleSave(); }
 }
-
 function daysSince(dateStr) {
   if (!dateStr) return 9999;
   return Math.floor((Date.now() - new Date(dateStr).getTime()) / 86400000);
@@ -5944,8 +5285,6 @@ function monthsSince(dateStr) {
   const d = new Date(dateStr), now2 = new Date();
   return (now2.getFullYear() - d.getFullYear()) * 12 + now2.getMonth() - d.getMonth();
 }
-
-// Add recurring task modal
 function openRecurringModal(prefill) {
   document.getElementById('rec-title').value = prefill?.title || '';
   document.getElementById('rec-freq').value  = prefill?.frequency || 'weekly';
@@ -5954,7 +5293,6 @@ function openRecurringModal(prefill) {
   document.getElementById('rec-pri').value = prefill?.priority || 'med';
   openModal('recurring-modal');
 }
-
 function saveRecurring() {
   const title = document.getElementById('rec-title').value.trim();
   if (!title) return;
@@ -5970,14 +5308,12 @@ function saveRecurring() {
   renderRecurringList();
   scheduleSave();
 }
-
 function deleteRecurring(id) {
   ensureRecurring();
   S.recurring = S.recurring.filter(r => r.id !== id);
   renderRecurringList();
   scheduleSave();
 }
-
 function renderRecurringList() {
   const el = document.getElementById('recurring-list');
   if (!el) return;
@@ -5998,34 +5334,11 @@ function renderRecurringList() {
     </div>`;
   }).join('');
 }
-
-// ════════════════════════════════════════════════════════════════════
-// TIER 1B: TASK DEPENDENCIES
-// ════════════════════════════════════════════════════════════════════
-
-
-
-
-
-
-
-// Render dependency picker inside task modal
-
-
-// ════════════════════════════════════════════════════════════════════
-// TIER 1C: SUBTASK PROGRESS BARS on cards (already have subtasks, just improve display)
-// ════════════════════════════════════════════════════════════════════
-
 function getSubtaskProgress(t) {
   const all = [...(t.subtasks?.backlog || []), ...(t.subtasks?.inprogress || []), ...(t.subtasks?.done || [])];
   const done = (t.subtasks?.done || []).length;
   return { total: all.length, done };
 }
-
-// ════════════════════════════════════════════════════════════════════
-// TIER 1D: DUE DATE NOTIFICATIONS
-// ════════════════════════════════════════════════════════════════════
-
 async function requestNotificationPermission() {
   if (!('Notification' in window)) return false;
   if (Notification.permission === 'granted') return true;
@@ -6035,7 +5348,6 @@ async function requestNotificationPermission() {
   }
   return false;
 }
-
 function checkDueNotifications() {
   if (!('Notification' in window) || Notification.permission !== 'granted') return;
   const today = new Date().toISOString().slice(0, 10);
@@ -6054,38 +5366,27 @@ function checkDueNotifications() {
     }
   });
 }
-
-// ════════════════════════════════════════════════════════════════════
-// TIER 2A: AI MULTI-STEP PLANNING
-// ════════════════════════════════════════════════════════════════════
-
 async function aiPlanMyWeek() {
   if (!anthropicKey) { addAIMessage('ai', 'Add your Anthropic API key in Settings to use AI planning.'); return; }
   if (!document.getElementById('ai-panel').classList.contains('open')) toggleAI();
   addAIMessage('ai', '🧠 Analyzing your board and planning your week…');
   document.getElementById('ai-status').textContent = 'Planning…';
-
   const today = new Date();
   const weekEnd = new Date(today.getTime() + 7 * 86400000).toISOString().slice(0, 10);
   const overdue = S.tasks.filter(t => t.dueDate && t.dueDate < today.toISOString().slice(0,10) && t.status !== 'finished');
   const highPri = S.tasks.filter(t => t.priority === 'high' && t.status !== 'finished');
   const noDate  = S.tasks.filter(t => !t.dueDate && t.status !== 'finished');
-
   const planPrompt = `The user wants a WEEKLY PLAN. Today is ${today.toISOString().slice(0,10)}, week ends ${weekEnd}.
-
 Current state:
 - ${overdue.length} OVERDUE tasks: ${overdue.map(t=>`"${t.title}"`).join(', ')||'none'}
 - ${highPri.length} HIGH priority tasks: ${highPri.map(t=>`"${t.title}" (${t.status})`).join(', ')||'none'}
 - ${noDate.length} tasks with no due date: ${noDate.slice(0,5).map(t=>`"${t.title}"`).join(', ')}
 - Focus tasks: ${S.focusTasks.map(id => S.tasks.find(t=>t.id===id)?.title).filter(Boolean).join(', ') || 'none set'}
-
 Create a realistic weekly plan. For each day Mon-Sun:
 1. Move 1-3 tasks to appropriate due dates based on priority
 2. Set focus tasks for today (max 3)
 3. Add any missing prep tasks for high-priority items
-
 Execute as a batch action. Be decisive — actually set the dates and move tasks. Also give a brief strategic summary of the week plan.`;
-
   try {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -6106,66 +5407,43 @@ Execute as a batch action. Be decisive — actually set the dates and move tasks
     addAIMessage('ai', 'Planning failed: ' + e.message);
   }
 }
-
 async function aiDailyBriefing() {
   if (!anthropicKey) return;
   const today = new Date().toISOString().slice(0, 10);
   const lastBriefing = localStorage.getItem('ab-last-briefing');
-  if (lastBriefing === today) return; // already shown today
-
+  if (lastBriefing === today) return; 
   const overdue = S.tasks.filter(t => t.dueDate && t.dueDate < today && t.status !== 'finished');
   const dueToday = S.tasks.filter(t => t.dueDate === today && t.status !== 'finished');
   const highPri  = S.tasks.filter(t => t.priority === 'high' && t.status !== 'finished').length;
-
-  // Show proactive insight in sidebar
   const insightEl = document.getElementById('ai-insight');
   if (!insightEl) return;
-
   let insight = '';
   if (overdue.length > 0) insight = `⚠️ ${overdue.length} overdue task${overdue.length>1?'s':''}`;
   else if (dueToday.length > 0) insight = `📅 ${dueToday.length} due today`;
   else if (highPri > 0) insight = `🔴 ${highPri} high priority`;
   else insight = '✅ Board is clear';
-
   insightEl.textContent = insight;
   insightEl.style.display = 'block';
   localStorage.setItem('ab-last-briefing', today);
 }
-
-// ════════════════════════════════════════════════════════════════════
-// TIER 2B: AI MEMORY (store rolling context in Supabase)
-// ════════════════════════════════════════════════════════════════════
-
 function saveAIMemory(summary) {
   if (!S.aiMemory) S.aiMemory = [];
   S.aiMemory.unshift({ date: now(), summary: summary.slice(0, 300) });
-  S.aiMemory = S.aiMemory.slice(0, 10); // keep last 10 memories
+  S.aiMemory = S.aiMemory.slice(0, 10); 
   scheduleSave();
 }
-
 function getAIMemoryContext() {
   if (!S.aiMemory || !S.aiMemory.length) return '';
   return '\n\nAI MEMORY (recent context from past sessions):\n' +
     S.aiMemory.slice(0, 5).map(m => `[${m.date.slice(0,10)}] ${m.summary}`).join('\n');
 }
-
-// ════════════════════════════════════════════════════════════════════
-// TIER 2C: PROACTIVE INSIGHTS
-// ════════════════════════════════════════════════════════════════════
-
 function computeInsights() {
   const insights = [];
   const today = new Date().toISOString().slice(0, 10);
-
-  // Overdue
   const overdue = S.tasks.filter(t => t.dueDate && t.dueDate < today && t.status !== 'finished');
   if (overdue.length) insights.push({ type: 'warning', icon: '⚠️', text: `${overdue.length} overdue task${overdue.length>1?'s':''}`, action: () => { setFilter('all'); renderBoard(); } });
-
-  // Too many in-progress
   const inprog = S.tasks.filter(t => t.status === 'inprogress');
   if (inprog.length > 5) insights.push({ type: 'info', icon: '🔄', text: `${inprog.length} tasks in progress — consider focusing`, action: null });
-
-  // Habit streak
   if (S.habitList && S.habitList.length) {
     const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
     S.habitList.forEach(h => {
@@ -6174,15 +5452,11 @@ function computeInsights() {
       }
     });
   }
-
-  // Nothing in focus
   if (!S.focusTasks.length && S.tasks.filter(t => t.status !== 'finished').length > 3) {
     insights.push({ type: 'tip', icon: '🎯', text: 'No focus tasks set for today', action: () => switchView('focus', document.querySelector('.navtab:nth-child(2)')) });
   }
-
   return insights.slice(0, 3);
 }
-
 function renderInsights() {
   const el = document.getElementById('insights-strip');
   if (!el) return;
@@ -6196,19 +5470,12 @@ function renderInsights() {
     </button>`
   ).join('');
 }
-
 function dismissInsight(idx) {
   const el = document.getElementById('insights-strip');
   if (el?.children[idx]) el.children[idx].style.opacity = '0';
   setTimeout(() => renderInsights(), 400);
 }
-
-// ════════════════════════════════════════════════════════════════════
-// TIER 3A: COMMAND PALETTE (⌘K)
-// ════════════════════════════════════════════════════════════════════
-
 let _cmdOpen = false;
-
 function openCommandPalette() {
   _cmdOpen = true;
   const pal = document.getElementById('cmd-palette');
@@ -6218,18 +5485,15 @@ function openCommandPalette() {
   if (inp) { inp.value = ''; inp.focus(); }
   renderCmdResults('');
 }
-
 function closeCommandPalette() {
   _cmdOpen = false;
   const pal = document.getElementById('cmd-palette');
   if (pal) pal.style.display = 'none';
 }
-
 function renderCmdResults(query) {
   const el = document.getElementById('cmd-results');
   if (!el) return;
   const q = query.toLowerCase().trim();
-
   const commands = [
     { icon: '＋', label: 'New Task', kbd: 'N', action: () => openNewTask() },
     { icon: '＋', label: 'New Note', kbd: '', action: () => openNewNote() },
@@ -6245,34 +5509,26 @@ function renderCmdResults(query) {
     { icon: '📤', label: 'Export Data (JSON)', kbd: '', action: () => exportDataJSON() },
     { icon: '🌙', label: 'Toggle Dark Mode', kbd: '', action: () => toggleDarkMode() },
   ];
-
-  // Also search tasks
   const taskMatches = q.length > 1
     ? S.tasks.filter(t => t.title.toLowerCase().includes(q)).slice(0, 5).map(t => ({
         icon: '📌', label: t.title, sub: catById(t.category).label + ' · ' + t.status,
         action: () => openEditTask(t.id)
       }))
     : [];
-
-  // Also search notes
   const noteMatches = q.length > 1
     ? (S.notes || []).filter(n => (n.title + n.content).toLowerCase().includes(q)).slice(0, 3).map(n => ({
         icon: '📄', label: n.title || 'Untitled Note', sub: (n.content || '').slice(0, 50),
         action: () => { switchView('notes', document.querySelector('.navtab:nth-child(5)')); }
       }))
     : [];
-
   const filtered = q
     ? commands.filter(c => c.label.toLowerCase().includes(q))
     : commands;
-
   const all = [...filtered, ...taskMatches, ...noteMatches];
-
   if (!all.length) {
     el.innerHTML = `<div style="padding:16px;text-align:center;color:var(--text4);font-size:13px">No results for "${esc(q)}"</div>`;
     return;
   }
-
   el.innerHTML = all.map((cmd, i) =>
     `<div class="cmd-item" tabindex="0" onclick="(${cmd.action.toString()})(this);closeCommandPalette()">
       <span class="cmd-icon">${cmd.icon}</span>
@@ -6284,32 +5540,20 @@ function renderCmdResults(query) {
     </div>`
   ).join('');
 }
-
-// ════════════════════════════════════════════════════════════════════
-// TIER 3B: KEYBOARD NAVIGATION
-// ════════════════════════════════════════════════════════════════════
-
 function initKeyboardNav() {
   document.addEventListener('keydown', e => {
     const tag = document.activeElement?.tagName;
     const inInput = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || document.activeElement?.isContentEditable;
-
-    // ⌘K or Ctrl+K — command palette
     if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
       e.preventDefault();
       _cmdOpen ? closeCommandPalette() : openCommandPalette();
       return;
     }
-
-    // Escape — close palette, close modals
     if (e.key === 'Escape') {
       if (_cmdOpen) { closeCommandPalette(); return; }
       return;
     }
-
     if (inInput || isModalOpen()) return;
-
-    // Number keys — switch views
     const viewMap = { '1': ['board',0], '2': ['focus',1], '3': ['calendar',2], '4': ['notes',4], '5': ['settings',-1] };
     if (viewMap[e.key]) {
       const [view, tabIdx] = viewMap[e.key];
@@ -6317,36 +5561,19 @@ function initKeyboardNav() {
       if (tab) switchView(view, tab);
       return;
     }
-
-    // N — new task
     if (e.key === 'n' || e.key === 'N') { openNewTask(); return; }
-
-    // / — open AI
     if (e.key === '/') { e.preventDefault(); toggleAI(); return; }
-
-    // L — toggle layout
     if ((e.key === 'l' || e.key === 'L') && curView === 'board') { toggleLayout(); return; }
-
-    // , — settings
     if (e.key === ',') { const t = document.querySelector('.navtab:last-child'); if(t) switchView('settings', t); return; }
   });
 }
-
-// ════════════════════════════════════════════════════════════════════
-// TIER 3C: TIMELINE / GANTT VIEW
-// ════════════════════════════════════════════════════════════════════
-
-let timelineOffset = 0; // days from today
-
+let timelineOffset = 0; 
 function renderTimeline() {
   const el = document.getElementById('timeline-grid');
   if (!el) return;
-
   const today = new Date();
   const startDate = new Date(today.getTime() + timelineOffset * 86400000);
-  const days = 14; // show 2 weeks
-
-  // Header
+  const days = 14; 
   const headers = [];
   for (let d = 0; d < days; d++) {
     const day = new Date(startDate.getTime() + d * 86400000);
@@ -6356,11 +5583,8 @@ function renderTimeline() {
       <div class="tl-day-num ${isToday?'tl-today-num':''}">${day.getDate()}</div>
     </div>`);
   }
-
-  // Tasks with due dates
   const tasksWithDates = S.tasks.filter(t => t.dueDate && t.status !== 'finished')
     .sort((a, b) => a.dueDate.localeCompare(b.dueDate));
-
   const rows = tasksWithDates.map(t => {
     const cat = catById(t.category);
     const taskDate = new Date(t.dueDate + 'T12:00:00');
@@ -6382,10 +5606,7 @@ function renderTimeline() {
       ${cells.join('')}
     </div>`;
   });
-
-  // Tasks without dates
   const noDates = S.tasks.filter(t => !t.dueDate && t.status !== 'finished');
-
   el.innerHTML = `
     <div class="tl-header-row">
       <div class="tl-row-label" style="font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase">Task</div>
@@ -6407,16 +5628,9 @@ function renderTimeline() {
     </div>` : ''}
   `;
 }
-
 function timelineNav(dir) { timelineOffset += dir * 7; renderTimeline(); }
-
-// ════════════════════════════════════════════════════════════════════
-// TIER 3D: MARKDOWN RENDERING IN NOTES
-// ════════════════════════════════════════════════════════════════════
-
 function renderMarkdown(text) {
   if (!text) return '';
-  // Basic markdown: bold, italic, headers, lists, code, links
   return text
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
     .replace(/```([\s\S]*?)```/g, '<pre class="md-code"><code>$1</code></pre>')
@@ -6432,7 +5646,6 @@ function renderMarkdown(text) {
     .replace(/^---$/gm, '<hr class="md-hr">')
     .replace(/\n/g, '<br>');
 }
-
 // Note preview/edit toggle
 function toggleNoteMarkdown(noteId) {
   const pad = document.querySelector(`[data-note-id="${noteId}"]`);
@@ -6451,90 +5664,58 @@ function toggleNoteMarkdown(noteId) {
   textarea.style.display = 'none';
   textarea.parentNode.insertBefore(preview, textarea);
 }
-
 // ════════════════════════════════════════════════════════════════════
 // TIER 3E: MICRO-ANIMATIONS
 // ════════════════════════════════════════════════════════════════════
-
 function injectAnimationCSS() {
   const style = document.createElement('style');
   style.textContent = `
-    /* Card enter animation */
     @keyframes card-enter { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
     .card { animation: card-enter .15s ease-out; }
-
-    /* Column header pulse when count changes */
     @keyframes count-pop { 0%,100%{transform:scale(1)} 50%{transform:scale(1.15)} }
     .col-count.popped { animation: count-pop .2s ease; }
-
-    /* AI panel slide */
     @keyframes panel-slide { from { opacity:0; transform:translateY(12px) scale(.98); } to { opacity:1; transform:none; } }
     #ai-panel.open { animation: panel-slide .18s ease-out; }
-
-    /* Command palette */
     @keyframes palette-in { from { opacity:0; transform:translateY(-8px) scale(.97); } to { opacity:1; transform:none; } }
     #cmd-palette { animation: palette-in .16s ease-out; }
-
-    /* Insight chips */
     @keyframes insight-in { from { opacity:0; transform:translateX(-8px); } to { opacity:1; transform:none; } }
     .insight-chip { animation: insight-in .2s ease-out both; }
-
-    /* Board view transitions */
     .view-wrap { animation: card-enter .15s ease-out; }
-
-    /* Smooth focus ring */
     :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
-
-    /* Card hover lift */
     .card { transition: box-shadow .12s ease, transform .1s ease; }
     .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,.1); transform: translateY(-1px); }
     .card:active { transform: translateY(0); }
-
-    /* Button transitions */
     .btn, .tbb, .navtab { transition: background .12s, color .12s, border-color .12s; }
-
-    /* Sidebar sector hover */
     .catbtn { transition: background .1s, border-color .1s; }
-
-    /* Note pad hover */
     .note-pad { transition: box-shadow .15s; }
     .note-pad:hover { box-shadow: 5px 5px 16px rgba(0,0,0,.22); }
   `;
   document.head.appendChild(style);
 }
-
 // ════════════════════════════════════════════════════════════════════
 // TIER 3F: ONBOARDING FLOW
 // ════════════════════════════════════════════════════════════════════
-
 function checkOnboarding() {
   if (localStorage.getItem('ab-onboarded') || (S.tasks && S.tasks.length > 1)) return;
   const el = document.getElementById('onboarding-overlay');
   if (el) el.style.display = 'flex';
 }
-
 async function onboardingAISetup() {
   const input = document.getElementById('onboard-input').value.trim();
   if (!input) return;
   const el = document.getElementById('onboarding-overlay');
   if (el) el.style.display = 'none';
   localStorage.setItem('ab-onboarded', '1');
-
   if (!anthropicKey) { render(); return; }
-
   // Let AI set up the board
   if (!document.getElementById('ai-panel').classList.contains('open')) toggleAI();
   addAIMessage('ai', `🚀 Setting up your Action Board for: "${input}"…`);
-
   const setupPrompt = `New user setup. They said: "${input}"
-
 Create a complete, personalized starting board for them. Include:
 1. 8-12 relevant tasks spread across columns (backlog, inprogress, future) with realistic due dates
 2. Set focus tasks (2-3 most important ones)
 3. Create 2-3 starter notes with useful content for their context
-
 Execute everything as a single batch action. Make it feel immediately useful and personal.`;
-
   try {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -6554,23 +5735,18 @@ Execute everything as a single batch action. Make it feel immediately useful and
     addAIMessage('ai', 'Setup failed. You can set up your board manually or ask me anything!');
   }
 }
-
 function skipOnboarding() {
   localStorage.setItem('ab-onboarded', '1');
   const el = document.getElementById('onboarding-overlay');
   if (el) el.style.display = 'none';
 }
-
 // ════════════════════════════════════════════════════════════════════
 // TIER 4A: REAL-TIME COLLABORATION
 // ════════════════════════════════════════════════════════════════════
-
 let _realtimeChannel = null;
-
 function initRealtime() {
   if (!_supabase || !_currentUser) return;
   if (_realtimeChannel) { _realtimeChannel.unsubscribe(); _realtimeChannel = null; }
-
   _realtimeChannel = _supabase
     .channel('board-' + _currentUser.id)
     .on('postgres_changes', {
@@ -6594,7 +5770,6 @@ function initRealtime() {
     })
     .subscribe();
 }
-
 function showSyncToast() {
   const el = document.getElementById('sync-toast');
   if (!el) return;
@@ -6602,39 +5777,30 @@ function showSyncToast() {
   el.textContent = '🔄 Board updated from another device';
   setTimeout(() => { el.style.opacity = '0'; }, 3000);
 }
-
 // ════════════════════════════════════════════════════════════════════
 // TIER 4B: GRAPH VIEW FOR NOTES
 // ════════════════════════════════════════════════════════════════════
-
 // Store node positions for click handling
 var _graphNodeData = [];
-
 function renderNoteGraph() {
   const canvas = document.getElementById('graph-canvas');
   if (!canvas) return;
-
   // Set canvas size to match container
   const container = canvas.parentElement;
   canvas.width  = container.offsetWidth  || 800;
   canvas.height = (container.offsetHeight || 500) - 50;
-
   const ctx = canvas.getContext('2d');
   const W = canvas.width;
   const H = canvas.height;
   const isDark = document.body.classList.contains('dark');
-
   ctx.clearRect(0, 0, W, H);
-
   // Draw background grid
   ctx.strokeStyle = isDark ? 'rgba(255,255,255,.04)' : 'rgba(0,0,0,.04)';
   ctx.lineWidth = 1;
   for (let x = 0; x < W; x += 40) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
   for (let y = 0; y < H; y += 40) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
-
   const notes = S.notes || [];
   const tasks = S.tasks.filter(t => t.status !== 'finished').slice(0, 12);
-
   if (!notes.length && !tasks.length) {
     ctx.fillStyle = isDark ? '#888' : '#aaa';
     ctx.font = '14px system-ui';
@@ -6642,7 +5808,6 @@ function renderNoteGraph() {
     ctx.fillText('No notes yet. Create some notes to see the graph.', W/2, H/2);
     return;
   }
-
   // Position note nodes in outer ring
   const noteNodes = notes.map((n, i) => {
     const angle = (i / Math.max(notes.length, 1)) * Math.PI * 2 - Math.PI / 2;
@@ -6654,7 +5819,6 @@ function renderNoteGraph() {
       cat: catById(n.category), radius: 20
     };
   });
-
   // Position task nodes in inner ring
   const taskNodes = tasks.map((t, i) => {
     const angle = (i / Math.max(tasks.length, 1)) * Math.PI * 2 - Math.PI / 2;
@@ -6666,9 +5830,7 @@ function renderNoteGraph() {
       cat: catById(t.category), radius: 12
     };
   });
-
   _graphNodeData = [...noteNodes, ...taskNodes];
-
   // Draw edges between same-sector notes
   ctx.lineWidth = 1.5;
   for (let i = 0; i < noteNodes.length; i++) {
@@ -6683,34 +5845,27 @@ function renderNoteGraph() {
       }
     }
   }
-
-
-
   // Draw nodes
   _graphNodeData.forEach(n => {
     // Shadow
     ctx.shadowColor = 'rgba(0,0,0,.2)';
     ctx.shadowBlur = 8;
-
     // Circle
     ctx.beginPath();
     ctx.arc(n.x, n.y, n.radius, 0, Math.PI * 2);
     ctx.fillStyle = n.cat.color;
     ctx.fill();
     ctx.shadowBlur = 0;
-
     // White border
     ctx.strokeStyle = isDark ? 'rgba(255,255,255,.3)' : 'rgba(255,255,255,.8)';
     ctx.lineWidth = 2;
     ctx.stroke();
-
     // Icon in center
     ctx.fillStyle = '#fff';
     ctx.font = `${n.radius * 0.7}px system-ui`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(n.type === 'note' ? '📄' : '✓', n.x, n.y);
-
     // Label below
     ctx.fillStyle = isDark ? '#ccc' : '#333';
     ctx.font = `${n.type === 'note' ? 11 : 10}px system-ui`;
@@ -6719,7 +5874,6 @@ function renderNoteGraph() {
     const label = n.title.slice(0, 16) + (n.title.length > 16 ? '…' : '');
     ctx.fillText(label, n.x, n.y + n.radius + 5);
   });
-
   // Legend
   ctx.font = '11px system-ui';
   ctx.textAlign = 'left';
@@ -6727,25 +5881,20 @@ function renderNoteGraph() {
   ctx.fillStyle = isDark ? '#888' : '#999';
   ctx.fillText('● Notes (outer) · ● Tasks (inner) · Click any node to open · Lines = same sector or dependency', 12, H - 16);
 }
-
 // Click handler for graph nodes — wire on load
 function initGraphClickHandler() {
   const canvas = document.getElementById('graph-canvas');
   if (!canvas || canvas._graphClickAdded) return;
   canvas._graphClickAdded = true;
-
   canvas.addEventListener('click', function(e) {
     const rect = canvas.getBoundingClientRect();
     const mx = e.clientX - rect.left;
     const my = e.clientY - rect.top;
-
     const hit = _graphNodeData.find(n => {
       const dx = mx - n.x, dy = my - n.y;
       return Math.sqrt(dx*dx + dy*dy) <= n.radius + 6;
     });
-
     if (!hit) return;
-
     if (hit.type === 'note') {
       // Switch to notes view and highlight
       const tab = Array.from(document.querySelectorAll('.navtab')).find(t => t.textContent.trim() === 'Notes');
@@ -6755,7 +5904,6 @@ function initGraphClickHandler() {
       openEditTask(hit.id);
     }
   });
-
   // Cursor change on hover
   canvas.addEventListener('mousemove', function(e) {
     const rect = canvas.getBoundingClientRect();
@@ -6768,22 +5916,18 @@ function initGraphClickHandler() {
     canvas.style.cursor = hit ? 'pointer' : 'default';
   });
 }
-
 // ════════════════════════════════════════════════════════════════════
 // TIER 4C: PUBLIC BOARD SHARING
 // ════════════════════════════════════════════════════════════════════
-
 async function generateShareLink() {
   const btn = document.getElementById('share-btn');
   if (btn) { btn.textContent = 'Generating…'; btn.disabled = true; }
-
   // Store a public snapshot in Supabase
   if (!_supabase || !_currentUser) {
     alert('Sign in to create a share link.');
     if (btn) { btn.textContent = 'Generate Share Link'; btn.disabled = false; }
     return;
   }
-
   const shareId = uid();
   const publicData = {
     tasks: S.tasks.map(t => ({
@@ -6795,7 +5939,6 @@ async function generateShareLink() {
     sharedAt: now(),
     ownerEmail: _currentUser.email
   };
-
   try {
     const { error } = await _supabase.from('public_shares').upsert({
       id: shareId, user_id: _currentUser.id, data: publicData, created_at: now()
@@ -6812,7 +5955,6 @@ async function generateShareLink() {
     if (btn) { btn.textContent = 'Generate Share Link'; btn.disabled = false; }
   }
 }
-
 // Check for shared board on load
 async function checkSharedBoard() {
   const params = new URLSearchParams(window.location.search);
@@ -6823,7 +5965,6 @@ async function checkSharedBoard() {
     showSharedBoard(data.data);
   }
 }
-
 function showSharedBoard(data) {
   document.getElementById('auth-screen')?.style && (document.getElementById('auth-screen').style.display = 'none');
   // Mount a read-only view
@@ -6852,54 +5993,42 @@ function showSharedBoard(data) {
     </div>`;
   document.body.appendChild(overlay);
 }
-
 // ════════════════════════════════════════════════════════════════════
 // ENHANCED AI SYSTEM PROMPT — override with memory + fuller context
 // ════════════════════════════════════════════════════════════════════
-
 const _prevAISys = AI_SYSTEM;
 AI_SYSTEM = function() {
   let base = _prevAISys();
-
   // Add AI memory
   const memory = getAIMemoryContext();
-
   // Add recurring tasks context
   const recurringCtx = (S.recurring || []).length
     ? '\nRECURRING TASKS: ' + S.recurring.map(r => `"${r.title}" (${r.frequency})`).join(', ')
     : '';
-
   const blockedCtx = '';
-
   // Add plan-my-week action to prompt
   const extraActions = `
 ADD RECURRING TASK:
 \`\`\`action
 {"action":"add_recurring","title":"...","frequency":"daily|weekly|monthly|weekday","category":"...","priority":"med"}
 \`\`\`
-
 PLAN MY WEEK (schedule tasks across next 7 days):
 \`\`\`action
 {"action":"plan_week","assignments":[{"taskId":"...","dueDate":"YYYY-MM-DD"}]}
 \`\`\`
-
 BULK MOVE MULTIPLE TASKS:
 \`\`\`action
 {"action":"batch","actions":[{"action":"move_task","taskId":"...","status":"..."},{"action":"move_task","taskId":"...","status":"..."}]}
 \`\`\`
 `;
-
   return base + memory + recurringCtx + blockedCtx + '\n\n' + extraActions +
     '\n- plan_week: assign due dates to multiple tasks intelligently across 7 days' +
     '\n- Think strategically: consider blockers, priorities, and realistic workload' +
     '\n- proactively suggest recurring tasks if user mentions habits/routines';
 };
-
-// Extended executeAction to handle new action types
 const _prevExecV10 = executeAction;
 executeAction = function(a) {
   if (!a || !a.action) return;
-
   if (a.action === 'add_recurring') {
     ensureRecurring();
     S.recurring.push({
@@ -6913,8 +6042,6 @@ executeAction = function(a) {
     addAIMessage('ai', `✓ Recurring task added: **${a.title}** (${a.frequency})`);
     return;
   }
-
-
   if (a.action === 'plan_week') {
     let changed = 0;
     (a.assignments || []).forEach(assign => {
@@ -6925,19 +6052,11 @@ executeAction = function(a) {
     addAIMessage('ai', `✓ Week planned — ${changed} tasks scheduled`);
     return;
   }
-
   _prevExecV10(a);
 };
-
-// ════════════════════════════════════════════════════════════════════
-// CARD HTML ENHANCEMENTS — subtask progress, blocked indicator, recurring badge
-// ════════════════════════════════════════════════════════════════════
-
 const _prevCardHTML = cardHTML;
 cardHTML = function(t) {
   let h = _prevCardHTML(t);
-
-  // Inject subtask progress bar right before c-footer
   const { total, done } = getSubtaskProgress(t);
   if (total > 0) {
     const pct = Math.round((done / total) * 100);
@@ -6947,27 +6066,14 @@ cardHTML = function(t) {
     </div>`;
     h = h.replace('<div class="c-footer">', progressBar + '<div class="c-footer">');
   }
-
-  // Recurring badge
   if (t.recurringId) {
     h = h.replace('<div class="c-footer">', '<div class="c-recurring-badge" title="Recurring task">🔄</div><div class="c-footer">');
   }
-
   return h;
 };
-
-// ════════════════════════════════════════════════════════════════════
-// INIT — wire everything up on load
-// ════════════════════════════════════════════════════════════════════
-
 window.addEventListener('load', function() {
-  // Animations
   injectAnimationCSS();
-
-  // Keyboard nav
   initKeyboardNav();
-
-  // Command palette input handler
   const cmdInput = document.getElementById('cmd-input');
   if (cmdInput) {
     cmdInput.addEventListener('input', e => renderCmdResults(e.target.value));
@@ -6992,13 +6098,9 @@ window.addEventListener('load', function() {
       }
     });
   }
-
-  // Close command palette on backdrop click
   document.getElementById('cmd-palette')?.addEventListener('mousedown', e => {
     if (e.target === document.getElementById('cmd-palette')) closeCommandPalette();
   });
-
-  // Notification permission request (subtle — only if user has tasks with due dates)
   const hasDueDates = S.tasks.some(t => t.dueDate);
   if (hasDueDates && Notification.permission === 'default') {
     setTimeout(() => requestNotificationPermission().then(granted => {
@@ -7007,39 +6109,23 @@ window.addEventListener('load', function() {
   } else if (Notification.permission === 'granted') {
     checkDueNotifications();
   }
-
-  // Process recurring tasks
   processRecurringTasks();
-
-  // Daily briefing / insights
   setTimeout(() => {
     renderInsights();
     aiDailyBriefing();
   }, 1000);
-
-  // Check onboarding
   setTimeout(checkOnboarding, 500);
-
-  // Check shared board
   checkSharedBoard();
-
-  // Realtime collaboration
   setTimeout(() => initRealtime(), 2000);
-  // Graph click handler (in case graph tab is already active)
   setTimeout(initGraphClickHandler, 500);
-
-  // Patch render to include insights
   const _origRender = render;
   render = function() {
     _origRender();
     renderInsights();
   };
-
-  // Patch doSave to save AI memory summary
   const _origDoSave = doSave;
   doSave = function() {
     _origDoSave();
-    // Periodically snapshot a brief memory
     const memKey = 'ab-mem-date';
     const today = new Date().toISOString().slice(0,10);
     if (localStorage.getItem(memKey) !== today) {
@@ -7051,16 +6137,12 @@ window.addEventListener('load', function() {
       localStorage.setItem(memKey, today);
     }
   };
-
-  // Patch renderSettings to add new sections
   const _origRS = renderSettings;
   renderSettings = function() {
     _origRS();
     setTimeout(() => {
       const sg = document.getElementById('settings-grid');
       if (!sg) return;
-
-      // Recurring tasks section
       if (!sg.querySelector('#recurring-section')) {
         const div = document.createElement('div');
         div.id = 'recurring-section';
@@ -7072,8 +6154,6 @@ window.addEventListener('load', function() {
         sg.appendChild(div);
         renderRecurringList();
       }
-
-      // Public sharing section
       if (!sg.querySelector('#sharing-section')) {
         const div = document.createElement('div');
         div.id = 'sharing-section';
@@ -7087,8 +6167,6 @@ window.addEventListener('load', function() {
       }
     }, 80);
   };
-});
-
-</script>
+});</script>
 </body>
 </html>
