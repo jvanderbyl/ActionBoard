@@ -726,15 +726,218 @@ dialog::backdrop{background:rgba(0,0,0,.38)}
 #lb-board-wrap.rows .lb-col:last-child { border-bottom: none; }
 #lb-board-wrap.rows .cards-list { max-height: none; }
 
-/* ═══ MOBILE (≤768px) ═══════════════════════════════════
-   Minimal rules — only override what's needed.
-   PC version (>768px) is completely untouched.
-   ════════════════════════════════════════════════════════ */
+/* ═══ MOBILE iOS (≤768px) ════════════════════════════════
+   Architecture: top logo bar + bottom tab bar + full-screen views
+   Sidebar becomes a slide-in sheet, not part of main flow
+   ═════════════════════════════════════════════════════════ */
 
-/* Hide the ☰ button on desktop */
+@media (max-width: 768px) {
+
+  /* ── Kill the desktop layout ── */
+  #sidebar { display: none !important; }
+  #main    { margin-left: 0 !important; width: 100vw; flex-direction: column; }
+
+  /* ── Top bar: just logo + hamburger, no nav tabs ── */
+  #tb {
+    height: 52px;
+    padding: 0 12px;
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 200;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg4);
+  }
+  /* Hide navtabs from topbar on mobile */
+  #tb .navtabs { display: none !important; }
+  #tb .tb-drag-spacer { display: none !important; }
+  /* Show hamburger */
+  #mob-sidebar-btn {
+    display: flex !important;
+    align-items: center; justify-content: center;
+    width: 38px; height: 38px; flex-shrink: 0;
+    border: 1px solid var(--border); border-radius: var(--rs);
+    background: var(--bg3); cursor: pointer; font-size: 18px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  /* AI fab: above bottom tab bar */
+  #ai-fab {
+    bottom: 70px !important;
+    right: 14px !important;
+  }
+
+  /* ── Content area: sits between fixed top bar and fixed bottom tab bar ── */
+  #content {
+    margin-top: 52px;
+    margin-bottom: 56px;
+    height: calc(100dvh - 52px - 56px);
+    overflow: hidden;
+    flex: none;
+  }
+
+  /* ── Bottom tab bar ── */
+  #mob-tab-bar {
+    display: flex !important;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 56px;
+    background: var(--bg4);
+    border-top: 1px solid var(--border);
+    z-index: 200;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .mob-tab {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-family: var(--font);
+    -webkit-tap-highlight-color: transparent;
+    padding: 4px 2px;
+  }
+  .mob-tab .mt-icon { font-size: 18px; line-height: 1; }
+  .mob-tab .mt-label { font-size: 9px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: .3px; }
+  .mob-tab.on .mt-label { color: var(--accent); }
+  .mob-tab.on .mt-icon { filter: none; }
+  .mob-tab:active { background: var(--bg2); }
+
+  /* ── All views: fill the content area, scrollable ── */
+  [id^="view-"] {
+    height: 100% !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* ── Board ── */
+  #board-wrap {
+    height: 100% !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  #board {
+    flex-direction: column !important;
+    overflow: visible !important;
+    padding: 10px !important;
+    gap: 8px !important;
+    min-height: min-content;
+  }
+  #board.rows { flex-direction: column !important; }
+  .column { width: 100% !important; min-width: 0 !important; max-width: 100% !important; border-right: none !important; border-bottom: 1px solid var(--border); }
+  .column:last-child { border-bottom: none; }
+  .cards-list { max-height: none !important; overflow: visible !important; }
+
+  /* ── Toolbar ── */
+  #toolbar, #lb-toolbar {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    flex-wrap: nowrap !important;
+    scrollbar-width: none;
+    padding: 0 8px !important;
+  }
+  #toolbar::-webkit-scrollbar, #lb-toolbar::-webkit-scrollbar { display: none; }
+  .tbb { white-space: nowrap !important; flex-shrink: 0 !important; font-size: 12px !important; }
+
+  /* ── Cards ── */
+  .card { padding: 10px 12px !important; }
+  .cbtn { min-width: 34px !important; min-height: 34px !important; }
+  .btn  { min-height: 40px !important; }
+
+  /* ── Notes canvas: scrollable on mobile ── */
+  #notes-canvas {
+    overflow: auto !important;
+    overflow-x: auto !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+    min-height: 600px;
+    height: auto !important;
+  }
+  .view-wrap { padding: 10px !important; overflow-y: auto !important; height: 100%; }
+
+  /* ── Learn board ── */
+  #lb-board-wrap { overflow-y: auto !important; overflow-x: hidden !important; height: 100%; }
+  #lb-wrap { flex-direction: column !important; overflow: visible !important; }
+  .lb-col { width: 100% !important; min-width: 0 !important; border-right: none !important; border-bottom: 1px solid var(--border); }
+  .lb-col:last-child { border-bottom: none; }
+
+  /* ── Modals: slide up from bottom ── */
+  dialog {
+    width: 100% !important; max-width: 100% !important; min-width: 0 !important;
+    margin: 0 !important;
+    position: fixed !important;
+    bottom: 0 !important; left: 0 !important; right: 0 !important; top: auto !important;
+    border-radius: 18px 18px 0 0 !important;
+    max-height: 90dvh !important;
+    overflow-y: auto !important;
+    border: none !important;
+    border-top: 1px solid var(--border) !important;
+  }
+
+  /* CRITICAL: 16px prevents iOS zoom */
+  input, textarea, select { font-size: 16px !important; }
+
+  /* ── Settings ── */
+  #settings-grid { grid-template-columns: 1fr !important; }
+  .g2 { grid-template-columns: 1fr !important; }
+
+  /* ── AI panel ── */
+  #ai-panel {
+    width: 100% !important; max-width: 100% !important;
+    left: 0 !important; right: 0 !important;
+    bottom: 56px !important; top: auto !important;
+    height: 78dvh !important;
+    border-radius: 18px 18px 0 0 !important;
+    border: none !important;
+    border-top: 1px solid var(--border) !important;
+  }
+
+  /* ── Calendar ── */
+  .cal-nav { flex-wrap: wrap; gap: 6px; }
+  .cal-grid { font-size: 10px; }
+  .cal-cell { min-height: 40px; }
+
+  /* ── Sidebar drawer ── */
+  #sidebar.mob-open {
+    display: flex !important;
+    position: fixed !important;
+    top: 0 !important; left: 0 !important;
+    width: 82vw !important; max-width: 300px !important;
+    height: 100dvh !important;
+    z-index: 500 !important;
+    box-shadow: 4px 0 24px rgba(0,0,0,.4) !important;
+    overflow-y: auto !important;
+    flex-direction: column;
+    background: var(--bg4) !important;
+  }
+  #sidebar.mob-open #task-sidebar-inner { display: block !important; }
+  #sidebar.mob-open #lb-sidebar-inner   { display: block !important; }
+
+  /* ── Overlay ── */
+  #mob-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.5);
+    z-index: 499;
+  }
+  #mob-overlay.show { display: block !important; }
+
+  /* ── Insights strip ── */
+  #insights-strip { font-size: 11px; }
+
+  /* ── Habits ── */
+  #habits-grid > div { overflow-x: auto; }
+}
+
+/* Desktop: hide mobile-only elements */
 @media (min-width: 769px) {
   #mob-sidebar-btn { display: none !important; }
   #mob-overlay     { display: none !important; }
+  #mob-tab-bar     { display: none !important; }
 }
 
 @media (max-width: 768px) {
@@ -2837,7 +3040,7 @@ async function testAnthropicKey() {
   const btn = document.querySelector('[onclick="testAnthropicKey()"]');
   if (btn) btn.textContent = 'Testing…';
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await fetch(AI_WORKER_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -3336,7 +3539,7 @@ function executeAction(a) {
     return;
   }
 }
-const AI_WORKER_URL = 'https://api.vanderbyllabs.com/ai';
+const AI_WORKER_URL = 'https://actionboard-ai.YOUR-SUBDOMAIN.workers.dev/ai';
 async function sendAI() {
   const inp = document.getElementById('ai-input');
   const text = inp.value.trim();
@@ -4170,10 +4373,22 @@ function lbAIPopulate() {
       S.learnBoard.sectors.push(sec);
     }
     var queueCol = S.learnBoard.columns[0];
-    fetch('https://api.anthropic.com/v1/messages', {
+    // Route through Worker
+    var _lbOwnKey = (localStorage.getItem('anthropic_key')||'').trim();
+    var _lbUseOwn = _lbOwnKey.startsWith('sk-ant-');
+    // Get token from localStorage cache (set by main sendAI flow)
+    var _lbTokenData = null;
+    try {
+      var _lbAuthRaw = localStorage.getItem('sb-ugkrzslioeiqzvmfievh-auth-token');
+      _lbTokenData = _lbAuthRaw ? JSON.parse(_lbAuthRaw) : null;
+    } catch(e) {}
+    var _lbToken = _lbTokenData?.access_token || null;
+    var _lbTopic = topicLabel;
+    fetch(AI_WORKER_URL, {
       method:'POST',
-      headers:{'Content-Type':'application/json','x-api-key':anthropicKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      headers:{'Content-Type':'application/json'},
       body: JSON.stringify({
+        useOwnKey: _lbUseOwn, ownKey: _lbUseOwn ? _lbOwnKey : undefined, userToken: _lbToken,
         model:'claude-sonnet-4-20250514', max_tokens:2000,
         messages:[{role:'user', content:
           'Create a practical learning plan for: "' + topicLabel + '".\n'
@@ -4468,43 +4683,7 @@ function permDeleteTask(id){
   if(before===after){ console.warn('permDeleteTask: no item matched id', id); }
   renderArchive(); scheduleSave();
 }
-processAudio = async function(apiKey, mimeType) {
-  cleanupVoiceUI();
-  document.getElementById('ai-status').textContent = 'Transcribing…';
-  if (!audioChunks.length) { document.getElementById('ai-status').textContent='Ready'; return; }
-  try {
-    var blob = new Blob(audioChunks, {type: mimeType||'audio/webm'});
-    var base64 = await new Promise(function(res,rej){
-      var r=new FileReader(); r.onloadend=function(){res(r.result.split(',')[1]);}; r.onerror=rej; r.readAsDataURL(blob);
-    });
-    var response = await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','x-api-key':anthropicKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-      body:JSON.stringify({
-        model:'claude-sonnet-4-20250514', max_tokens:500,
-        messages:[{role:'user',content:[
-          {type:'document',source:{type:'base64',media_type:mimeType||'audio/webm',data:base64}},
-          {type:'text',text:'Transcribe this audio exactly as spoken. Return ONLY the transcription text, nothing else.'}
-        ]}]
-      })
-    });
-    var data = await response.json();
-    if (data.error) {
-      var oaKey = localStorage.getItem('openai_key');
-      if (oaKey) {
-        var ext=mimeType&&mimeType.includes('mp4')?'mp4':mimeType&&mimeType.includes('ogg')?'ogg':'webm';
-        var fd=new FormData(); fd.append('file',blob,'audio.'+ext); fd.append('model','whisper-1');
-        var r2=await fetch('https://api.openai.com/v1/audio/transcriptions',{method:'POST',headers:{'Authorization':'Bearer '+oaKey},body:fd});
-        var d2=await r2.json();
-        if (d2.text) { document.getElementById('ai-input').value=d2.text.trim(); autoResizeAI(document.getElementById('ai-input')); document.getElementById('ai-status').textContent='Transcribed — sending…'; setTimeout(function(){sendAI();},500); return; }
-      }
-      addAIMessage('ai','Transcription failed. Check your Anthropic key in Settings.'); document.getElementById('ai-status').textContent='Ready'; return;
-    }
-    var text=(data.content&&data.content[0]&&data.content[0].text)||'';
-    if (text) { document.getElementById('ai-input').value=text.trim(); autoResizeAI(document.getElementById('ai-input')); document.getElementById('ai-status').textContent='Transcribed — sending…'; setTimeout(function(){sendAI();},500); }
-    else document.getElementById('ai-status').textContent='Ready';
-  } catch(e) { document.getElementById('ai-status').textContent='Ready'; addAIMessage('ai','Audio error: '+e.message); }
-};
+;
 var _baseAISys = AI_SYSTEM;
 AI_SYSTEM = function() {
   var base = _baseAISys();
@@ -4955,34 +5134,73 @@ function restoreArchivedTask2(id) {
 })();
 processAudio = async function(apiKey, mimeType) {
   cleanupVoiceUI();
-  document.getElementById('ai-status').textContent = 'Transcribing\u2026';
+  document.getElementById('ai-status').textContent = 'Transcribing…';
   if (!audioChunks.length) { document.getElementById('ai-status').textContent = 'Ready'; return; }
   try {
     var blob = new Blob(audioChunks, {type: mimeType || 'audio/webm'});
-    var oaKey = localStorage.getItem('openai_key') || '';
-    if (!oaKey) {
-      addAIMessage('ai', '\U0001f3a4 Voice transcription needs an OpenAI API key (Whisper). '
-        + 'Add one in Settings \u2192 OpenAI API Key (Voice). '
-        + 'Your Anthropic key handles all AI chat \u2014 OpenAI is only needed for voice input. '
-        + 'You can type your message instead!');
-      document.getElementById('ai-status').textContent = 'Ready';
-      return;
+
+    // Try OpenAI Whisper first (best for audio)
+    var oaKey = (localStorage.getItem('openai_key')||'').trim();
+    if (oaKey) {
+      var ext = mimeType && mimeType.includes('mp4') ? 'mp4' : mimeType && mimeType.includes('ogg') ? 'ogg' : 'webm';
+      var fd = new FormData();
+      fd.append('file', blob, 'audio.' + ext);
+      fd.append('model', 'whisper-1');
+      var r = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + oaKey },
+        body: fd
+      });
+      var d = await r.json();
+      if (d.text) {
+        document.getElementById('ai-input').value = d.text.trim();
+        autoResizeAI(document.getElementById('ai-input'));
+        document.getElementById('ai-status').textContent = 'Transcribed — sending…';
+        setTimeout(function(){ sendAI(); }, 500);
+        return;
+      }
     }
-    var ext = mimeType && mimeType.includes('mp4') ? 'mp4' : mimeType && mimeType.includes('ogg') ? 'ogg' : 'webm';
-    var fd = new FormData();
-    fd.append('file', blob, 'audio.' + ext);
-    fd.append('model', 'whisper-1');
-    var res = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-      method: 'POST', headers: {'Authorization': 'Bearer ' + oaKey}, body: fd
+
+    // Fallback: send audio through Worker to Claude for transcription
+    var base64 = await new Promise(function(res, rej) {
+      var fr = new FileReader();
+      fr.onloadend = function() { res(fr.result.split(',')[1]); };
+      fr.onerror = rej;
+      fr.readAsDataURL(blob);
+    });
+    var ownKey = (localStorage.getItem('anthropic_key')||'').trim();
+    var useOwnKey = ownKey.startsWith('sk-ant-');
+    var authRaw = localStorage.getItem('sb-ugkrzslioeiqzvmfievh-auth-token');
+    var authData = null;
+    try { authData = authRaw ? JSON.parse(authRaw) : null; } catch(e) {}
+    var userToken = authData ? authData.access_token : null;
+
+    var res = await fetch(AI_WORKER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        useOwnKey: useOwnKey,
+        ownKey: useOwnKey ? ownKey : undefined,
+        userToken: userToken,
+        isAudio: true,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'document', source: { type: 'base64', media_type: mimeType || 'audio/webm', data: base64 } },
+            { type: 'text', text: 'Transcribe this audio exactly as spoken. Return ONLY the transcription text, nothing else.' }
+          ]
+        }]
+      })
     });
     var data = await res.json();
-    if (data.text) {
-      document.getElementById('ai-input').value = data.text.trim();
+    var text = (data.content && data.content[0] && data.content[0].text) || '';
+    if (text) {
+      document.getElementById('ai-input').value = text.trim();
       autoResizeAI(document.getElementById('ai-input'));
-      document.getElementById('ai-status').textContent = 'Transcribed \u2014 sending\u2026';
-      setTimeout(function() { sendAI(); }, 500);
+      document.getElementById('ai-status').textContent = 'Transcribed — sending…';
+      setTimeout(function(){ sendAI(); }, 500);
     } else {
-      addAIMessage('ai', 'Whisper error: ' + (data.error ? data.error.message : 'unknown'));
+      addAIMessage('ai', 'Transcription failed. Add an OpenAI API key in Settings for best voice support.');
       document.getElementById('ai-status').textContent = 'Ready';
     }
   } catch(e) {
@@ -5158,7 +5376,70 @@ function mobCloseSidebar() {
   if (sb) sb.classList.remove('mob-open');
   if (ov) ov.classList.remove('show');
   document.body.style.overflow = '';
+  mobHideMore();
 }
+
+// Mobile view switcher — syncs with desktop switchView and updates bottom tab bar
+function mobSwitchView(view, btn) {
+  // Map mobile buttons to corresponding desktop navtabs
+  var viewToNavIdx = {
+    'board': 0, 'focus': 1, 'calendar': 2,
+    'learnboard': 3, 'notes': 4, 'archive': 5,
+    'habits': 6, 'settings': 9
+  };
+  // Call the real switchView with the matching desktop navtab
+  var tabs = document.querySelectorAll('.navtab');
+  var idx = viewToNavIdx[view];
+  var tab = (idx !== undefined && tabs[idx]) ? tabs[idx] : tabs[0];
+  switchView(view, tab);
+  // Update bottom tab bar highlight
+  document.querySelectorAll('.mob-tab').forEach(function(b) { b.classList.remove('on'); });
+  if (btn) btn.classList.add('on');
+  // Close sidebar if open
+  mobCloseSidebar();
+  // Close more menu
+  mobHideMore();
+}
+
+function mobShowMore() {
+  var m = document.getElementById('mob-more-menu');
+  if (m) m.style.display = m.style.display === 'block' ? 'none' : 'block';
+}
+function mobHideMore() {
+  var m = document.getElementById('mob-more-menu');
+  if (m) m.style.display = 'none';
+}
+
+// Sync bottom tab bar when desktop nav is used
+function syncMobTabBar(view) {
+  var viewMap = {
+    'board':'mbt-board','focus':'mbt-focus','calendar':'mbt-calendar',
+    'notes':'mbt-notes','settings':'mbt-settings','learnboard':'mbt-board',
+    'habits':'mbt-settings','archive':'mbt-settings','timeline':'mbt-settings','graph':'mbt-settings'
+  };
+  document.querySelectorAll('.mob-tab').forEach(function(b){ b.classList.remove('on'); });
+  var id = viewMap[view];
+  if (id) { var el = document.getElementById(id); if(el) el.classList.add('on'); }
+}
+
+// Init mobile on load
+(function initMobile() {
+  if (window.innerWidth > 768) return;
+
+  // Show bottom tab bar
+  var tabBar = document.getElementById('mob-tab-bar');
+  if (tabBar) tabBar.style.display = 'flex';
+
+  // Patch switchView to sync bottom tab bar
+  var _origSV = switchView;
+  switchView = function(v, btn) {
+    _origSV(v, btn);
+    syncMobTabBar(v);
+  };
+
+  // Keyboard should not cause zoom on iOS
+  document.addEventListener('touchstart', function(){}, {passive: true});
+})();
 if (window.innerWidth <= 768) {
   document.addEventListener('click', function(e) {
     var btn = e.target.closest('.catbtn');
@@ -5388,7 +5669,7 @@ Create a realistic weekly plan. For each day Mon-Sun:
 3. Add any missing prep tasks for high-priority items
 Execute as a batch action. Be decisive — actually set the dates and move tasks. Also give a brief strategic summary of the week plan.`;
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await fetch(AI_WORKER_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': anthropicKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
       body: JSON.stringify({ model: 'claude-opus-4-5', max_tokens: 3000, messages: [...aiHistory, { role: 'user', content: planPrompt }] })
@@ -5717,7 +5998,7 @@ Create a complete, personalized starting board for them. Include:
 3. Create 2-3 starter notes with useful content for their context
 Execute everything as a single batch action. Make it feel immediately useful and personal.`;
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await fetch(AI_WORKER_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': anthropicKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
       body: JSON.stringify({ model: 'claude-opus-4-5', max_tokens: 3000,
@@ -6170,3 +6451,33 @@ window.addEventListener('load', function() {
 });</script>
 </body>
 </html>
+
+
+<!-- MOBILE OVERLAY + BOTTOM TAB BAR -->
+<div id="mob-overlay" onclick="mobCloseSidebar()"></div>
+<div id="mob-tab-bar" style="display:none">
+  <button class="mob-tab on" id="mbt-board"    onclick="mobSwitchView('board',this)">
+    <span class="mt-icon">▦</span><span class="mt-label">Board</span>
+  </button>
+  <button class="mob-tab"    id="mbt-focus"    onclick="mobSwitchView('focus',this)">
+    <span class="mt-icon">🎯</span><span class="mt-label">Focus</span>
+  </button>
+  <button class="mob-tab"    id="mbt-calendar" onclick="mobSwitchView('calendar',this)">
+    <span class="mt-icon">📅</span><span class="mt-label">Calendar</span>
+  </button>
+  <button class="mob-tab"    id="mbt-notes"    onclick="mobSwitchView('notes',this)">
+    <span class="mt-icon">📝</span><span class="mt-label">Notes</span>
+  </button>
+  <button class="mob-tab"    id="mbt-more"     onclick="mobShowMore()">
+    <span class="mt-icon">⋯</span><span class="mt-label">More</span>
+  </button>
+</div>
+<!-- MORE MENU (hidden by default) -->
+<div id="mob-more-menu" style="display:none;position:fixed;bottom:56px;left:0;right:0;background:var(--bg4);border-top:1px solid var(--border);z-index:400;padding:8px 0">
+  <button onclick="mobSwitchView('learnboard',document.getElementById('mbt-more'));mobHideMore()" style="display:block;width:100%;padding:12px 20px;text-align:left;background:none;border:none;font-size:14px;font-weight:600;color:var(--text);font-family:var(--font);cursor:pointer">📚 Learn Board</button>
+  <button onclick="mobSwitchView('habits',document.getElementById('mbt-more'));mobHideMore()" style="display:block;width:100%;padding:12px 20px;text-align:left;background:none;border:none;font-size:14px;font-weight:600;color:var(--text);font-family:var(--font);cursor:pointer">🔥 Habits</button>
+  <button onclick="mobSwitchView('archive',document.getElementById('mbt-more'));mobHideMore()" style="display:block;width:100%;padding:12px 20px;text-align:left;background:none;border:none;font-size:14px;font-weight:600;color:var(--text);font-family:var(--font);cursor:pointer">📦 Archive</button>
+  <button onclick="mobSwitchView('timeline',document.getElementById('mbt-more'));mobHideMore()" style="display:block;width:100%;padding:12px 20px;text-align:left;background:none;border:none;font-size:14px;font-weight:600;color:var(--text);font-family:var(--font);cursor:pointer">📈 Timeline</button>
+  <button onclick="mobSwitchView('settings',document.getElementById('mbt-more'));mobHideMore()" style="display:block;width:100%;padding:12px 20px;text-align:left;background:none;border:none;font-size:14px;font-weight:600;color:var(--text);font-family:var(--font);cursor:pointer">⚙️ Settings</button>
+  <button onclick="mobHideMore()" style="display:block;width:100%;padding:12px 20px;text-align:left;background:none;border:none;font-size:14px;color:var(--text3);font-family:var(--font);cursor:pointer">✕ Close</button>
+</div>
