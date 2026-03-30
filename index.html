@@ -906,7 +906,6 @@ dialog::backdrop{background:rgba(0,0,0,.38)}
 .c-progress{height:4px;background:var(--bg2);border-radius:2px;margin:4px 0;position:relative;overflow:hidden}
 .c-progress-bar{height:100%;background:var(--accent);border-radius:2px;transition:width .3s}
 .c-progress-label{position:absolute;right:0;top:-1px;font-size:9px;font-weight:700;color:var(--text4);line-height:1}
-.c-blocked{font-size:10px;font-weight:700;color:var(--pri-high);padding:2px 6px;background:rgba(239,68,68,.08);border-radius:3px;margin-bottom:4px;display:inline-block}
 .c-recurring-badge{font-size:10px;color:var(--text4);margin-bottom:2px;display:inline-block}
 
 /* ── GRAPH VIEW ── */
@@ -1269,11 +1268,6 @@ body.dark .note-md-preview .md-inline{background:#333}
       </div>
     </div>
     <!-- Sketch -->
-    <div>
-      <label class="flabel">Blocked By (Dependencies)</label>
-      <div id="dep-picker" style="max-height:120px;overflow-y:auto;padding:4px 0;font-size:13px"></div>
-      <div class="hint">Check tasks that must be finished before this one.</div>
-    </div>
     <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--bg3);border-radius:var(--rs);border:1px solid var(--border)">
       <input type="checkbox" id="f-make-recurring" onchange="document.getElementById('f-recurring-opts').style.display=this.checked?'block':'none'" style="width:16px;height:16px;cursor:pointer"/>
       <label for="f-make-recurring" style="font-size:13px;font-weight:600;color:var(--text);cursor:pointer">Make recurring</label>
@@ -2555,8 +2549,6 @@ function openNewTask(status='backlog'){
   renderTags();renderTagManager();clearCanvas();
   openModal('task-modal');
   focusFirstInput('task-modal');
-  // Populate dependency picker
-  if (typeof renderDepPicker === 'function') renderDepPicker(id);
   // Restore recurring state
   const recCheck = document.getElementById('f-make-recurring');
   const recOpts  = document.getElementById('f-recurring-opts');
@@ -2593,8 +2585,6 @@ function openEditTask(id,e){
   if(t.sketch){const img=new Image();img.onload=()=>ctx.drawImage(img,0,0);img.src=t.sketch;}
   openModal('task-modal');
   focusFirstInput('task-modal');
-  // Populate dependency picker
-  if (typeof renderDepPicker === 'function') renderDepPicker(id);
   // Restore recurring state
   const recCheck = document.getElementById('f-make-recurring');
   const recOpts  = document.getElementById('f-recurring-opts');
@@ -2631,18 +2621,15 @@ function saveTask(){
     updatedAt:n};
   if(isNew){S.tasks.push({id:uid(),createdAt:n,...data});}
   else{const idx=S.tasks.findIndex(t=>t.id===editingId);if(idx>-1)S.tasks[idx]={...S.tasks[idx],...data};}
-  // Save dependencies (blockedBy)
-  const savedTask = S.tasks.find(t => t.id === (isNew ? S.tasks[S.tasks.length-1]?.id : editingId));
-  if (savedTask) {
-    const depChecks = document.querySelectorAll('#dep-picker input[type=checkbox]');
-    if (depChecks.length) savedTask.blockedBy = Array.from(depChecks).filter(c=>c.checked).map(c=>c.dataset.taskid).filter(Boolean);
-    // Handle recurring
+  // Handle recurring
+  const savedTaskRec = S.tasks.find(t => t.id === (isNew ? S.tasks[S.tasks.length-1]?.id : editingId));
+  if (savedTaskRec) {
     const makeRec = document.getElementById('f-make-recurring');
     if (makeRec && makeRec.checked) {
       if (typeof ensureRecurring === 'function') ensureRecurring();
-      if (S.recurring && !S.recurring.find(r => r.title === savedTask.title)) {
+      if (S.recurring && !S.recurring.find(r => r.title === savedTaskRec.title)) {
         const freq = document.getElementById('f-rec-freq')?.value || 'weekly';
-        S.recurring.push({id:uid(), title:savedTask.title, frequency:freq, category:savedTask.category, priority:savedTask.priority||'med', lastGenerated:'', createdAt:now()});
+        S.recurring.push({id:uid(), title:savedTaskRec.title, frequency:freq, category:savedTaskRec.category, priority:savedTaskRec.priority||'med', lastGenerated:'', createdAt:now()});
       }
     }
   }
@@ -6016,48 +6003,14 @@ function renderRecurringList() {
 // TIER 1B: TASK DEPENDENCIES
 // ════════════════════════════════════════════════════════════════════
 
-function getBlockers(taskId) {
-  const t = S.tasks.find(x => x.id === taskId);
-  return (t?.blockedBy || []).map(id => S.tasks.find(x => x.id === id)).filter(Boolean);
-}
 
-function isBlocked(taskId) {
-  return getBlockers(taskId).some(b => b.status !== 'finished');
-}
 
-function toggleBlocker(taskId, blockerId) {
-  const t = S.tasks.find(x => x.id === taskId);
-  if (!t) return;
-  if (!t.blockedBy) t.blockedBy = [];
-  const idx = t.blockedBy.indexOf(blockerId);
-  if (idx > -1) t.blockedBy.splice(idx, 1);
-  else t.blockedBy.push(blockerId);
-  t.updatedAt = now();
-  invalidateCardCache(); renderBoard(); scheduleSave();
-}
+
+
+
 
 // Render dependency picker inside task modal
-function renderDepPicker(taskId) {
-  const el = document.getElementById('dep-picker');
-  if (!el) return;
-  const task = S.tasks.find(t => t.id === taskId);
-  const blockedBy = task?.blockedBy || [];
-  const others = S.tasks.filter(t => t.id !== taskId && t.status !== 'finished');
-  if (!others.length) {
-    el.innerHTML = '<div style="font-size:12px;color:var(--text4)">No other active tasks to depend on.</div>';
-    return;
-  }
-  el.innerHTML = others.map(t => {
-    const checked = blockedBy.includes(t.id);
-    const cat = catById(t.category);
-    return `<label style="display:flex;align-items:center;gap:7px;padding:4px 0;cursor:pointer;font-size:13px;color:var(--text2)">
-      <input type="checkbox" data-taskid="${t.id}" ${checked ? 'checked' : ''}/>
-      <span style="width:8px;height:8px;border-radius:50%;background:${cat.color};flex-shrink:0"></span>
-      <span style="font-size:11px;font-weight:700;color:${cat.color};flex-shrink:0">${esc(cat.label)}</span>
-      ${esc(t.title.slice(0, 45))}
-    </label>`;
-  }).join('');
-}
+
 
 // ════════════════════════════════════════════════════════════════════
 // TIER 1C: SUBTASK PROGRESS BARS on cards (already have subtasks, just improve display)
@@ -6731,22 +6684,7 @@ function renderNoteGraph() {
     }
   }
 
-  // Draw edges for task dependencies
-  tasks.forEach((t, ti) => {
-    (t.blockedBy || []).forEach(bid => {
-      const blocker = taskNodes.find(n => n.id === bid);
-      if (blocker) {
-        ctx.strokeStyle = 'rgba(239,68,68,.3)';
-        ctx.lineWidth = 2;
-        ctx.setLineDash([4, 3]);
-        ctx.beginPath();
-        ctx.moveTo(blocker.x, blocker.y);
-        ctx.lineTo(taskNodes[ti].x, taskNodes[ti].y);
-        ctx.stroke();
-        ctx.setLineDash([]);
-      }
-    });
-  });
+
 
   // Draw nodes
   _graphNodeData.forEach(n => {
@@ -6931,22 +6869,13 @@ AI_SYSTEM = function() {
     ? '\nRECURRING TASKS: ' + S.recurring.map(r => `"${r.title}" (${r.frequency})`).join(', ')
     : '';
 
-  // Add dependencies context
-  const blocked = S.tasks.filter(t => isBlocked(t.id));
-  const blockedCtx = blocked.length
-    ? '\nBLOCKED TASKS: ' + blocked.map(t => `"${t.title}" blocked by ${getBlockers(t.id).map(b=>`"${b.title}"`).join(', ')}`).join('; ')
-    : '';
+  const blockedCtx = '';
 
   // Add plan-my-week action to prompt
   const extraActions = `
 ADD RECURRING TASK:
 \`\`\`action
 {"action":"add_recurring","title":"...","frequency":"daily|weekly|monthly|weekday","category":"...","priority":"med"}
-\`\`\`
-
-SET TASK DEPENDENCY (taskId is blocked until blockerId is finished):
-\`\`\`action
-{"action":"set_dependency","taskId":"...","blockerId":"..."}
 \`\`\`
 
 PLAN MY WEEK (schedule tasks across next 7 days):
@@ -6985,17 +6914,6 @@ executeAction = function(a) {
     return;
   }
 
-  if (a.action === 'set_dependency') {
-    const t = S.tasks.find(x => x.id === a.taskId);
-    if (t) {
-      if (!t.blockedBy) t.blockedBy = [];
-      if (!t.blockedBy.includes(a.blockerId)) t.blockedBy.push(a.blockerId);
-      t.updatedAt = now();
-      invalidateCardCache(); renderBoard(); scheduleSave();
-      addAIMessage('ai', `✓ Dependency set`);
-    }
-    return;
-  }
 
   if (a.action === 'plan_week') {
     let changed = 0;
@@ -7028,13 +6946,6 @@ cardHTML = function(t) {
       <span class="c-progress-label">${done}/${total}</span>
     </div>`;
     h = h.replace('<div class="c-footer">', progressBar + '<div class="c-footer">');
-  }
-
-  // Blocked indicator
-  if (isBlocked(t.id)) {
-    const blockers = getBlockers(t.id).map(b => b.title.slice(0,20)).join(', ');
-    const badge = `<div class="c-blocked" title="Blocked by: ${esc(blockers)}">🔒 Blocked</div>`;
-    h = h.replace('<div class="c-footer">', badge + '<div class="c-footer">');
   }
 
   // Recurring badge
