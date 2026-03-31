@@ -727,159 +727,180 @@ dialog::backdrop{background:rgba(0,0,0,.38)}
 #lb-board-wrap.rows .cards-list { max-height: none; }
 
 /* ═══ MOBILE iOS (≤768px) ════════════════════════════════
-   Architecture: top logo bar + bottom tab bar + full-screen views
-   Sidebar becomes a slide-in sheet, not part of main flow
-   ═════════════════════════════════════════════════════════ */
+   Native iOS feel: safe areas, momentum scroll, tap targets
+   Desktop (>768px) completely unaffected
+   ════════════════════════════════════════════════════════ */
 
 @media (max-width: 768px) {
 
-  /* ── Kill the desktop layout ── */
+  /* ── Reset desktop layout ── */
   #sidebar { display: none !important; }
-  #main    { margin-left: 0 !important; width: 100vw; flex-direction: column; }
+  #main { margin-left: 0 !important; width: 100vw !important; flex-direction: column; }
 
-  /* ── Top bar: just logo + hamburger, no nav tabs ── */
+  /* ── Top bar: fixed, logo + hamburger only ── */
   #tb {
-    height: 52px;
-    padding: 0 12px;
-    position: fixed;
+    height: 52px !important;
+    padding: 0 14px !important;
+    position: fixed !important;
     top: 0; left: 0; right: 0;
     z-index: 200;
-    border-bottom: 1px solid var(--border);
     background: var(--bg4);
+    border-bottom: 1px solid var(--border);
+    /* iOS safe area */
+    padding-top: env(safe-area-inset-top, 0px) !important;
+    height: calc(52px + env(safe-area-inset-top, 0px)) !important;
   }
-  /* Hide navtabs from topbar on mobile */
   #tb .navtabs { display: none !important; }
   #tb .tb-drag-spacer { display: none !important; }
-  /* Show hamburger */
+  #tb .tb-right { display: none !important; }
+  /* Insights strip below topbar */
+  #insights-strip {
+    top: calc(52px + env(safe-area-inset-top, 0px));
+    position: sticky;
+    z-index: 199;
+  }
+
+  /* ── Hamburger button ── */
   #mob-sidebar-btn {
     display: flex !important;
     align-items: center; justify-content: center;
-    width: 38px; height: 38px; flex-shrink: 0;
-    border: 1px solid var(--border); border-radius: var(--rs);
+    width: 40px; height: 40px; flex-shrink: 0;
+    border: 1px solid var(--border); border-radius: 10px;
     background: var(--bg3); cursor: pointer; font-size: 18px;
     -webkit-tap-highlight-color: transparent;
-  }
-  /* AI fab: above bottom tab bar */
-  #ai-fab {
-    bottom: 70px !important;
-    right: 14px !important;
+    touch-action: manipulation;
   }
 
-  /* ── Content area: sits between fixed top bar and fixed bottom tab bar ── */
+  /* ── Content area: between topbar and bottom tab bar ── */
   #content {
-    margin-top: 52px;
-    margin-bottom: 56px;
-    height: calc(100dvh - 52px - 56px);
-    overflow: hidden;
-    flex: none;
+    margin-top: calc(52px + env(safe-area-inset-top, 0px)) !important;
+    margin-bottom: calc(56px + env(safe-area-inset-bottom, 0px)) !important;
+    height: calc(100dvh - 52px - 56px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)) !important;
+    overflow: hidden !important;
+    flex: none !important;
   }
 
   /* ── Bottom tab bar ── */
   #mob-tab-bar {
     display: flex !important;
-    position: fixed;
+    position: fixed !important;
     bottom: 0; left: 0; right: 0;
-    height: 56px;
+    height: calc(56px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
     background: var(--bg4);
     border-top: 1px solid var(--border);
     z-index: 200;
-    padding-bottom: env(safe-area-inset-bottom, 0px);
+    /* Frosted glass effect on iOS */
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
   }
   .mob-tab {
     flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 2px;
-    border: none;
-    background: transparent;
-    cursor: pointer;
-    font-family: var(--font);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 2px; border: none; background: transparent;
+    cursor: pointer; font-family: var(--font);
     -webkit-tap-highlight-color: transparent;
-    padding: 4px 2px;
+    touch-action: manipulation;
+    padding: 6px 2px 4px;
+    min-width: 0;
   }
-  .mob-tab .mt-icon { font-size: 18px; line-height: 1; }
-  .mob-tab .mt-label { font-size: 9px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: .3px; }
+  .mob-tab .mt-icon { font-size: 20px; line-height: 1; }
+  .mob-tab .mt-label { font-size: 9px; font-weight: 600; color: var(--text4); letter-spacing: .2px; white-space: nowrap; }
   .mob-tab.on .mt-label { color: var(--accent); }
-  .mob-tab.on .mt-icon { filter: none; }
-  .mob-tab:active { background: var(--bg2); }
+  .mob-tab.on .mt-icon  { transform: scale(1.05); }
+  .mob-tab:active { opacity: .6; }
 
-  /* ── All views: fill the content area, scrollable ── */
+  /* ── All views: full height, iOS scroll ── */
+  .view-wrap {
+    padding: 12px 14px !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    height: 100% !important;
+    box-sizing: border-box;
+  }
   [id^="view-"] {
     height: 100% !important;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-    -webkit-overflow-scrolling: touch;
+    overflow: hidden !important;
   }
 
-  /* ── Board ── */
-  #board-wrap {
-    height: 100% !important;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-    -webkit-overflow-scrolling: touch;
-  }
-  #board {
-    flex-direction: column !important;
-    overflow: visible !important;
-    padding: 10px !important;
-    gap: 8px !important;
-    min-height: min-content;
-  }
-  #board.rows { flex-direction: column !important; }
-  .column { width: 100% !important; min-width: 0 !important; max-width: 100% !important; border-right: none !important; border-bottom: 1px solid var(--border); }
-  .column:last-child { border-bottom: none; }
-  .cards-list { max-height: none !important; overflow: visible !important; }
-
-  /* ── Toolbar ── */
+  /* ── Toolbar: horizontal scroll ── */
   #toolbar, #lb-toolbar {
     overflow-x: auto !important;
     -webkit-overflow-scrolling: touch;
     flex-wrap: nowrap !important;
     scrollbar-width: none;
-    padding: 0 8px !important;
+    padding: 0 10px !important;
+    height: 44px !important;
+    flex-shrink: 0 !important;
   }
   #toolbar::-webkit-scrollbar, #lb-toolbar::-webkit-scrollbar { display: none; }
-  .tbb { white-space: nowrap !important; flex-shrink: 0 !important; font-size: 12px !important; }
-
-  /* ── Cards ── */
-  .card { padding: 10px 12px !important; }
-  .cbtn { min-width: 34px !important; min-height: 34px !important; }
-  .btn  { min-height: 40px !important; }
-
-  /* ── Notes canvas: scrollable on mobile ── */
-  #notes-canvas {
-    overflow: auto !important;
-    overflow-x: auto !important;
-    overflow-y: auto !important;
-    -webkit-overflow-scrolling: touch;
-    min-height: 600px;
-    height: auto !important;
+  .tbb {
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+    font-size: 12px !important;
+    padding: 5px 12px !important;
+    height: 32px !important;
+    min-height: 32px !important;
   }
-  .view-wrap { padding: 10px !important; overflow-y: auto !important; height: 100%; }
 
-  /* ── Learn board ── */
+  /* ── Board: hide desktop, show iOS shell ── */
+  #board-wrap { display: none !important; }
+  #ios-board-shell { display: flex !important; height: 100%; }
+  #ios-col-picker {
+    padding: 10px 12px !important;
+    gap: 8px !important;
+    flex-shrink: 0;
+  }
+  #ios-board-list {
+    padding: 0 12px 12px !important;
+  }
+
+  /* ── Notes: list view, full height ── */
+  #notes-canvas {
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    position: static !important;
+    background-image: none !important;
+    background-color: var(--bg2) !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 10px 12px !important;
+    box-sizing: border-box;
+  }
+
+  /* ── Learn board: vertical ── */
   #lb-board-wrap { overflow-y: auto !important; overflow-x: hidden !important; height: 100%; }
   #lb-wrap { flex-direction: column !important; overflow: visible !important; }
   .lb-col { width: 100% !important; min-width: 0 !important; border-right: none !important; border-bottom: 1px solid var(--border); }
   .lb-col:last-child { border-bottom: none; }
 
-  /* ── Modals: slide up from bottom ── */
+  /* ── Touch targets: minimum 44px (Apple HIG) ── */
+  .cbtn { min-width: 38px !important; min-height: 38px !important; font-size: 16px !important; }
+  .btn  { min-height: 44px !important; font-size: 14px !important; padding: 10px 16px !important; }
+  .card { padding: 12px 14px !important; }
+
+  /* ── 16px prevents iOS zoom on input focus ── */
+  input, textarea, select { font-size: 16px !important; }
+
+  /* ── Modals: slide up from bottom, with safe area ── */
   dialog {
     width: 100% !important; max-width: 100% !important; min-width: 0 !important;
     margin: 0 !important;
     position: fixed !important;
     bottom: 0 !important; left: 0 !important; right: 0 !important; top: auto !important;
-    border-radius: 18px 18px 0 0 !important;
-    max-height: 90dvh !important;
+    border-radius: 20px 20px 0 0 !important;
+    max-height: 92dvh !important;
     overflow-y: auto !important;
     border: none !important;
     border-top: 1px solid var(--border) !important;
+    padding-bottom: env(safe-area-inset-bottom, 0px) !important;
   }
-
-  /* CRITICAL: 16px prevents iOS zoom */
-  input, textarea, select { font-size: 16px !important; }
+  .mhdr  { padding: 16px 18px 10px !important; }
+  .mbody { padding: 12px 18px !important; gap: 12px !important; }
+  .mfoot { padding: 12px 18px !important; padding-bottom: max(12px, env(safe-area-inset-bottom, 0px)) !important; }
 
   /* ── Settings ── */
   #settings-grid { grid-template-columns: 1fr !important; }
@@ -889,17 +910,26 @@ dialog::backdrop{background:rgba(0,0,0,.38)}
   #ai-panel {
     width: 100% !important; max-width: 100% !important;
     left: 0 !important; right: 0 !important;
-    bottom: 56px !important; top: auto !important;
+    bottom: calc(56px + env(safe-area-inset-bottom, 0px)) !important;
+    top: auto !important;
     height: 78dvh !important;
-    border-radius: 18px 18px 0 0 !important;
+    border-radius: 20px 20px 0 0 !important;
     border: none !important;
     border-top: 1px solid var(--border) !important;
   }
 
+  /* ── AI FAB above tab bar ── */
+  #ai-fab {
+    bottom: calc(70px + env(safe-area-inset-bottom, 0px)) !important;
+    right: 16px !important;
+    width: 48px !important; height: 48px !important;
+  }
+
   /* ── Calendar ── */
-  .cal-nav { flex-wrap: wrap; gap: 6px; }
   .cal-grid { font-size: 10px; }
-  .cal-cell { min-height: 40px; }
+  .cal-cell { min-height: 38px; padding: 3px; }
+  .cal-ev   { font-size: 10px; padding: 1px 3px; }
+  .cal-nav  { flex-wrap: wrap; gap: 6px; }
 
   /* ── Sidebar drawer ── */
   #sidebar.mob-open {
@@ -909,10 +939,11 @@ dialog::backdrop{background:rgba(0,0,0,.38)}
     width: 82vw !important; max-width: 300px !important;
     height: 100dvh !important;
     z-index: 500 !important;
-    box-shadow: 4px 0 24px rgba(0,0,0,.4) !important;
+    box-shadow: 4px 0 32px rgba(0,0,0,.45) !important;
     overflow-y: auto !important;
     flex-direction: column;
     background: var(--bg4) !important;
+    padding-top: env(safe-area-inset-top, 0px);
   }
   #sidebar.mob-open #task-sidebar-inner { display: block !important; }
   #sidebar.mob-open #lb-sidebar-inner   { display: block !important; }
@@ -923,14 +954,28 @@ dialog::backdrop{background:rgba(0,0,0,.38)}
     position: fixed; inset: 0;
     background: rgba(0,0,0,.5);
     z-index: 499;
+    -webkit-tap-highlight-color: transparent;
   }
   #mob-overlay.show { display: block !important; }
 
-  /* ── Insights strip ── */
-  #insights-strip { font-size: 11px; }
+  /* ── More menu ── */
+  #mob-more-menu {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  #mob-more-menu button { min-height: 52px !important; font-size: 15px !important; }
+
+  /* ── Focus view ── */
+  #view-focus .view-wrap { height: 100%; }
+  .focus-card { padding: 14px 16px !important; }
 
   /* ── Habits ── */
-  #habits-grid > div { overflow-x: auto; }
+  #habits-grid > div { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  /* ── Timeline ── */
+  #timeline-grid { overflow: auto; -webkit-overflow-scrolling: touch; }
+
+  /* ── Command palette ── */
+  #cmd-palette { padding-top: env(safe-area-inset-top, 0px); }
 }
 
 /* Desktop: hide mobile-only elements */
@@ -1147,6 +1192,122 @@ body.dark .note-md-preview .md-code{background:#2a2a2a}
 body.dark .note-md-preview .md-inline{background:#333}
 
 /* ── RECURRING MODAL ── */
+
+/* ── iOS SPECIFIC ── */
+
+/* ── iOS NOTE LIST ── */
+.ios-note-row {
+  background: var(--bg4);
+  border-radius: var(--r);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+.ios-note-row.ios-open { border-color: var(--accent); }
+.ios-note-collapsed {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  cursor: pointer;
+  gap: 10px;
+  -webkit-tap-highlight-color: transparent;
+}
+.ios-note-collapsed:active { background: var(--bg3); }
+.ios-note-left { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+.ios-note-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.ios-note-info { flex: 1; min-width: 0; }
+.ios-note-title { font-size: 14px; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ios-note-preview { font-size: 12px; color: var(--text3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+.ios-note-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+.ios-note-date { font-size: 11px; color: var(--text4); }
+.ios-note-expanded { border-top: 1px solid var(--border); }
+.ios-note-textarea {
+  width: 100%; min-height: 140px; padding: 12px 14px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 14px; line-height: 1.6;
+  border: none; background: var(--bg4); color: var(--text);
+  resize: none; outline: none; box-sizing: border-box;
+  -webkit-user-select: text; user-select: text;
+}
+.ios-note-actions {
+  display: flex;
+  border-top: 1px solid var(--border);
+  gap: 0;
+}
+.ios-note-btn {
+  flex: 1; padding: 12px 8px;
+  font-size: 13px; font-weight: 600;
+  border: none; background: var(--bg3);
+  cursor: pointer; font-family: var(--font);
+  -webkit-tap-highlight-color: transparent;
+}
+.ios-note-btn:active { opacity: .7; }
+.ios-note-edit { color: var(--accent); border-right: 1px solid var(--border); }
+.ios-note-delete { color: var(--pri-high); }
+
+/* ── iOS TASK BOARD ── */
+.ios-col-tab {
+  flex-shrink: 0;
+  padding: 7px 14px;
+  font-size: 12px; font-weight: 700;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--bg4); color: var(--text2);
+  cursor: pointer; font-family: var(--font);
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+}
+.ios-col-tab.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+.ios-col-count { font-size: 10px; font-weight: 800; opacity: .8; margin-left: 3px; }
+.ios-task-row {
+  display: flex;
+  align-items: stretch;
+  background: var(--bg4);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+.ios-task-stripe { width: 5px; flex-shrink: 0; }
+.ios-task-body { flex: 1; padding: 11px 12px; cursor: pointer; min-width: 0; }
+.ios-task-body:active { background: var(--bg3); }
+.ios-task-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 3px; word-break: break-word; line-height: 1.3; }
+.ios-task-notes { font-size: 12px; color: var(--text3); margin-bottom: 5px; line-height: 1.4; }
+.ios-task-meta { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.ios-task-actions {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  border-left: 1px solid var(--border);
+}
+.ios-task-btn {
+  flex: 1; padding: 0 14px;
+  border: none; background: transparent;
+  font-size: 16px; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  display: flex; align-items: center; justify-content: center;
+}
+.ios-task-btn:first-child { border-bottom: 1px solid var(--border); }
+.ios-task-btn:active { background: var(--bg2); }
+.ios-task-btn.del { color: var(--pri-high); }
+.ios-empty-col { text-align: center; padding: 40px 20px; color: var(--text4); font-size: 13px; }
+
+/* ── iOS MOVE SHEET ── */
+.ios-sheet-header { padding: 14px 20px 8px; font-size: 12px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: .5px; }
+.ios-sheet-btn {
+  display: block; width: 100%;
+  padding: 16px 20px;
+  text-align: left; font-size: 16px; font-weight: 500;
+  border: none; border-top: 1px solid var(--border);
+  background: var(--bg4); color: var(--text);
+  cursor: pointer; font-family: var(--font);
+  -webkit-tap-highlight-color: transparent;
+}
+.ios-sheet-btn:active { background: var(--bg3); }
+.ios-sheet-btn.active { color: var(--accent); font-weight: 700; }
+.ios-sheet-btn.cancel { color: var(--pri-high); font-weight: 600; }
+
 </style>
 </head>
 <body>
@@ -3691,6 +3852,7 @@ function exportDataJSON(){
 let notesSectorFilter = 'all';
 let noteSaveTimers = {};
 function renderNotes(){
+  // Sector filter dropdown
   const sel = document.getElementById('notes-sector-filter');
   if(sel){
     sel.innerHTML = '<option value="all">All Sectors</option>' +
@@ -3705,52 +3867,87 @@ function renderNotes(){
       if(cat) scopeEl.innerHTML=`· <span style="color:${cat.color}">${esc(cat.label)}</span>`;
     }
   }
+
   const canvas = document.getElementById('notes-canvas');
   if(!canvas) return;
+
   const filtered = notesSectorFilter==='all'
     ? S.notes
     : S.notes.filter(n=>n.category===notesSectorFilter);
+
   if(!filtered.length){
     canvas.innerHTML='<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;color:var(--text4);font-size:14px;pointer-events:none">No notes yet. Click "+ New Note" to create one.</div>';
     return;
   }
-  const existingIds = new Set(Array.from(canvas.querySelectorAll('.note-pad')).map(el=>el.dataset.noteId));
-  const currentIds = new Set(filtered.map(n=>n.id));
-  existingIds.forEach(id=>{if(!currentIds.has(id)){const el=canvas.querySelector('[data-note-id="'+id+'"]');if(el)el.remove();}});
-  canvas.querySelector('.empty-msg') && canvas.querySelector('.empty-msg').remove();
-  filtered.forEach(note=>{
-    const cat=catById(note.category);
+
+  // Remove any stale empty-state message
+  const emptyMsg = canvas.querySelector(':not([data-note-id])');
+  if(emptyMsg) emptyMsg.remove();
+
+  // Remove pads for notes no longer in filtered set
+  Array.from(canvas.querySelectorAll('.note-pad')).forEach(el => {
+    if(!filtered.find(n => n.id === el.dataset.noteId)) el.remove();
+  });
+
+  // Auto-place notes that have no saved position yet
+  // Use a stable grid based on creation order, not filtered index
+  const allNotes = S.notes;
+  filtered.forEach((note, filteredIdx) => {
     let pad = canvas.querySelector('[data-note-id="'+note.id+'"]');
     const isNew = !pad;
-    if(!pad){
+
+    if(isNew){
       pad = document.createElement('div');
-      pad.className='note-pad';
+      pad.className = 'note-pad';
       pad.dataset.noteId = note.id;
       canvas.appendChild(pad);
     }
-    const pos = note.canvasPos || null;
-    const size = note.canvasSize || null;
+
+    // Set position — only on new pads or pads with no position yet
     if(isNew || !pad.style.left){
-      if(pos){
-        pad.style.left = pos.x+'px';
-        pad.style.top  = pos.y+'px';
+      if(note.canvasPos){
+        pad.style.left = note.canvasPos.x + 'px';
+        pad.style.top  = note.canvasPos.y + 'px';
       } else {
-        const idx = filtered.indexOf(note);
-        const col = idx % 3;
-        const row = Math.floor(idx/3);
-        pad.style.left = (20 + col*280)+'px';
-        pad.style.top  = (20 + row*220)+'px';
+        // Auto-grid — save immediately so position is stable
+        const globalIdx = allNotes.indexOf(note);
+        const stableIdx = globalIdx >= 0 ? globalIdx : filteredIdx;
+        const col = stableIdx % 3;
+        const row = Math.floor(stableIdx / 3);
+        const x = 20 + col * 290;
+        const y = 20 + row * 230;
+        pad.style.left = x + 'px';
+        pad.style.top  = y + 'px';
+        // Save immediately so this position persists
+        note.canvasPos = {x, y};
+        scheduleSave();
       }
     }
-    pad.style.width  = size ? size.w+'px' : '260px';
-    pad.style.height = size ? size.h+'px' : '200px';
+
+    // Set size
+    if(note.canvasSize){
+      pad.style.width  = note.canvasSize.w + 'px';
+      pad.style.height = note.canvasSize.h + 'px';
+    } else if(isNew){
+      pad.style.width  = '260px';
+      pad.style.height = '200px';
+    }
+
+    // Only rebuild innerHTML on new pads or when content changed
+    // Use a content hash to avoid unnecessary rebuilds
+    const cat = catById(note.category);
+    const contentHash = note.title + '|' + note.content + '|' + note.category + '|' + (note.updatedAt||'');
+    if(pad.dataset.contentHash === contentHash) return; // nothing changed, skip
+    pad.dataset.contentHash = contentHash;
+
     pad.innerHTML = `
       <div class="note-pad-bar" onmousedown="noteStartDrag(event,'${note.id}')">
         <span class="note-pad-title-text">${esc(note.title||'Untitled')}</span>
         <span style="flex:1"></span>
         <span class="note-pad-sector-tag" style="background:${cat.color};color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;letter-spacing:.3px;white-space:nowrap;flex-shrink:0;margin-right:4px">${esc(cat.label)}</span>
         <div class="note-pad-btns" onmousedown="event.stopPropagation()">
-          <button class="note-pad-btn edit" onclick="noteOpenEdit('${note.id}')" title="Edit title & sector" style="background:#f0c040;font-size:9px">✎</button>
+          <button class="note-pad-btn" onclick="toggleNoteMarkdown('${note.id}')" title="Preview markdown" style="background:#7c3aed;font-size:8px">MD</button>
+          <button class="note-pad-btn edit" onclick="noteOpenEdit('${note.id}')" title="Edit title &amp; sector" style="background:#f0c040;font-size:9px">✎</button>
           <button class="note-pad-btn close" onclick="deleteNote('${note.id}')" title="Close">✕</button>
         </div>
       </div>
@@ -6449,6 +6646,279 @@ window.addEventListener('load', function() {
     }, 80);
   };
 });</script>
+
+<!-- iOS Board: column picker + list (only visible on mobile) -->
+<div id="ios-board-shell" style="display:none;flex-direction:column;height:100%;overflow:hidden">
+  <div id="ios-col-picker" style="display:flex;overflow-x:auto;flex-shrink:0;padding:8px;gap:6px;background:var(--bg3);border-bottom:1px solid var(--border);-webkit-overflow-scrolling:touch;scrollbar-width:none"></div>
+  <div id="ios-board-list" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:8px;display:flex;flex-direction:column;gap:6px"></div>
+</div>
+<!-- iOS move-to-column sheet -->
+<div id="ios-sheet-overlay" onclick="iosHideSheet()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:800"></div>
+<div id="ios-move-sheet" style="display:none;position:fixed;bottom:56px;left:0;right:0;background:var(--bg4);border-top:1px solid var(--border);border-radius:18px 18px 0 0;z-index:801;padding:8px 0 4px;max-height:60dvh;overflow-y:auto"></div>
+
+<script>
+
+// ════════════════════════════════════════════════════════
+// iOS-SPECIFIC VIEW OVERRIDES
+// Only active on screen width ≤ 768px
+// Desktop is completely unaffected
+// ════════════════════════════════════════════════════════
+
+var _iosOrigRenderNotes = null;
+var _iosOrigRenderBoard = null;
+var _iosOrigBuildBoard  = null;
+
+function isIOS() { return window.innerWidth <= 768; }
+
+// ── iOS NOTES: simple list view ──────────────────────────
+function iosRenderNotes() {
+  // Sector filter dropdown (reuse existing)
+  var sel = document.getElementById('notes-sector-filter');
+  if (sel) {
+    sel.innerHTML = '<option value="all">All Sectors</option>' +
+      S.categories.map(function(c){ return '<option value="' + c.id + '">' + esc(c.label) + '</option>'; }).join('');
+    sel.value = notesSectorFilter;
+  }
+
+  var canvas = document.getElementById('notes-canvas');
+  if (!canvas) return;
+
+  var filtered = notesSectorFilter === 'all'
+    ? (S.notes || [])
+    : (S.notes || []).filter(function(n){ return n.category === notesSectorFilter; });
+
+  if (!filtered.length) {
+    canvas.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--text4);font-size:14px">No notes yet. Tap "+ New Note" to create one.</div>';
+    return;
+  }
+
+  // Render as a scrollable list (iPhone Notes style)
+  canvas.style.cssText = 'overflow:auto;-webkit-overflow-scrolling:touch;height:100%;background:var(--bg2);border-radius:0;border:none;cursor:default;user-select:none;position:static;min-height:0;background-image:none;';
+
+  canvas.innerHTML = filtered.map(function(note) {
+    var cat = catById(note.category);
+    var preview = (note.content || '').replace(/\n/g, ' ').slice(0, 60);
+    var updated = note.updatedAt ? new Date(note.updatedAt).toLocaleDateString('en-US', {month:'short', day:'numeric'}) : '';
+    var nid = note.id;
+    return '<div class="ios-note-row" id="ios-note-' + nid + '">' +
+      '<div class="ios-note-collapsed" onclick="iosToggleNote(' + JSON.stringify(nid) + ')">' +
+        '<div class="ios-note-left">' +
+          '<div class="ios-note-dot" style="background:' + cat.color + '"></div>' +
+          '<div class="ios-note-info">' +
+            '<div class="ios-note-title">' + esc(note.title || 'Untitled') + '</div>' +
+            '<div class="ios-note-preview">' + esc(preview || 'No text') + '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="ios-note-meta">' +
+          '<div class="ios-note-date">' + updated + '</div>' +
+          '<div style="color:var(--text4);font-size:20px;line-height:1">›</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="ios-note-expanded" id="ios-exp-' + nid + '" style="display:none">' +
+        '<textarea class="ios-note-textarea" oninput="updateNoteField(' + JSON.stringify(nid) + ',\'content\',this.value)" ontouchstart="event.stopPropagation()">' + esc(note.content || '') + '</textarea>' +
+        '<div class="ios-note-actions">' +
+          '<button class="ios-note-btn ios-note-edit" onclick="iosEditNoteTitle(' + JSON.stringify(nid) + ')">✎ Edit Title</button>' +
+          '<button class="ios-note-btn ios-note-delete" onclick="iosDeleteNote(' + JSON.stringify(nid) + ')">🗑 Delete</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function iosToggleNote(id) {
+  var exp = document.getElementById('ios-exp-' + id);
+  var row = document.getElementById('ios-note-' + id);
+  if (!exp) return;
+  var isOpen = exp.style.display !== 'none';
+  // Close all others first
+  document.querySelectorAll('.ios-note-expanded').forEach(function(el) { el.style.display = 'none'; });
+  document.querySelectorAll('.ios-note-row').forEach(function(el) { el.classList.remove('ios-open'); });
+  if (!isOpen) {
+    exp.style.display = 'block';
+    row.classList.add('ios-open');
+    // Focus textarea
+    var ta = exp.querySelector('textarea');
+    if (ta) { setTimeout(function(){ ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }, 100); }
+  }
+}
+
+function iosEditNoteTitle(id) {
+  var note = S.notes.find(function(n){ return n.id === id; });
+  if (!note) return;
+  var newTitle = prompt('Edit title:', note.title || '');
+  if (newTitle !== null) {
+    updateNoteField(id, 'title', newTitle);
+    iosRenderNotes(); // re-render list
+  }
+}
+
+function iosDeleteNote(id) {
+  var note = S.notes.find(function(n){ return n.id === id; });
+  if (!note) return;
+  if (confirm('Delete "' + (note.title || 'Untitled') + '"?')) {
+    deleteNote(id);
+  }
+}
+
+// ── iOS BOARD: column picker + vertical card list ────────
+var _iosActiveColIdx = 0;
+
+function iosBuildBoard() {
+  if (!isIOS()) { _iosOrigBuildBoard && _iosOrigBuildBoard(); return; }
+  var statuses = getStatuses();
+
+  // Build column picker tabs
+  var picker = document.getElementById('ios-col-picker');
+  if (!picker) return;
+
+  picker.innerHTML = statuses.map(function(s, idx) {
+    var count = S.tasks.filter(function(t){ return t.status === s.id; }).length;
+    return '<button class="ios-col-tab' + (idx === _iosActiveColIdx ? ' on' : '') + '" ' +
+      'onclick="iosSetCol(' + idx + ')" ontouchend="iosSetCol(' + idx + ')">' +
+      esc(s.label) + ' <span class="ios-col-count">' + count + '</span>' +
+    '</button>';
+  }).join('');
+
+  iosRenderBoardColumn();
+}
+
+function iosSetCol(idx) {
+  _iosActiveColIdx = idx;
+  // Update picker tabs
+  document.querySelectorAll('.ios-col-tab').forEach(function(t, i) {
+    t.classList.toggle('on', i === idx);
+  });
+  iosRenderBoardColumn();
+}
+
+function iosRenderBoardColumn() {
+  var list = document.getElementById('ios-board-list');
+  if (!list) return;
+  var statuses = getStatuses();
+  var col = statuses[_iosActiveColIdx];
+  if (!col) return;
+
+  var tasks = S.tasks.filter(function(t){ return t.status === col.id; });
+  if (activeCat !== 'all') tasks = tasks.filter(function(t){ return t.category === activeCat; });
+  tasks.sort(function(a,b){
+    var ao = a.sortOrder !== undefined ? a.sortOrder : 9999;
+    var bo = b.sortOrder !== undefined ? b.sortOrder : 9999;
+    return ao !== bo ? ao - bo : ({high:0,med:1,low:2}[a.priority]||1) - ({high:0,med:1,low:2}[b.priority]||1);
+  });
+
+  if (!tasks.length) {
+    list.innerHTML = '<div class="ios-empty-col">No tasks in this column.<br><button class="btn pri" onclick="openNewTask()" style="margin-top:12px;font-size:13px">+ Add Task</button></div>';
+    return;
+  }
+
+  list.innerHTML = tasks.map(function(t) {
+    var cat = catById(t.category);
+    var isFoc = S.focusTasks.includes(t.id);
+    var pc = PRI_COLOR[t.priority] || PRI_COLOR.med;
+    var diff = t.dueDate ? dueDiff(t.dueDate) : null;
+    var overdue = diff !== null && diff < 0 && t.status !== 'finished';
+    var dueToday = diff === 0 && t.status !== 'finished';
+    var dueLabel = '';
+    if (t.dueDate) {
+      var cls = overdue ? 'late' : dueToday ? 'today' : 'ok';
+      dueLabel = '<span class="c-due ' + cls + '" style="font-size:10px">' +
+        (overdue ? 'Overdue' : dueToday ? 'Due today' : 'Due ' + new Date(t.dueDate + 'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'})) +
+        '</span>';
+    }
+    return '<div class="ios-task-row" id="ios-card-' + t.id + '">' +
+      '<div class="ios-task-stripe" style="background:' + cat.color + '"></div>' +
+      '<div class="ios-task-body" onclick="openEditTask(' + JSON.stringify(t.id) + ', event)">' +
+        '<div class="ios-task-title">' + esc(t.title) + (isFoc ? ' <span style="color:var(--accent)">★</span>' : '') + '</div>' +
+        (t.notes ? '<div class="ios-task-notes">' + esc(t.notes.slice(0,60)) + (t.notes.length>60?'…':'') + '</div>' : '') +
+        '<div class="ios-task-meta">' +
+          '<span style="font-size:11px;font-weight:700;padding:1px 6px;background:' + pc + '18;color:' + pc + ';border-radius:3px">' + (t.priority || 'med').toUpperCase() + '</span>' +
+          ' <span style="font-size:11px;color:' + cat.color + ';font-weight:600">' + esc(cat.label) + '</span>' +
+          dueLabel +
+        '</div>' +
+      '</div>' +
+      '<div class="ios-task-actions">' +
+        '<button class="ios-task-btn" onclick="iosMoveTask(' + JSON.stringify(t.id) + ', event)" title="Move to column">⇄</button>' +
+        '<button class="ios-task-btn del" onclick="quickDeleteTask(' + JSON.stringify(t.id) + ', event)" title="Delete">🗑</button>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function iosMoveTask(taskId, e) {
+  e.stopPropagation();
+  var statuses = getStatuses();
+  var task = S.tasks.find(function(t){ return t.id === taskId; });
+  if (!task) return;
+  // Build a simple action sheet style picker
+  var sheet = document.getElementById('ios-move-sheet');
+  if (!sheet) return;
+  sheet.innerHTML = '<div class="ios-sheet-header">Move to column</div>' +
+    statuses.map(function(s) {
+      var active = task.status === s.id;
+      return '<button class="ios-sheet-btn' + (active ? ' active' : '') + '" onclick="iosMoveToCol(' + JSON.stringify(taskId) + ',' + JSON.stringify(s.id) + ')">' +
+        esc(s.label) + (active ? ' ✓' : '') + '</button>';
+    }).join('') +
+    '<button class="ios-sheet-btn cancel" onclick="iosHideSheet()">Cancel</button>';
+  sheet.style.display = 'block';
+  document.getElementById('ios-sheet-overlay').style.display = 'block';
+}
+
+function iosMoveToCol(taskId, statusId) {
+  var task = S.tasks.find(function(t){ return t.id === taskId; });
+  if (task) {
+    task.status = statusId;
+    task.updatedAt = now();
+    invalidateCardCache();
+    scheduleSave();
+  }
+  iosHideSheet();
+  // Update to stay on same col index if col still has tasks, else stay
+  iosBuildBoard();
+}
+
+function iosHideSheet() {
+  var sheet = document.getElementById('ios-move-sheet');
+  var overlay = document.getElementById('ios-sheet-overlay');
+  if (sheet) sheet.style.display = 'none';
+  if (overlay) overlay.style.display = 'none';
+}
+
+// ── Patch render/build on mobile ─────────────────────────
+(function patchForIOS() {
+  if (!isIOS()) return;
+
+  // Patch renderNotes
+  _iosOrigRenderNotes = renderNotes;
+  renderNotes = function() { iosRenderNotes(); };
+
+  // Patch buildBoard + renderBoard to use iOS version
+  _iosOrigBuildBoard = buildBoard;
+  _iosOrigRenderBoard = renderBoard;
+
+  buildBoard = function() {
+    // Don't rebuild the full desktop DOM — the iOS view uses its own elements
+    if (typeof iosBuildBoard === 'function') iosBuildBoard();
+  };
+
+  renderBoard = function() {
+    if (typeof iosRenderBoardColumn === 'function') iosRenderBoardColumn();
+  };
+
+  // Re-render on view switch so iOS view initialises
+  var _origSwitchView = switchView;
+  switchView = function(v, btn) {
+    _origSwitchView(v, btn);
+    if (v === 'notes') setTimeout(iosRenderNotes, 50);
+    if (v === 'board') setTimeout(iosBuildBoard, 50);
+  };
+
+  // Initial render
+  setTimeout(function() {
+    iosBuildBoard();
+  }, 200);
+})();
+
+</script>
 </body>
 </html>
 
