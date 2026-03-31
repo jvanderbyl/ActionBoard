@@ -3700,7 +3700,7 @@ function executeAction(a) {
     return;
   }
 }
-const AI_WORKER_URL = 'https://actionboard-ai.joelvanderbyl17.workers.dev';
+const AI_WORKER_URL = 'https://api.vanderbyllabs.com/ai';
 async function sendAI() {
   const inp = document.getElementById('ai-input');
   const text = inp.value.trim();
@@ -5333,72 +5333,45 @@ processAudio = async function(apiKey, mimeType) {
   cleanupVoiceUI();
   document.getElementById('ai-status').textContent = 'Transcribing…';
   if (!audioChunks.length) { document.getElementById('ai-status').textContent = 'Ready'; return; }
+
+  var oaKey = (localStorage.getItem('openai_key')||''). trim();
+  if (!oaKey) {
+    document.getElementById('ai-status').textContent = 'Ready';
+    addAIMessage('ai', '🎤 Voice needs an OpenAI API key (Whisper). Add one in Settings → OpenAI API Key. Your Anthropic key handles all AI chat.');
+    return;
+  }
+
   try {
     var blob = new Blob(audioChunks, {type: mimeType || 'audio/webm'});
+    var ext = mimeType && mimeType.includes('mp4') ? 'mp4'
+            : mimeType && mimeType.includes('ogg') ? 'ogg' : 'webm';
+    var fd = new FormData();
+    fd.append('file', blob, 'audio.' + ext);
+    fd.append('model', 'whisper-1');
 
-    // Try OpenAI Whisper first (best for audio)
-    var oaKey = (localStorage.getItem('openai_key')||'').trim();
-    if (oaKey) {
-      var ext = mimeType && mimeType.includes('mp4') ? 'mp4' : mimeType && mimeType.includes('ogg') ? 'ogg' : 'webm';
-      var fd = new FormData();
-      fd.append('file', blob, 'audio.' + ext);
-      fd.append('model', 'whisper-1');
-      var r = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-        method: 'POST',
-        headers: { 'Authorization': 'Bearer ' + oaKey },
-        body: fd
-      });
-      var d = await r.json();
-      if (d.text) {
-        document.getElementById('ai-input').value = d.text.trim();
-        autoResizeAI(document.getElementById('ai-input'));
-        document.getElementById('ai-status').textContent = 'Transcribed — sending…';
-        setTimeout(function(){ sendAI(); }, 500);
-        return;
-      }
+    var r = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + oaKey },
+      body: fd
+    });
+
+    if (!r.ok) {
+      var errData = await r.json().catch(function(){ return {}; });
+      var msg = (errData.error && errData.error.message) || ('HTTP ' + r.status);
+      document.getElementById('ai-status').textContent = 'Ready';
+      addAIMessage('ai', 'Transcription failed: ' + msg + '. Check your OpenAI API key in Settings.');
+      return;
     }
 
-    // Fallback: send audio through Worker to Claude for transcription
-    var base64 = await new Promise(function(res, rej) {
-      var fr = new FileReader();
-      fr.onloadend = function() { res(fr.result.split(',')[1]); };
-      fr.onerror = rej;
-      fr.readAsDataURL(blob);
-    });
-    var ownKey = (localStorage.getItem('anthropic_key')||'').trim();
-    var useOwnKey = ownKey.startsWith('sk-ant-');
-    var authRaw = localStorage.getItem('sb-ugkrzslioeiqzvmfievh-auth-token');
-    var authData = null;
-    try { authData = authRaw ? JSON.parse(authRaw) : null; } catch(e) {}
-    var userToken = authData ? authData.access_token : null;
-
-    var res = await fetch(AI_WORKER_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        useOwnKey: useOwnKey,
-        ownKey: useOwnKey ? ownKey : undefined,
-        userToken: userToken,
-        isAudio: true,
-        messages: [{
-          role: 'user',
-          content: [
-            { type: 'document', source: { type: 'base64', media_type: mimeType || 'audio/webm', data: base64 } },
-            { type: 'text', text: 'Transcribe this audio exactly as spoken. Return ONLY the transcription text, nothing else.' }
-          ]
-        }]
-      })
-    });
-    var data = await res.json();
-    var text = (data.content && data.content[0] && data.content[0].text) || '';
-    if (text) {
-      document.getElementById('ai-input').value = text.trim();
+    var data = await r.json();
+    if (data.text) {
+      document.getElementById('ai-input').value = data.text.trim();
       autoResizeAI(document.getElementById('ai-input'));
       document.getElementById('ai-status').textContent = 'Transcribed — sending…';
-      setTimeout(function(){ sendAI(); }, 500);
+      setTimeout(function(){ sendAI(); }, 400);
     } else {
-      addAIMessage('ai', 'Transcription failed. Add an OpenAI API key in Settings for best voice support.');
       document.getElementById('ai-status').textContent = 'Ready';
+      addAIMessage('ai', 'No transcription returned. Try speaking more clearly or check your microphone.');
     }
   } catch(e) {
     document.getElementById('ai-status').textContent = 'Ready';
