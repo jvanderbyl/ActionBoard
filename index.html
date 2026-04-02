@@ -530,7 +530,9 @@ canvas{display:block;cursor:crosshair;touch-action:none}
 #notes-canvas {
   position: relative;
   width: 100%;
-  min-height: calc(100vh - 120px);
+  /* min-height fills the view-wrap content area */
+  min-height: 100%;
+  flex: 1;
   background:
     linear-gradient(var(--border) 1px, transparent 1px),
     linear-gradient(90deg, var(--border) 1px, transparent 1px);
@@ -541,6 +543,17 @@ canvas{display:block;cursor:crosshair;touch-action:none}
   border: 1px solid var(--border);
   cursor: default;
   user-select: none;
+}
+/* Notes view-wrap: allow canvas to fill height */
+#view-notes.view-wrap {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding-bottom: 0;
+}
+#view-notes .notes-toolbar {
+  flex-shrink: 0;
+  margin-bottom: 8px;
 }
 /* Notepad-style note card */
 .note-pad {
@@ -1538,7 +1551,7 @@ body.dark .note-md-preview .md-inline{background:#333}
 
     <!-- SETTINGS VIEW -->
     <!-- NOTES VIEW -->
-    <div id="view-notes" class="view-wrap" style="display:none">
+    <div id="view-notes" class="view-wrap" style="display:none;flex-direction:column;overflow:hidden">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
         <div>
           <div class="view-title">Notes <span id="notes-scope-label" style="font-size:14px;font-weight:500;color:var(--text3)"></span></div>
@@ -3909,6 +3922,16 @@ function renderNotes(){
   // Route to list view if that mode is active (works on desktop too)
   if(typeof _notesViewMode !== 'undefined' && _notesViewMode === 'list' && !isIOS()) {
     desktopListNotes(); return;
+  }
+  // Restore canvas style (may have been overwritten by list view)
+  var _cv = document.getElementById('notes-canvas');
+  if(_cv) {
+    _cv.style.cssText = '';  // clear all inline styles first
+    // Reapply canvas-specific styles that CSS alone doesn't set
+    _cv.style.position = 'relative';
+    _cv.style.overflow = 'hidden';
+    _cv.style.userSelect = 'none';
+    _cv.style.cursor = 'default';
   }
   // Sector filter dropdown
   const sel = document.getElementById('notes-sector-filter');
@@ -6835,11 +6858,35 @@ function desktopListNotes() {
 
   if (!filtered.length) {
     canvas.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text4);font-size:14px">No notes. Click \"+ New Note\" to create one.</div>';
-    canvas.style.cssText = 'position:static;overflow-y:auto;height:100%;min-height:0;background:var(--bg2);background-image:none;border:none;border-radius:0;padding:10px 12px;box-sizing:border-box;';
+    // Set list view styles (will be cleared when switching back to canvas)
+  canvas.style.position = 'static';
+  canvas.style.overflow = 'auto';
+  canvas.style.overflowY = 'auto';
+  canvas.style.height = '100%';
+  canvas.style.minHeight = '0';
+  canvas.style.backgroundImage = 'none';
+  canvas.style.backgroundColor = 'var(--bg2)';
+  canvas.style.border = 'none';
+  canvas.style.borderRadius = '0';
+  canvas.style.padding = '10px 12px';
+  canvas.style.boxSizing = 'border-box';
+  canvas.style.cursor = 'default';
     return;
   }
 
-  canvas.style.cssText = 'position:static;overflow-y:auto;height:100%;min-height:0;background:var(--bg2);background-image:none;border:none;border-radius:0;padding:10px 12px;box-sizing:border-box;';
+  // Set list view styles (will be cleared when switching back to canvas)
+  canvas.style.position = 'static';
+  canvas.style.overflow = 'auto';
+  canvas.style.overflowY = 'auto';
+  canvas.style.height = '100%';
+  canvas.style.minHeight = '0';
+  canvas.style.backgroundImage = 'none';
+  canvas.style.backgroundColor = 'var(--bg2)';
+  canvas.style.border = 'none';
+  canvas.style.borderRadius = '0';
+  canvas.style.padding = '10px 12px';
+  canvas.style.boxSizing = 'border-box';
+  canvas.style.cursor = 'default';
 
   // Remove pads for deleted notes
   Array.from(canvas.querySelectorAll('.note-pad,.ios-note-row')).forEach(function(el) {
