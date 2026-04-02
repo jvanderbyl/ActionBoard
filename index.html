@@ -1114,6 +1114,25 @@ dialog::backdrop{background:rgba(0,0,0,.38)}
 
   /* ── Snap section fix ── */
   #snap-section { grid-column: 1 !important; }
+
+  /* ── iOS modal: always visible, scrollable ── */
+  dialog {
+    top: env(safe-area-inset-top, 0px) !important;
+    max-height: calc(100dvh - env(safe-area-inset-top, 0px)) !important;
+    overflow-y: auto !important;
+  }
+  /* ── iOS settings: scrollable ── */
+  #view-settings { overflow-y: auto !important; }
+  #view-settings .view-wrap { height: auto !important; padding-bottom: 40px !important; }
+  /* ── iOS topbar: show sync status, hide clutter ── */
+  .tb-right { display: flex !important; }
+  .tb-right .wbtn:not([title*="sign"]):not([title*="Sign"]):not(.sync-indicator) { display: none !important; }
+  .save-status { display: block !important; font-size: 10px !important; }
+  /* ── iOS note textarea: editable ── */
+  .ios-note-textarea { -webkit-user-select: text !important; user-select: text !important; pointer-events: auto !important; cursor: text !important; }
+  /* ── iOS note title input ── */
+  .ios-note-edit input, .ios-note-edit textarea { -webkit-user-select: text !important; pointer-events: auto !important; }
+
 }
 
 
@@ -1163,9 +1182,6 @@ dialog::backdrop{background:rgba(0,0,0,.38)}
 .c-progress-label{position:absolute;right:0;top:-1px;font-size:9px;font-weight:700;color:var(--text4);line-height:1}
 .c-recurring-badge{font-size:10px;color:var(--text4);margin-bottom:2px;display:inline-block}
 
-/* ── GRAPH VIEW ── */
-#view-graph{display:none;flex-direction:column;flex:1;overflow:hidden}
-#graph-canvas{width:100%;flex:1;cursor:default}
 
 /* ── ONBOARDING ── */
 #onboarding-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;align-items:center;justify-content:center}
@@ -1308,6 +1324,20 @@ body.dark .note-md-preview .md-inline{background:#333}
 .ios-sheet-btn.active { color: var(--accent); font-weight: 700; }
 .ios-sheet-btn.cancel { color: var(--pri-high); font-weight: 600; }
 
+
+/* ── NOTE CANVAS ARROWS ── */
+.note-arrow-layer { position:absolute; inset:0; pointer-events:none; z-index:1; overflow:visible; }
+.note-arrow-btn {
+  position:absolute; bottom:6px; left:6px;
+  width:20px; height:20px; border-radius:50%;
+  background:var(--accent); color:#fff;
+  border:none; cursor:crosshair; font-size:11px;
+  display:flex; align-items:center; justify-content:center;
+  z-index:10; pointer-events:all; opacity:.7;
+  transition:opacity .15s;
+}
+.note-arrow-btn:hover { opacity:1; }
+.note-arrow-btn.drawing { opacity:1; background:var(--pri-high); animation:ai-pulse 1s infinite; }
 </style>
 </head>
 <body>
@@ -1381,7 +1411,6 @@ body.dark .note-md-preview .md-inline{background:#333}
     <button class="navtab"     onclick="switchView('archive',this)">Archive</button>
     <button class="navtab"     onclick="switchView('habits',this)">Habits</button>
     <button class="navtab"     onclick="switchView('timeline',this)">Timeline</button>
-    <button class="navtab"     onclick="switchView('graph',this)">Graph</button>
     <button class="navtab"     onclick="switchView('settings',this)">Settings</button>
   </div>
   <div class="tb-drag-spacer"></div>
@@ -1520,6 +1549,7 @@ body.dark .note-md-preview .md-inline{background:#333}
             <option value="all">All Sectors</option>
           </select>
           <button class="btn pri" onclick="openNewNote()">+ New Note</button>
+          <button class="btn" id="notes-view-toggle" onclick="toggleNotesView()" title="Switch between canvas and list view">⋯ List View</button>
         </div>
       </div>
       <div id="notes-canvas"></div>
@@ -1551,19 +1581,7 @@ body.dark .note-md-preview .md-inline{background:#333}
         <span style="font-size:11px;color:var(--text4);margin-left:8px">Tasks with due dates appear here</span>
       </div>
       <div id="timeline-grid"></div>
-    </div>
-
-    <!-- GRAPH VIEW -->
-    <div id="view-graph" style="display:none;flex-direction:column;flex:1;overflow:hidden">
-      <div style="padding:10px 16px;background:var(--bg3);border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:12px">
-        <span style="font-size:14px;font-weight:700;color:var(--text)">Note Graph</span>
-        <span style="font-size:12px;color:var(--text3)">Notes grouped by sector • Click a node to open</span>
-        <button class="btn" onclick="renderNoteGraph()" style="margin-left:auto;font-size:12px">Refresh</button>
-      </div>
-      <canvas id="graph-canvas" style="flex:1;width:100%"></canvas>
-    </div>
-
-    <div id="view-settings" class="view-wrap" style="display:none">
+    </div><div id="view-settings" class="view-wrap" style="display:none">
       <div class="view-title">Settings</div>
       <div class="view-sub">Storage, backup, and app configuration.</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:26px;max-width:960px" id="settings-grid"></div>
@@ -2424,16 +2442,25 @@ function renderEventsPanel(){
 function toggleFocus(id,e){
   if(e)e.stopPropagation();
   if(S.focusTasks.includes(id)) S.focusTasks=S.focusTasks.filter(f=>f!==id);
-  else if(S.focusTasks.length<3) S.focusTasks.push(id);
+  else S.focusTasks.push(id);
   invalidateCardCache();render();scheduleSave();
+}
+function moveFocusTask(id,dir,e){
+  if(e)e.stopPropagation();
+  var idx=S.focusTasks.indexOf(id);
+  if(idx===-1)return;
+  var newIdx=idx+dir;
+  if(newIdx<0||newIdx>=S.focusTasks.length)return;
+  S.focusTasks.splice(idx,1);
+  S.focusTasks.splice(newIdx,0,id);
+  renderFocus();scheduleSave();
 }
 function renderFocus(){
   const focused=S.tasks.filter(t=>S.focusTasks.includes(t.id));
   const avail=S.tasks.filter(t=>!S.focusTasks.includes(t.id)&&t.status!=='finished');
-  document.getElementById('focus-badge').textContent=`${focused.length}/3`;
+  document.getElementById('focus-badge').textContent=`${focused.length} focused`;
   const slots=document.getElementById('focus-slots');
-  slots.innerHTML=[0,1,2].map(i=>{
-    const t=focused[i];
+  slots.innerHTML=focused.map((t,i)=>{
     if(!t)return`<div class="empty-focus"><div class="empty-num">${i+1}</div><span style="font-size:13px;color:var(--text4)">Empty — add from list below</span></div>`;
     const cat=catById(t.category);const pc=PRI_COLOR[t.priority]||PRI_COLOR.med;
     return`<div class="focus-card">
@@ -2455,7 +2482,7 @@ function renderFocus(){
     </div>`;
   }).join('');
   const ah=document.getElementById('avail-head'),al=document.getElementById('avail-list');
-  if(S.focusTasks.length<3&&avail.length){
+  if(avail.length){
     ah.style.display='flex';document.getElementById('avail-badge').textContent=avail.length;
     al.innerHTML=[...avail].sort((a,b)=>({high:0,med:1,low:2}[a.priority]-{high:0,med:1,low:2}[b.priority])).map(t=>{
       const cat=catById(t.category);const st=STATUSES.find(s=>s.id===t.status);
@@ -3091,6 +3118,10 @@ function renderSettings(){
     </div>
     <div style="display:flex;gap:6px;flex-wrap:wrap">
       <button class="btn" onclick="exportDataJSON()">Export JSON</button>
+          <label class="btn" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px">
+            📥 Import JSON
+            <input type="file" accept=".json" style="display:none" onchange="importDataJSON(this.files[0]);this.value=''"/>
+          </label>
     </div>
     <div style="margin-top:20px"><div class="settings-sec-title">AI Assistant</div>
     <div class="info-block" style="border-color:var(--accent);background:rgba(99,102,241,.06);font-size:12px;line-height:1.7">
@@ -3151,8 +3182,8 @@ function switchView(v,btn){
   curView=v;
   document.querySelectorAll('.navtab').forEach(b=>b.classList.remove('on'));
   btn.classList.add('on');
-  const flexViews = new Set(['board','learnboard','timeline','graph']);
-  ['board','focus','calendar','learning','learnboard','notes','archive','habits','timeline','graph','settings'].forEach(id=>{
+  const flexViews = new Set(['board','learnboard','timeline']);
+  ['board','focus','calendar','learning','learnboard','notes','archive','habits','timeline','settings'].forEach(id=>{
     const el=document.getElementById('view-'+id);
     if(el) el.style.display = id===v ? (flexViews.has(id)?'flex':'block') : 'none';
   });
@@ -3165,7 +3196,6 @@ function switchView(v,btn){
   if(v==='habits')     { ensureHabitsV2 && ensureHabitsV2(); renderHabits(); }
   if(v==='archive')    renderArchive();
   if(v==='timeline')   renderTimeline();
-  if(v==='graph')      { setTimeout(function(){ renderNoteGraph(); initGraphClickHandler(); }, 100); }
   if(v==='settings')   renderSettings();
 }
 function updateSB(){
@@ -3849,9 +3879,37 @@ function exportDataJSON(){
   a.href = url; a.download = `actionboard-export-${new Date().toISOString().slice(0,10)}.json`;
   a.click(); URL.revokeObjectURL(url);
 }
+function importDataJSON(file){
+  if(!file)return;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      var imported=JSON.parse(e.target.result);
+      if(!imported.tasks&&!imported.notes){alert('Invalid Action Board export file.');return;}
+      // Save current data as a snapshot before overwriting
+      var snaps=[];
+      try{snaps=JSON.parse(localStorage.getItem('ab-snapshots')||'[]');}catch(x){}
+      snaps.unshift({date:new Date().toISOString(),label:'Before import '+new Date().toLocaleDateString(),data:JSON.parse(JSON.stringify(S))});
+      snaps=snaps.slice(0,10);
+      localStorage.setItem('ab-snapshots',JSON.stringify(snaps));
+      // Apply imported data
+      S=Object.assign(makeSeed(),imported);
+      if(typeof ensureStateFields==='function')ensureStateFields();
+      invalidateCardCache();
+      render();
+      doSave();
+      alert('✓ Import successful! '+((imported.tasks||[]).length)+' tasks, '+((imported.notes||[]).length)+' notes loaded.\nPrevious data saved as a snapshot in Settings.');
+    }catch(err){alert('Import failed: '+err.message);}
+  };
+  reader.readAsText(file);
+}
 let notesSectorFilter = 'all';
 let noteSaveTimers = {};
 function renderNotes(){
+  // Route to list view if that mode is active (works on desktop too)
+  if(typeof _notesViewMode !== 'undefined' && _notesViewMode === 'list' && !isIOS()) {
+    desktopListNotes(); return;
+  }
   // Sector filter dropdown
   const sel = document.getElementById('notes-sector-filter');
   if(sel){
@@ -3967,6 +4025,7 @@ function renderNotes(){
       <div class="note-pad-footer">
         <span style="color:rgba(0,0,0,.35);font-size:10px">${note.updatedAt?new Date(note.updatedAt).toLocaleDateString('en-US',{month:'short',day:'numeric'}):''}</span>
       </div>
+      <button class="note-pad-btn" style="position:absolute;bottom:6px;left:6px;width:18px;height:18px;border-radius:50%;background:var(--accent);color:#fff;border:none;cursor:crosshair;font-size:10px;z-index:10;opacity:.7;padding:0;display:flex;align-items:center;justify-content:center" data-arrow-note="${note.id}" onclick="startArrowDraw('${note.id}')" title="Draw arrow to another note">→</button>
       <div class="note-pad-resize" onmousedown="noteStartResize(event,'${note.id}')"></div>
     `;
   });
@@ -5333,36 +5392,27 @@ processAudio = async function(apiKey, mimeType) {
   cleanupVoiceUI();
   document.getElementById('ai-status').textContent = 'Transcribing…';
   if (!audioChunks.length) { document.getElementById('ai-status').textContent = 'Ready'; return; }
-
-  var oaKey = (localStorage.getItem('openai_key')||''). trim();
+  var oaKey = (localStorage.getItem('openai_key')||'').trim();
   if (!oaKey) {
     document.getElementById('ai-status').textContent = 'Ready';
-    addAIMessage('ai', '🎤 Voice needs an OpenAI API key (Whisper). Add one in Settings → OpenAI API Key. Your Anthropic key handles all AI chat.');
+    addAIMessage('ai', '🎤 Voice needs an OpenAI API key (Whisper). Add one in Settings → OpenAI API Key.');
     return;
   }
-
   try {
     var blob = new Blob(audioChunks, {type: mimeType || 'audio/webm'});
-    var ext = mimeType && mimeType.includes('mp4') ? 'mp4'
-            : mimeType && mimeType.includes('ogg') ? 'ogg' : 'webm';
+    var ext = mimeType && mimeType.includes('mp4') ? 'mp4' : mimeType && mimeType.includes('ogg') ? 'ogg' : 'webm';
+    // Route through Worker to bypass CSP restrictions
+    var whisperURL = AI_WORKER_URL.replace('/ai', '/whisper');
     var fd = new FormData();
     fd.append('file', blob, 'audio.' + ext);
-    fd.append('model', 'whisper-1');
-
-    var r = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-      method: 'POST',
-      headers: { 'Authorization': 'Bearer ' + oaKey },
-      body: fd
-    });
-
+    fd.append('openaiKey', oaKey);
+    var r = await fetch(whisperURL, { method: 'POST', body: fd });
     if (!r.ok) {
       var errData = await r.json().catch(function(){ return {}; });
-      var msg = (errData.error && errData.error.message) || ('HTTP ' + r.status);
       document.getElementById('ai-status').textContent = 'Ready';
-      addAIMessage('ai', 'Transcription failed: ' + msg + '. Check your OpenAI API key in Settings.');
+      addAIMessage('ai', 'Transcription failed: ' + (errData.error || 'HTTP ' + r.status) + '. Check your OpenAI key in Settings.');
       return;
     }
-
     var data = await r.json();
     if (data.text) {
       document.getElementById('ai-input').value = data.text.trim();
@@ -5371,7 +5421,7 @@ processAudio = async function(apiKey, mimeType) {
       setTimeout(function(){ sendAI(); }, 400);
     } else {
       document.getElementById('ai-status').textContent = 'Ready';
-      addAIMessage('ai', 'No transcription returned. Try speaking more clearly or check your microphone.');
+      addAIMessage('ai', 'No transcription returned. Try speaking more clearly.');
     }
   } catch(e) {
     document.getElementById('ai-status').textContent = 'Ready';
@@ -6233,140 +6283,9 @@ function showSyncToast() {
 // ════════════════════════════════════════════════════════════════════
 // Store node positions for click handling
 var _graphNodeData = [];
-function renderNoteGraph() {
-  const canvas = document.getElementById('graph-canvas');
-  if (!canvas) return;
-  // Set canvas size to match container
-  const container = canvas.parentElement;
-  canvas.width  = container.offsetWidth  || 800;
-  canvas.height = (container.offsetHeight || 500) - 50;
-  const ctx = canvas.getContext('2d');
-  const W = canvas.width;
-  const H = canvas.height;
-  const isDark = document.body.classList.contains('dark');
-  ctx.clearRect(0, 0, W, H);
-  // Draw background grid
-  ctx.strokeStyle = isDark ? 'rgba(255,255,255,.04)' : 'rgba(0,0,0,.04)';
-  ctx.lineWidth = 1;
-  for (let x = 0; x < W; x += 40) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
-  for (let y = 0; y < H; y += 40) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
-  const notes = S.notes || [];
-  const tasks = S.tasks.filter(t => t.status !== 'finished').slice(0, 12);
-  if (!notes.length && !tasks.length) {
-    ctx.fillStyle = isDark ? '#888' : '#aaa';
-    ctx.font = '14px system-ui';
-    ctx.textAlign = 'center';
-    ctx.fillText('No notes yet. Create some notes to see the graph.', W/2, H/2);
-    return;
-  }
-  // Position note nodes in outer ring
-  const noteNodes = notes.map((n, i) => {
-    const angle = (i / Math.max(notes.length, 1)) * Math.PI * 2 - Math.PI / 2;
-    const r = Math.min(W, H) * 0.36;
-    return {
-      id: n.id, type: 'note', title: n.title || 'Untitled',
-      x: W/2 + Math.cos(angle) * r,
-      y: H/2 + Math.sin(angle) * r,
-      cat: catById(n.category), radius: 20
-    };
-  });
-  // Position task nodes in inner ring
-  const taskNodes = tasks.map((t, i) => {
-    const angle = (i / Math.max(tasks.length, 1)) * Math.PI * 2 - Math.PI / 2;
-    const r = Math.min(W, H) * 0.18;
-    return {
-      id: t.id, type: 'task', title: t.title,
-      x: W/2 + Math.cos(angle) * r,
-      y: H/2 + Math.sin(angle) * r,
-      cat: catById(t.category), radius: 12
-    };
-  });
-  _graphNodeData = [...noteNodes, ...taskNodes];
-  // Draw edges between same-sector notes
-  ctx.lineWidth = 1.5;
-  for (let i = 0; i < noteNodes.length; i++) {
-    for (let j = i + 1; j < noteNodes.length; j++) {
-      if (notes[i].category === notes[j].category) {
-        const alpha = isDark ? 0.2 : 0.15;
-        ctx.strokeStyle = noteNodes[i].cat.color + Math.round(alpha * 255).toString(16).padStart(2,'0');
-        ctx.beginPath();
-        ctx.moveTo(noteNodes[i].x, noteNodes[i].y);
-        ctx.lineTo(noteNodes[j].x, noteNodes[j].y);
-        ctx.stroke();
-      }
-    }
-  }
-  // Draw nodes
-  _graphNodeData.forEach(n => {
-    // Shadow
-    ctx.shadowColor = 'rgba(0,0,0,.2)';
-    ctx.shadowBlur = 8;
-    // Circle
-    ctx.beginPath();
-    ctx.arc(n.x, n.y, n.radius, 0, Math.PI * 2);
-    ctx.fillStyle = n.cat.color;
-    ctx.fill();
-    ctx.shadowBlur = 0;
-    // White border
-    ctx.strokeStyle = isDark ? 'rgba(255,255,255,.3)' : 'rgba(255,255,255,.8)';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    // Icon in center
-    ctx.fillStyle = '#fff';
-    ctx.font = `${n.radius * 0.7}px system-ui`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(n.type === 'note' ? '📄' : '✓', n.x, n.y);
-    // Label below
-    ctx.fillStyle = isDark ? '#ccc' : '#333';
-    ctx.font = `${n.type === 'note' ? 11 : 10}px system-ui`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'top';
-    const label = n.title.slice(0, 16) + (n.title.length > 16 ? '…' : '');
-    ctx.fillText(label, n.x, n.y + n.radius + 5);
-  });
-  // Legend
-  ctx.font = '11px system-ui';
-  ctx.textAlign = 'left';
-  ctx.textBaseline = 'middle';
-  ctx.fillStyle = isDark ? '#888' : '#999';
-  ctx.fillText('● Notes (outer) · ● Tasks (inner) · Click any node to open · Lines = same sector or dependency', 12, H - 16);
-}
+
 // Click handler for graph nodes — wire on load
-function initGraphClickHandler() {
-  const canvas = document.getElementById('graph-canvas');
-  if (!canvas || canvas._graphClickAdded) return;
-  canvas._graphClickAdded = true;
-  canvas.addEventListener('click', function(e) {
-    const rect = canvas.getBoundingClientRect();
-    const mx = e.clientX - rect.left;
-    const my = e.clientY - rect.top;
-    const hit = _graphNodeData.find(n => {
-      const dx = mx - n.x, dy = my - n.y;
-      return Math.sqrt(dx*dx + dy*dy) <= n.radius + 6;
-    });
-    if (!hit) return;
-    if (hit.type === 'note') {
-      // Switch to notes view and highlight
-      const tab = Array.from(document.querySelectorAll('.navtab')).find(t => t.textContent.trim() === 'Notes');
-      if (tab) switchView('notes', tab);
-    } else {
-      // Open task editor
-      openEditTask(hit.id);
-    }
-  });
-  // Cursor change on hover
-  canvas.addEventListener('mousemove', function(e) {
-    const rect = canvas.getBoundingClientRect();
-    const mx = e.clientX - rect.left;
-    const my = e.clientY - rect.top;
-    const hit = _graphNodeData.find(n => {
-      const dx = mx - n.x, dy = my - n.y;
-      return Math.sqrt(dx*dx + dy*dy) <= n.radius + 6;
-    });
-    canvas.style.cursor = hit ? 'pointer' : 'default';
-  });
-}
+
 // ════════════════════════════════════════════════════════════════════
 // TIER 4C: PUBLIC BOARD SHARING
 // ════════════════════════════════════════════════════════════════════
@@ -6637,6 +6556,15 @@ window.addEventListener('load', function() {
 // Desktop is completely unaffected
 // ════════════════════════════════════════════════════════
 
+var _notesViewMode = localStorage.getItem('notes-view-mode') || 'canvas'; // 'canvas' or 'list'
+function toggleNotesView(){
+  _notesViewMode = _notesViewMode === 'canvas' ? 'list' : 'canvas';
+  localStorage.setItem('notes-view-mode', _notesViewMode);
+  var btn = document.getElementById('notes-view-toggle');
+  if(btn) btn.textContent = _notesViewMode === 'canvas' ? '⋯ List View' : '▦ Canvas View';
+  renderNotes();
+}
+
 var _iosOrigRenderNotes = null;
 var _iosOrigRenderBoard = null;
 var _iosOrigBuildBoard  = null;
@@ -6891,6 +6819,150 @@ function iosHideSheet() {
   }, 200);
 })();
 
+</script>
+<script>
+// ── DESKTOP LIST VIEW FOR NOTES ──────────────────────────
+function desktopListNotes() {
+  var canvas = document.getElementById('notes-canvas');
+  if (!canvas) return;
+  // Update toggle button
+  var btn = document.getElementById('notes-view-toggle');
+  if (btn) btn.textContent = '▦ Canvas View';
+
+  var filtered = notesSectorFilter === 'all'
+    ? (S.notes || [])
+    : (S.notes || []).filter(function(n){ return n.category === notesSectorFilter; });
+
+  if (!filtered.length) {
+    canvas.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text4);font-size:14px">No notes. Click \"+ New Note\" to create one.</div>';
+    canvas.style.cssText = 'position:static;overflow-y:auto;height:100%;min-height:0;background:var(--bg2);background-image:none;border:none;border-radius:0;padding:10px 12px;box-sizing:border-box;';
+    return;
+  }
+
+  canvas.style.cssText = 'position:static;overflow-y:auto;height:100%;min-height:0;background:var(--bg2);background-image:none;border:none;border-radius:0;padding:10px 12px;box-sizing:border-box;';
+
+  // Remove pads for deleted notes
+  Array.from(canvas.querySelectorAll('.note-pad,.ios-note-row')).forEach(function(el) {
+    if (!filtered.find(function(n){ return n.id === (el.dataset.noteId || ''); })) el.remove();
+  });
+
+  canvas.innerHTML = filtered.map(function(note) {
+    var cat = catById(note.category);
+    var updated = note.updatedAt ? new Date(note.updatedAt).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '';
+    return '<div class="ios-note-row" id="dnl-' + note.id + '">' +
+      '<div class="ios-note-collapsed" onclick="desktopToggleNote(' + JSON.stringify(note.id) + ')">' +
+        '<div class="ios-note-left">' +
+          '<div class="ios-note-dot" style="background:' + cat.color + '"></div>' +
+          '<div class="ios-note-info">' +
+            '<div class="ios-note-title">' + esc(note.title || 'Untitled') + '</div>' +
+            '<div class="ios-note-preview">' + esc((note.content||'').replace(/\n/g,' ').slice(0,60)) + '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="ios-note-meta">' +
+          '<span style="font-size:11px;font-weight:700;padding:1px 6px;border-radius:10px;background:' + cat.color + '18;color:' + cat.color + '">' + esc(cat.label) + '</span>' +
+          '<div class="ios-note-date">' + updated + '</div>' +
+          '<div style="color:var(--text4);font-size:20px;line-height:1">›</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="ios-note-expanded" id="dnl-exp-' + note.id + '" style="display:none">' +
+        '<textarea class="ios-note-textarea" oninput="updateNoteField(' + JSON.stringify(note.id) + ',\'content\',this.value)">' + esc(note.content||'') + '</textarea>' +
+        '<div class="ios-note-actions">' +
+          '<button class="ios-note-btn ios-note-edit" onclick="iosEditNoteTitle(' + JSON.stringify(note.id) + ')">✎ Edit Title</button>' +
+          '<button class="ios-note-btn ios-note-delete" onclick="iosDeleteNote(' + JSON.stringify(note.id) + ')">🗑 Delete</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function desktopToggleNote(id) {
+  var exp = document.getElementById('dnl-exp-' + id);
+  var row = document.getElementById('dnl-' + id);
+  if (!exp) return;
+  var isOpen = exp.style.display !== 'none';
+  document.querySelectorAll('.ios-note-expanded').forEach(function(el){ el.style.display='none'; });
+  document.querySelectorAll('.ios-note-row').forEach(function(el){ el.classList.remove('ios-open'); });
+  if (!isOpen) {
+    exp.style.display = 'block';
+    if (row) row.classList.add('ios-open');
+    var ta = exp.querySelector('textarea');
+    if (ta) setTimeout(function(){ ta.focus(); }, 100);
+  }
+}
+
+// ── NOTE CANVAS ARROWS ────────────────────────────────────
+var _noteArrows = []; // [{fromId, toId}]
+var _arrowDrawing = false;
+var _arrowFromId = null;
+
+function initNoteArrows() {
+  if (!S.noteArrows) S.noteArrows = [];
+  _noteArrows = S.noteArrows;
+}
+
+function renderNoteArrowLayer() {
+  var canvas = document.getElementById('notes-canvas');
+  if (!canvas || _notesViewMode === 'list') return;
+  var layer = canvas.querySelector('.note-arrow-layer');
+  if (!layer) {
+    layer = document.createElement('svg');
+    layer.className = 'note-arrow-layer';
+    layer.setAttribute('xmlns','http://www.w3.org/2000/svg');
+    layer.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1;overflow:visible;';
+    canvas.insertBefore(layer, canvas.firstChild);
+  }
+  // Draw arrows
+  if (!S.noteArrows) S.noteArrows = [];
+  layer.innerHTML = '<defs><marker id="arrowhead" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="var(--accent)"/></marker></defs>';
+  S.noteArrows.forEach(function(a) {
+    var fromEl = canvas.querySelector('[data-note-id="' + a.from + '"]');
+    var toEl   = canvas.querySelector('[data-note-id="' + a.to + '"]');
+    if (!fromEl || !toEl) return;
+    var fx = parseInt(fromEl.style.left) + fromEl.offsetWidth / 2;
+    var fy = parseInt(fromEl.style.top) + fromEl.offsetHeight / 2;
+    var tx = parseInt(toEl.style.left) + toEl.offsetWidth / 2;
+    var ty = parseInt(toEl.style.top) + toEl.offsetHeight / 2;
+    var line = document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1', fx); line.setAttribute('y1', fy);
+    line.setAttribute('x2', tx); line.setAttribute('y2', ty);
+    line.setAttribute('stroke','var(--accent)'); line.setAttribute('stroke-width','2');
+    line.setAttribute('marker-end','url(#arrowhead)');
+    line.style.pointerEvents = 'stroke';
+    line.style.cursor = 'pointer';
+    line.title = 'Click to delete arrow';
+    line.addEventListener('click', function() {
+      S.noteArrows = S.noteArrows.filter(function(x){ return !(x.from===a.from && x.to===a.to); });
+      scheduleSave();
+      renderNoteArrowLayer();
+    });
+    layer.appendChild(line);
+  });
+}
+
+function startArrowDraw(noteId) {
+  if (_arrowDrawing && _arrowFromId) {
+    // Complete the arrow
+    if (_arrowFromId !== noteId) {
+      if (!S.noteArrows) S.noteArrows = [];
+      var exists = S.noteArrows.find(function(a){ return a.from===_arrowFromId && a.to===noteId; });
+      if (!exists) {
+        S.noteArrows.push({from: _arrowFromId, to: noteId});
+        scheduleSave();
+      }
+    }
+    _arrowDrawing = false;
+    _arrowFromId = null;
+    // Reset all arrow buttons
+    document.querySelectorAll('.note-arrow-btn').forEach(function(b){ b.classList.remove('drawing'); });
+    renderNoteArrowLayer();
+  } else {
+    _arrowDrawing = true;
+    _arrowFromId = noteId;
+    document.querySelectorAll('.note-arrow-btn').forEach(function(b){ b.classList.remove('drawing'); });
+    var btn = document.querySelector('[data-arrow-note="' + noteId + '"]');
+    if (btn) btn.classList.add('drawing');
+  }
+}
 </script>
 </body>
 </html>
